@@ -47,7 +47,7 @@ object ObjectConstructionUtil {
       theUnsafeField.get(null).asInstanceOf[sun.misc.Unsafe]
     } catch {
       case e: Exception => throw new IllegalStateException("Cannot create object without calling constructor\n" +
-        "That's probably because JRE is not sun/oracle implementation", e);
+        "That's probably because JRE is not sun/oracle implementation", e)
     }
   }
 
@@ -57,7 +57,7 @@ object ObjectConstructionUtil {
       unsafeObject.allocateInstance(clazz)
     } catch {
       case e: Exception => throw new IllegalStateException("Cannot create object without calling constructor\n" +
-        "That's probably because JRE is not sun/oracle implementation", e);
+        "That's probably because JRE is not sun/oracle implementation", e)
     }
 
     /** DO NOT REMOVE - this is another way to do this */

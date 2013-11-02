@@ -18,7 +18,7 @@ class ContainerObject(testObject: TestObject) {
 @Test
 class MPJsonComplexConstructorsTest {
 
-  def testDeserializationWithoutCallingConstructors {
+  def testDeserializationWithoutCallingConstructors() {
     val testObject = new TestObject
     testObject.someString = "Some test string"
     val containerObject = new ContainerObject(testObject)

@@ -12,27 +12,25 @@ object MapSerializer extends JsonTypeSerializer {
 
   def serialize(obj: Any, jsonBuilder: StringBuilder) = {
 
-    jsonBuilder.append('[')
-
     val map: Map[_, _] = obj.asInstanceOf[Map[_, _]]
 
-    var isNotFirstField = false
+    jsonBuilder.append('[')
+    var nonFirstField = false
 
     for ((key, value) <- map) {
-      if (isNotFirstField) {
+      if (nonFirstField) {
         jsonBuilder.append(",")
       } else {
-        isNotFirstField = true
+        nonFirstField = true
       }
-      jsonBuilder.append("{k:")
+      jsonBuilder.append("[")
       SerializerFactory.getSerializer(key).serialize(key, jsonBuilder)
-      jsonBuilder.append(",v:")
+      jsonBuilder.append(",")
       SerializerFactory.getSerializer(value).serialize(value, jsonBuilder)
-      jsonBuilder.append("}");
+      jsonBuilder.append("]")
     }
 
     jsonBuilder.append(']')
   }
-
 
 }

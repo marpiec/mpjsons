@@ -12,7 +12,9 @@ import pl.marpiec.mpjsons.annotation.{SecondSubType, FirstSubType}
 class MapElement(var intValue: Int, val stringValue: String)
 
 class SimpleMapsObject {
-  
+
+  @FirstSubType(classOf[Int]) @SecondSubType(classOf[Long])
+  var emptyMap:Map[Int, Long] = Map()
   var simpleMap:Map[String, String] = _
   @FirstSubType(classOf[Int]) @SecondSubType(classOf[Long])
   var primitiveMap:Map[Int, Long] = _
@@ -25,7 +27,7 @@ class MPJsonMapsTest {
 
   def testMapSerialization() {
 
-    var smo = new SimpleMapsObject
+    val smo = new SimpleMapsObject
 
     smo.simpleMap = Map()
     smo.simpleMap += "a" -> "Ala"
@@ -42,22 +44,24 @@ class MPJsonMapsTest {
 
     val serialized = MPJson.serialize(smo)
 
-    assertEquals(serialized, "{simpleMap:[{k:\"a\",v:\"Ala\"},{k:\"k\",v:\"Kot\"}]," +
-                              "primitiveMap:[{k:1,v:1224},{k:5,v:5324}]," +
-                              "objectMap:[" +
-                                "{k:{intValue:1,stringValue:\"one\"},v:{intValue:100,stringValue:\"one hundred\"}}," +
-                                "{k:{intValue:5,stringValue:\"five\"},v:{intValue:500,stringValue:\"five hundred\"}}" +
+    assertEquals(serialized, "{\"emptyMap\":[]," +
+                              "\"simpleMap\":[[\"a\",\"Ala\"],[\"k\",\"Kot\"]]," +
+                              "\"primitiveMap\":[[1,1224],[5,5324]]," +
+                              "\"objectMap\":[" +
+                                "[{\"intValue\":1,\"stringValue\":\"one\"},{\"intValue\":100,\"stringValue\":\"one hundred\"}]," +
+                                "[{\"intValue\":5,\"stringValue\":\"five\"},{\"intValue\":500,\"stringValue\":\"five hundred\"}]" +
                               "]}")
 
 
-    val serializedWithWhitespacesQuotesAndInvertedKV = "  {  simpleMap  :  [  {  \"k\" : \"a\" , \"v\" : \"Ala\" } , {  k : \"k\" , v : \"Kot\" } ] , " +
-      "primitiveMap : [ { k : 1 , v : 1224 } , { v : 5324 , \"k\" : 5} ] , " +
-      "objectMap : [ " +
-      "{ k : { intValue : 1 , stringValue : \"one\" } , v  : { intValue : 100 , stringValue : \"one hundred\" } } , " +
-      "{k:{intValue:5,stringValue:\"five\"},v:{intValue:500,stringValue:\"five hundred\"}} " +
+    val serializedWithWhitespacesQuotes = "  {  \"emptyMap\"  :   [   ]  ,  " +
+      "\"simpleMap\"  :  [  [\"a\" , \"Ala\" ] , [  \"k\" , \"Kot\"  ] ]  , " +
+      "\"primitiveMap\" : [  [1 , 1224]  ,  [ 5  , 5324  ] ], " +
+      "\"objectMap\" : [ " +
+      "[  { \"intValue\" : 1 , \"stringValue\" : \"one\" } , { \"intValue\" : 100 , \"stringValue\" : \"one hundred\" } ] , " +
+      "[ {\"intValue\":5,\"stringValue\":\"five\"},{\"intValue\":500,\"stringValue\":\"five hundred\"} ] " +
       "] } "
 
-    val smoDeserialized:SimpleMapsObject = MPJson.deserialize(serializedWithWhitespacesQuotesAndInvertedKV, classOf[SimpleMapsObject]).asInstanceOf[SimpleMapsObject]
+    val smoDeserialized:SimpleMapsObject = MPJson.deserialize(serializedWithWhitespacesQuotes, classOf[SimpleMapsObject]).asInstanceOf[SimpleMapsObject]
 
     assertNotNull(smoDeserialized)
 

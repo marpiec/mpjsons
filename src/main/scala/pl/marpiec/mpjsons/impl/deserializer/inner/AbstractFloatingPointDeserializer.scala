@@ -10,13 +10,13 @@ trait AbstractFloatingPointDeserializer[T] extends JsonTypeDeserializer[T] {
 
   def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): T = {
 
-    jsonIterator.skipWhitespaceChars
+    jsonIterator.skipWhitespaceChars()
 
     val identifier = new StringBuilder()
 
     while (jsonIterator.isCurrentCharAFloatingPointPart) {
       identifier.append(jsonIterator.currentChar)
-      jsonIterator.nextChar
+      jsonIterator.nextChar()
     }
 
     toProperFloatingPoint(identifier)

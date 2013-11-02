@@ -29,7 +29,7 @@ object ReflectionUtil {
    */
   def getField(clazz: Class[_], fieldName: String): Field = {
     try {
-      return clazz.getDeclaredField(fieldName)
+      clazz.getDeclaredField(fieldName)
     } catch {
       case e: NoSuchFieldException => {
         if (clazz.getSuperclass.equals(classOf[Object])) {

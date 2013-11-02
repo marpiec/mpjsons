@@ -9,8 +9,8 @@ import pl.marpiec.mpjsons.JsonTypeSerializer
 
 object SerializerFactory {
 
-  var additionalSerializers: Map[Class[_], JsonTypeSerializer] = Map[Class[_], JsonTypeSerializer]()
-  var additionalSuperclassSerializers: Map[Class[_], JsonTypeSerializer] = Map[Class[_], JsonTypeSerializer]()
+  private var additionalSerializers: Map[Class[_], JsonTypeSerializer] = Map[Class[_], JsonTypeSerializer]()
+  private var additionalSuperclassSerializers: Map[Class[_], JsonTypeSerializer] = Map[Class[_], JsonTypeSerializer]()
 
   def registerSerializer(clazz: Class[_], serializer: JsonTypeSerializer) {
     additionalSerializers += clazz -> serializer
@@ -23,28 +23,30 @@ object SerializerFactory {
   def getSerializer(obj: Any): JsonTypeSerializer = {
 
     if (obj.isInstanceOf[Long]) {
-      return SimpleToStringSerializer
+      return SimpleNakedStringSerializer
     } else if (obj.isInstanceOf[Int]) {
-      return SimpleToStringSerializer
+      return SimpleNakedStringSerializer
     } else if (obj.isInstanceOf[Short]) {
-      return SimpleToStringSerializer
+      return SimpleNakedStringSerializer
     } else if (obj.isInstanceOf[Byte]) {
-      return SimpleToStringSerializer
+      return SimpleNakedStringSerializer
     } else if (obj.isInstanceOf[Boolean]) {
-      return SimpleToStringSerializer
+      return SimpleNakedStringSerializer
+    } else if (obj.isInstanceOf[Char]) {
+      return SimpleStringSerializer
     } else if (obj.isInstanceOf[String]) {
       return StringSerializer
     } else if (obj.isInstanceOf[Double]) {
-      return SimpleToStringSerializer
+      return SimpleNakedStringSerializer
     } else if (obj.isInstanceOf[Float]) {
-      return SimpleToStringSerializer
+      return SimpleNakedStringSerializer
     } else if (obj.asInstanceOf[AnyRef].getClass.isArray) {
       return ArraySerializer
     } else if (obj.isInstanceOf[Seq[_]]) {
       return SeqSerializer
     } else if (obj.isInstanceOf[Set[_]]) {
       return SetSerializer
-    } else if (obj.isInstanceOf[Tuple2[_, _]]) {
+    } else if (obj.isInstanceOf[(_, _)]) {
       return Tuple2Serializer
     } else if (obj.isInstanceOf[Option[_]]) {
       return OptionSerializer

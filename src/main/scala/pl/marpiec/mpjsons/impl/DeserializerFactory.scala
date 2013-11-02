@@ -12,8 +12,8 @@ import pl.marpiec.mpjsons.JsonTypeDeserializer
 
 object DeserializerFactory {
 
-  var additionalDeserializers: Map[Class[_], JsonTypeDeserializer[_]] = Map[Class[_], JsonTypeDeserializer[_]]()
-  var additionalSuperclassDeserializers: Map[Class[_], JsonTypeDeserializer[_]] = Map[Class[_], JsonTypeDeserializer[_]]()
+  private var additionalDeserializers: Map[Class[_], JsonTypeDeserializer[_]] = Map[Class[_], JsonTypeDeserializer[_]]()
+  private var additionalSuperclassDeserializers: Map[Class[_], JsonTypeDeserializer[_]] = Map[Class[_], JsonTypeDeserializer[_]]()
 
   def registerDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_]) {
     additionalDeserializers += clazz -> deserializer
@@ -40,13 +40,15 @@ object DeserializerFactory {
       return ShortDeserializer
     } else if (clazz.equals(classOf[Byte])) {
       return ByteDeserializer
+    } else if (clazz.equals(classOf[Char])) {
+      return CharDeserializer
     } else if (clazz.isArray) {
       return ArrayDeserializer
     } else if (clazz.equals(classOf[List[_]])) {
       return ListDeserializer
     } else if (clazz.equals(classOf[Set[_]])) {
       return SetDeserializer
-    } else if (clazz.equals(classOf[Tuple2[_, _]])) {
+    } else if (clazz.equals(classOf[(_, _)])) {
       return Tuple2Deserializer
     } else if (clazz.equals(classOf[Option[_]])) {
       return OptionDeserializer

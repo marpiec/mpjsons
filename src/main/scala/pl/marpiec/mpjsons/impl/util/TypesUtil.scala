@@ -27,7 +27,7 @@ object TypesUtil {
       if (subtype == null) {
         throw new IllegalStateException("No @" + subTypeAnnotation.getSimpleName + " defined for type of field " + field.getName)
       } else {
-        //thats because annotations cannot have common interface :(
+        //that's because annotations cannot have common interface :(
         elementsType = subTypeAnnotation.getMethod("value").invoke(subtype).asInstanceOf[Class[_]]
       }
     }

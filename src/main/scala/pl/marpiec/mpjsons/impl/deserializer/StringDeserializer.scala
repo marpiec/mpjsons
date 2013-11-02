@@ -10,7 +10,7 @@ import pl.marpiec.mpjsons.{StringIterator, JsonTypeDeserializer}
 object StringDeserializer extends JsonTypeDeserializer[String] {
   def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): String = {
 
-    jsonIterator.skipWhitespaceChars
+    jsonIterator.skipWhitespaceChars()
 
     if (jsonIterator.currentChar != '"') {
       throw new IllegalArgumentException("String value shuld start with '\"', but was [" + jsonIterator.currentChar + "]")
@@ -18,12 +18,12 @@ object StringDeserializer extends JsonTypeDeserializer[String] {
 
     val stringValue = new StringBuilder()
 
-    jsonIterator.nextChar
+    jsonIterator.nextChar()
 
     while (jsonIterator.currentChar != '"') {
 
       if (jsonIterator.currentChar == '\\') {
-        jsonIterator.nextChar
+        jsonIterator.nextChar()
 
         val char = jsonIterator.currentChar
 
@@ -43,12 +43,12 @@ object StringDeserializer extends JsonTypeDeserializer[String] {
         stringValue.append(jsonIterator.currentChar)
       }
 
-      jsonIterator.nextChar
+      jsonIterator.nextChar()
     }
 
-    jsonIterator.nextChar //to pass closing ", it is " for sure because of previous while
+    jsonIterator.nextChar() //to pass closing ", it is " for sure because of previous while
 
-    stringValue.toString
+    stringValue.toString()
   }
 
 }

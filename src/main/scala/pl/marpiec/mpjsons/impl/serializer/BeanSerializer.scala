@@ -16,7 +16,7 @@ object BeanSerializer extends JsonTypeSerializer {
 
     jsonBuilder.append('{')
 
-    val clazz = obj.asInstanceOf[AnyRef].getClass()
+    val clazz = obj.asInstanceOf[AnyRef].getClass
     val fields = ReflectionUtil.getAllFields(clazz)
     AccessibleObject.setAccessible(fields.asInstanceOf[Array[AccessibleObject]], true)
 
@@ -33,7 +33,7 @@ object BeanSerializer extends JsonTypeSerializer {
           isNotFirstField = true
         }
 
-        jsonBuilder.append(field.getName).append(':')
+        jsonBuilder.append('"').append(field.getName).append('"').append(':')
         SerializerFactory.getSerializer(value).serialize(value, jsonBuilder)
       }
     })

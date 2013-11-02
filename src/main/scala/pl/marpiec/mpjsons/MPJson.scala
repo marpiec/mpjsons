@@ -34,7 +34,7 @@ object MPJson {
   def serialize(obj: AnyRef): String = {
     val json = new StringBuilder()
     BeanSerializer.serialize(obj, json)
-    json.toString
+    json.toString()
   }
 
   /**

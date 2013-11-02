@@ -15,6 +15,7 @@ class InnerObject {
 }
 
 class MPSimpleDataObject {
+  var charValue: Char = _
   var longValue: Long = _
   var intValue: Int = _
   var stringValue: String = _
@@ -37,6 +38,7 @@ class TupleDataObject {
 class MPJsonTest {
 
   val sdo = new MPSimpleDataObject
+  sdo.charValue = 'M'
   sdo.longValue = 1234567891234L
   sdo.intValue = 1111
   sdo.stringValue = "Hello Json \n\" parser\\serializer \"" //Hello Json " parser\deserializer "
@@ -54,43 +56,45 @@ class MPJsonTest {
   
   sdo.emptyArray = Array[Long]()
 
-  val properJson = " { " +
+  val properJsonSometimesIdentifiersWithoutQuotes = " { " +
+    "charValue  : \"M\"  " +
     "longValue  : 1234567891234 , " +
     "intValue : 1111 , " +
-    "stringValue : \"Hello Json \\n\\\" parser\\\\serializer \\\"\" , " +
+    "\"stringValue\" : \"Hello Json \\n\\\" parser\\\\serializer \\\"\" , " +
     "booleanValue : true , " +
     "innerObject : { " +
-    "intValue : -2222 , " +
+    "\"intValue\" : -2222 , " +
     "stringValue : \"inner string\" " +
     "} , " +
     "arrayObject : [ \"Be\" , \"or\" , \"not to be\" ] , " +
-    "arrayPrimitive:[6,8,10]," +
+    "\"arrayPrimitive\":[6,8,10]," +
     "listObject:[\"Hello\",\"json\", \"serializer\"] , " +
-    "listPrimitive : [ 15 , 30 , 1 ]," +
+    "\"listPrimitive\" : [ 15 , 30 , 1 ]," +
     "emptyArray : [ ] " +
     "} "
 
 
   val properJsonNonWhitespaces = "{" +
-    "longValue:1234567891234," +
-    "intValue:1111," +
-    "stringValue:\"Hello Json \\n\\\" parser\\\\serializer \\\"\"," +
-    "booleanValue:true," +
-    "innerObject:{" +
-    "intValue:-2222," +
-    "stringValue:\"inner string\"" +
+    "\"charValue\":\"M\"," +
+    "\"longValue\":1234567891234," +
+    "\"intValue\":1111," +
+    "\"stringValue\":\"Hello Json \\n\\\" parser\\\\serializer \\\"\"," +
+    "\"booleanValue\":true," +
+    "\"innerObject\":{" +
+    "\"intValue\":-2222," +
+    "\"stringValue\":\"inner string\"" +
     "}," +
-    "arrayObject:[\"Be\",\"or\",\"not to be\"]," +
-    "arrayPrimitive:[6,8,10]," +
-    "listObject:[\"Hello\",\"json\",\"serializer\"]," +
-    "listPrimitive:[15,30,1]," +
-    "emptyArray:[]" +
+    "\"arrayObject\":[\"Be\",\"or\",\"not to be\"]," +
+    "\"arrayPrimitive\":[6,8,10]," +
+    "\"listObject\":[\"Hello\",\"json\",\"serializer\"]," +
+    "\"listPrimitive\":[15,30,1]," +
+    "\"emptyArray\":[]" +
     "}"
 
 
-  def testSimpleDeserialization {
+  def testSimpleDeserialization() {
 
-    var deserialized: MPSimpleDataObject = MPJson.deserialize(properJson, classOf[MPSimpleDataObject]).asInstanceOf[MPSimpleDataObject]
+    val deserialized: MPSimpleDataObject = MPJson.deserialize(properJsonSometimesIdentifiersWithoutQuotes, classOf[MPSimpleDataObject]).asInstanceOf[MPSimpleDataObject]
 
     assertEquals(deserialized.longValue, sdo.longValue)
     assertEquals(deserialized.intValue, sdo.intValue)
@@ -126,15 +130,13 @@ class MPJsonTest {
   }
 
 
-  def testSimpleSerialization {
-
-    var serialized = MPJson.serialize(sdo)
+  def testSimpleSerialization() {
+    val serialized = MPJson.serialize(sdo)
     assertEquals(serialized, properJsonNonWhitespaces)
-
   }
 
 
-  def testDeserializationWithFieldNamesInQuotes {
+  def testDeserializationWithFieldNamesInQuotes() {
     val json = "{\"intValue\":10,\"stringValue\":\"Hello\"}"
 
     val deserialized = MPJson.deserialize(json, classOf[InnerObject]).asInstanceOf[InnerObject]
@@ -143,7 +145,7 @@ class MPJsonTest {
     assertEquals(deserialized.stringValue, "Hello")
   }
 
-  def testDeserializationWithWhitespaces {
+  def testDeserializationWithWhitespaces() {
     val json = " {  \"intValue\"  :  10  ,  stringValue  :   \"Hello\"   }   "
 
     val deserialized = MPJson.deserialize(json, classOf[InnerObject]).asInstanceOf[InnerObject]
@@ -152,13 +154,12 @@ class MPJsonTest {
     assertEquals(deserialized.stringValue, "Hello")
   }
 
-  def testTupleDeserializationWithWhitespaces {
+  def testTupleDeserializationWithWhitespaces() {
     val json = " {  tuple :  [ 5 , \"Hello\" ]  }   "
 
     val deserialized = MPJson.deserialize(json, classOf[TupleDataObject]).asInstanceOf[TupleDataObject]
 
-    assertEquals(deserialized.tuple._1,5)
-    assertEquals(deserialized.tuple._2, "Hello")
+    assertEquals(deserialized.tuple, (5, "Hello"))
   }
 
 }

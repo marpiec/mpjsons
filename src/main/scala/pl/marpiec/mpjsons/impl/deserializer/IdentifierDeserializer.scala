@@ -9,7 +9,7 @@ import pl.marpiec.mpjsons.StringIterator
 object IdentifierDeserializer {
   def deserialize(jsonIterator: StringIterator): String = {
 
-    jsonIterator.skipWhitespaceChars
+    jsonIterator.skipWhitespaceChars()
 
     val identifier = new StringBuilder()
 
@@ -19,18 +19,18 @@ object IdentifierDeserializer {
       identifier.append(jsonIterator.currentChar)
     }
 
-    jsonIterator.nextChar
+    jsonIterator.nextChar()
 
     while (jsonIterator.currentChar != ':' && (!quoted && !jsonIterator.currentChar.isWhitespace || quoted && !jsonIterator.currentChar.equals('"'))) {
       identifier.append(jsonIterator.currentChar)
-      jsonIterator.nextChar
+      jsonIterator.nextChar()
     }
 
     if (quoted) {
-      jsonIterator.nextChar // skip closing quote
+      jsonIterator.nextChar() // skip closing quote
     }
 
-    identifier.toString
+    identifier.toString()
   }
 
 }

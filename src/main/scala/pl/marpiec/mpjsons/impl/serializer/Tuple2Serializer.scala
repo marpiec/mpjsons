@@ -11,7 +11,7 @@ object Tuple2Serializer extends JsonTypeSerializer {
 
   def serialize(obj: Any, jsonBuilder: StringBuilder) = {
 
-    val tuple = obj.asInstanceOf[Tuple2[_, _]]
+    val tuple = obj.asInstanceOf[(_, _)]
     val first = tuple._1
     val second = tuple._2
 

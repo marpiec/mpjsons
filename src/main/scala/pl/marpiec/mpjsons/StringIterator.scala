@@ -1,7 +1,7 @@
 package pl.marpiec.mpjsons
 
 /**
- * Special container for String taht allows easy iteration throught String characters.
+ * Special container for String that allows easy iteration through String characters.
  * @author Marcin Pieciukiewicz
  */
 class StringIterator(val stringValue: String) {
@@ -10,26 +10,26 @@ class StringIterator(val stringValue: String) {
   var nextIndex = 1
   var currentChar: Char = stringValue.charAt(0)
 
-  def skipWhitespaceChars {
+  def skipWhitespaceChars(): Unit = {
     while (currentChar.isWhitespace) {
-      nextChar
+      nextChar()
     }
   }
 
-  def nextChar {
+  def nextChar(): Unit = {
     currentChar = stringValue.charAt(nextIndex)
     nextIndex = nextIndex + 1
   }
 
-  def nextNonWhitespaceChar {
+  def nextNonWhitespaceChar(): Unit = {
     do {
-      nextChar
+      nextChar()
     } while (currentChar.isWhitespace)
   }
 
   def nextCharOrNullIfLast = {
     if (nextIndex < stringValue.length()) {
-      nextChar
+      nextChar()
     } else {
       null
     }
@@ -47,60 +47,56 @@ class StringIterator(val stringValue: String) {
     currentChar >= '0' && currentChar <= '9' || currentChar == '-' || currentChar == '.'
   }
 
-  def checkFutureChar: Char = {
-    stringValue.charAt(nextIndex)
-  }
+  def checkFutureChar: Char = stringValue.charAt(nextIndex)
 
-  def hasNextChar: Boolean = {
-    return nextIndex < stringLength
-  }
+  def hasNextChar: Boolean = nextIndex < stringLength
 
-  def consumeObjectStart = {
-    skipWhitespaceChars
+  def consumeObjectStart(): Unit = {
+    skipWhitespaceChars()
     if (currentChar != '{') {
       throw new IllegalArgumentException("Object should start with '{' symbol but was [" + currentChar + "]\n" + stringValue + "\n" + debugShowLeftString)
     }
-    nextChar
+    nextChar()
   }
 
-  def consumeObjectEnd = {
-    skipWhitespaceChars
+  def consumeObjectEnd(): Unit = {
+    skipWhitespaceChars()
     if (currentChar != '}') {
       throw new IllegalArgumentException("Object should end with '{' symbol but was [" + currentChar + "]\n" + stringValue + "\n" + debugShowLeftString)
     }
-    nextChar
+    nextChar()
   }
 
-  def consumeFieldValueSeparator = {
-    skipWhitespaceChars
+  def consumeFieldValueSeparator(): Unit = {
+    skipWhitespaceChars()
     if (currentChar != ':') {
       throw new IllegalArgumentException("Field name and value should be separated by ':' symbol but was [" + currentChar + "]\n" + stringValue + "\n" + debugShowLeftString)
     }
-    nextChar
+    nextChar()
   }
 
-  def consumeArrayStart = {
-    skipWhitespaceChars
+  def consumeArrayStart(): Unit = {
+    skipWhitespaceChars()
     if (currentChar != '[') {
       throw new IllegalArgumentException("Array should start with '[' symbol but was [" + currentChar + "]\n" + stringValue + "\n" + debugShowLeftString)
     }
-    nextChar
+    nextChar()
   }
 
-  def consumeArrayEnd = {
-    skipWhitespaceChars
+  def consumeArrayEnd(): Unit = {
+    skipWhitespaceChars()
     if (currentChar != ']') {
       throw new IllegalArgumentException("Array should end with ']' symbol but was [" + currentChar + "]\n" + stringValue + "\n" + debugShowLeftString)
     }
-    nextChar
+    nextChar()
   }
 
-  def consumeArrayValuesSeparator = {
-    skipWhitespaceChars
+  def consumeArrayValuesSeparator(): Unit = {
+    skipWhitespaceChars()
     if (currentChar != ',') {
       throw new IllegalArgumentException("Array values should be separated by ',' symbol but was [" + currentChar + "]\n" + stringValue + "\n" + debugShowLeftString)
     }
-    nextChar
+    nextChar()
   }
 
   def debugShowLeftString: String = {

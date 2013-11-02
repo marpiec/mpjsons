@@ -1,9 +1,10 @@
 package pl.marpiec.mpjsons.impl.deserializer
 
 import java.lang.reflect.Field
-import pl.marpiec.mpjsons.impl.util.{ReflectionUtil, ObjectConstructionUtil}
+import pl.marpiec.mpjsons.impl.util.{ObjectConstructionUtil}
 import pl.marpiec.mpjsons.{StringIterator, JsonTypeDeserializer}
 import pl.marpiec.mpjsons.impl.DeserializerFactory
+import pl.marpiec.mpjsons.impl.util.reflection.ReflectionUtil
 
 /**
  * @author Marcin Pieciukiewicz
@@ -22,8 +23,7 @@ object BeanDeserializer extends JsonTypeDeserializer[Any] {
 
       val identifier = IdentifierDeserializer.deserialize(jsonIterator)
 
-      val field = ReflectionUtil.getField(clazz, identifier)
-      field.setAccessible(true)
+      val field = ReflectionUtil.getAccessibleField(clazz, identifier)
 
       val fieldType = field.getType
 

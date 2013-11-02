@@ -1,23 +1,25 @@
-package pl.marpiec.mpjsons.impl.util
+package pl.marpiec.mpjsons.impl.util.reflection
 
-import java.lang.reflect.Field
+import java.lang.reflect.{AccessibleObject, Field}
 
 /**
  * Utility object to support reflection.
  * @author Marcin Pieciukiewicz
  */
-object ReflectionUtil {
+object ReflectionUtilNoCache {
 
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
    * @param clazz class from which the fields should be retrieved
    * @return array containing all defined fields in class
    */
-  def getAllFields(clazz: Class[_]): Array[Field] = {
+  def getAllAccessibleFields(clazz: Class[_]): Array[Field] = {
+    val declaredFields: Array[Field] = clazz.getDeclaredFields
+    AccessibleObject.setAccessible(declaredFields.asInstanceOf[Array[AccessibleObject]], true)
     if (clazz.getSuperclass.equals(classOf[Object])) {
-      clazz.getDeclaredFields
+      declaredFields
     } else {
-      Array.concat(clazz.getDeclaredFields, getAllFields(clazz.getSuperclass))
+      Array.concat(declaredFields, getAllAccessibleFields(clazz.getSuperclass))
     }
   }
 
@@ -27,15 +29,17 @@ object ReflectionUtil {
    * @param fieldName field name
    * @return retrieved Field or null if field does not exists.
    */
-  def getField(clazz: Class[_], fieldName: String): Field = {
+  def getAccessibleField(clazz: Class[_], fieldName: String): Field = {
     try {
-      clazz.getDeclaredField(fieldName)
+      val field: Field = clazz.getDeclaredField(fieldName)
+      field.setAccessible(true)
+      field
     } catch {
       case e: NoSuchFieldException => {
         if (clazz.getSuperclass.equals(classOf[Object])) {
           return null
         } else {
-          getField(clazz.getSuperclass, fieldName)
+          getAccessibleField(clazz.getSuperclass, fieldName)
         }
       }
     }

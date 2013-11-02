@@ -20,7 +20,7 @@ object MPJson {
   def deserialize(json: String, clazz: Class[_]): Any = {
     val jsonIterator = new StringIterator(json)
     try {
-      BeanDeserializer.deserialize(jsonIterator, clazz, null)
+      DeserializerFactory.getDeserializer(clazz).deserialize(jsonIterator, clazz, null)
     } catch {
       case e: RuntimeException => throw new JsonInnerException("Problem deserializing:\n" + json + "\n" + jsonIterator.debugShowConsumedString, e)
     }
@@ -33,7 +33,7 @@ object MPJson {
    */
   def serialize(obj: AnyRef): String = {
     val json = new StringBuilder()
-    BeanSerializer.serialize(obj, json)
+    SerializerFactory.getSerializer(obj).serialize(obj, json)
     json.toString()
   }
 

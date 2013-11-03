@@ -5,7 +5,8 @@ import collection.mutable.ListBuffer
 import pl.marpiec.mpjsons.impl.deserializer.primitives._
 import pl.marpiec.mpjsons.impl.deserializer._
 import pl.marpiec.mpjsons.JsonTypeDeserializer
-import pl.marpiec.mpjsons.impl.deserializer.array.{SetDeserializer, OptionDeserializer, ListDeserializer, ArrayDeserializer}
+import pl.marpiec.mpjsons.impl.deserializer.array._
+import scala.collection.immutable.{Stack, Queue}
 
 /**
  * @author Marcin Pieciukiewicz
@@ -47,6 +48,14 @@ class DeserializerFactoryImpl {
       return ArrayDeserializer
     } else if (clazz.equals(classOf[List[_]])) {
       return ListDeserializer
+    } else if (clazz.equals(classOf[Vector[_]])) {
+      return VectorDeserializer
+    } else if (clazz.equals(classOf[Stream[_]])) {
+      return StreamDeserializer
+    } else if (clazz.equals(classOf[Queue[_]])) {
+      return ImmutableQueueDeserializer
+    } else if (clazz.equals(classOf[Stack[_]])) {
+      return ImmutableStackDeserializer
     } else if (clazz.equals(classOf[Set[_]])) {
       return SetDeserializer
     } else if (clazz.equals(classOf[(_, _)])) {

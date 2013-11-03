@@ -3,6 +3,7 @@ package pl.marpiec.mpjsons
 import org.testng.annotations.Test
 import org.testng.Assert._
 import pl.marpiec.mpjsons.annotation.{SecondSubType, FirstSubType}
+import scala.collection.immutable.{Stack, Queue}
 
 
 /**
@@ -41,6 +42,11 @@ class CollectionsDataObject {
   var emptyArray: Array[Long] = Array()
   @FirstSubType(classOf[Long])
   var longsSet: Set[Long] = _
+  var stringsVector: Vector[String] = _
+  var stringsStream: Stream[String] = _
+  var stringsQueue: Queue[String] = _
+  var stringsStack: Stack[String] = _
+
 }
 
 @Test
@@ -144,26 +150,31 @@ class JsonSerializerTest {
     cdo.longsList = List[Long](5, 10, 20)
     cdo.emptyList = List[String]()
     cdo.longsSet = Set[Long](1, 11, 111)
+    cdo.stringsVector = Vector[String]("x", "Y", "zz")
+    cdo.stringsQueue = Queue("An", "Be", "Do")
+    cdo.stringsStack = Stack("F", "G", "h", "o")
+    cdo.stringsStream = Stream.iterate("A")(_ + "A").take(5)
+
 
     val simpleJson = MPJson.serialize(cdo)
     val dataObject = MPJson.deserialize(simpleJson, classOf[CollectionsDataObject])
 
     val deserializedObject = dataObject.asInstanceOf[CollectionsDataObject]
-    assertEquals(deserializedObject.stringsList.size, cdo.stringsList.size)
-    assertEquals(deserializedObject.stringsList(0), cdo.stringsList(0))
-    assertEquals(deserializedObject.stringsList(1), cdo.stringsList(1))
-    assertEquals(deserializedObject.stringsList(2), cdo.stringsList(2))
+    assertEquals(deserializedObject.stringsList, cdo.stringsList)
 
-    assertEquals(deserializedObject.longsList.size, cdo.longsList.size)
-    assertEquals(deserializedObject.longsList(0), cdo.longsList(0))
-    assertEquals(deserializedObject.longsList(1), cdo.longsList(1))
-    assertEquals(deserializedObject.longsList(2), cdo.longsList(2))
+    assertEquals(deserializedObject.longsList, cdo.longsList)
 
-    assertEquals(deserializedObject.emptyList.size, cdo.emptyList.size)
-    assertEquals(deserializedObject.emptyArray.size, cdo.emptyArray.size)
+    assertEquals(deserializedObject.emptyList, cdo.emptyList)
+    assertEquals(deserializedObject.emptyArray, cdo.emptyArray)
 
-    assertEquals(deserializedObject.longsSet.size, cdo.longsSet.size)
     assertEquals(deserializedObject.longsSet, cdo.longsSet)
+
+    assertEquals(deserializedObject.stringsVector, cdo.stringsVector)
+
+    assertEquals(deserializedObject.stringsQueue, cdo.stringsQueue)
+    assertEquals(deserializedObject.stringsStack, cdo.stringsStack)
+    assertEquals(deserializedObject.stringsStream, cdo.stringsStream)
+
 
   }
 

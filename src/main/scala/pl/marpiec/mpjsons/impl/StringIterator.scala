@@ -1,10 +1,10 @@
-package pl.marpiec.mpjsons
+package pl.marpiec.mpjsons.impl
 
 /**
  * Special container for String that allows easy iteration through String characters.
  * @author Marcin Pieciukiewicz
  */
-class StringIterator(val stringValue: String) {
+class StringIterator(private val stringValue: String) {
 
   val stringLength = stringValue.length
   var nextIndex = 1

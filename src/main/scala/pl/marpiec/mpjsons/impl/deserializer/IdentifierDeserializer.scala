@@ -1,12 +1,13 @@
 package pl.marpiec.mpjsons.impl.deserializer
 
-import pl.marpiec.mpjsons.StringIterator
+import pl.marpiec.mpjsons.impl.StringIterator
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
 object IdentifierDeserializer {
+
   def deserialize(jsonIterator: StringIterator): String = {
 
     jsonIterator.skipWhitespaceChars()

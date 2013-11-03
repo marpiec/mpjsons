@@ -24,7 +24,7 @@ object IteratorSerializer extends JsonTypeSerializer {
       } else {
         isNotFirstField = true
       }
-      SerializerFactory.getSerializer(element).serialize(element, jsonBuilder)
+      SerializerFactory.getSerializer(element.getClass).serialize(element, jsonBuilder)
     })
 
 

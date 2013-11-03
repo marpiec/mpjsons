@@ -2,8 +2,8 @@ package pl.marpiec.mpjsons.impl.serializer
 
 import java.lang.reflect.AccessibleObject
 import pl.marpiec.mpjsons.JsonTypeSerializer
-import pl.marpiec.mpjsons.impl.SerializerFactory
 import pl.marpiec.mpjsons.impl.util.reflection.ReflectionUtil
+import pl.marpiec.mpjsons.impl.SerializerFactory
 
 /**
  * @author Marcin Pieciukiewicz
@@ -34,7 +34,7 @@ object BeanSerializer extends JsonTypeSerializer {
         }
 
         jsonBuilder.append('"').append(field.getName).append('"').append(':')
-        SerializerFactory.getSerializer(value).serialize(value, jsonBuilder)
+        SerializerFactory.getSerializer(value.getClass).serialize(value, jsonBuilder)
       }
     }
 

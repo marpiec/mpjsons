@@ -1,6 +1,6 @@
 package pl.marpiec.mpjsons
 
-import impl.{JsonInnerException, SerializerFactory, DeserializerFactory}
+import pl.marpiec.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator, JsonInnerException}
 import pl.marpiec.mpjsons.impl.deserializer.BeanDeserializer
 import pl.marpiec.mpjsons.impl.serializer.BeanSerializer
 
@@ -33,7 +33,7 @@ object MPJson {
    */
   def serialize(obj: AnyRef): String = {
     val json = new StringBuilder()
-    SerializerFactory.getSerializer(obj).serialize(obj, json)
+    SerializerFactory.getSerializer(obj.getClass).serialize(obj, json)
     json.toString()
   }
 

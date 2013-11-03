@@ -24,9 +24,9 @@ object MapSerializer extends JsonTypeSerializer {
         nonFirstField = true
       }
       jsonBuilder.append("[")
-      SerializerFactory.getSerializer(key).serialize(key, jsonBuilder)
+      SerializerFactory.getSerializer(key.getClass).serialize(key, jsonBuilder)
       jsonBuilder.append(",")
-      SerializerFactory.getSerializer(value).serialize(value, jsonBuilder)
+      SerializerFactory.getSerializer(value.getClass).serialize(value, jsonBuilder)
       jsonBuilder.append("]")
     }
 

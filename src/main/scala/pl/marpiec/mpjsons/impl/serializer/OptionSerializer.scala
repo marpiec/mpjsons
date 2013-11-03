@@ -17,7 +17,7 @@ object OptionSerializer extends JsonTypeSerializer {
     jsonBuilder.append('[')
     if (option.isDefined) {
       val value = option.get
-      SerializerFactory.getSerializer(value).serialize(value, jsonBuilder)
+      SerializerFactory.getSerializer(value.getClass).serialize(value, jsonBuilder)
     }
     jsonBuilder.append(']')
 

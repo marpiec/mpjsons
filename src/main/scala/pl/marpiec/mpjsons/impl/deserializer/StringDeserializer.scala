@@ -1,7 +1,8 @@
 package pl.marpiec.mpjsons.impl.deserializer
 
 import java.lang.reflect.Field
-import pl.marpiec.mpjsons.{StringIterator, JsonTypeDeserializer}
+import pl.marpiec.mpjsons.{JsonTypeDeserializer}
+import pl.marpiec.mpjsons.impl.StringIterator
 
 /**
  * @author Marcin Pieciukiewicz

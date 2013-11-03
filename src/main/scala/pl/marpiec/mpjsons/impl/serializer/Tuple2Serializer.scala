@@ -16,9 +16,9 @@ object Tuple2Serializer extends JsonTypeSerializer {
     val second = tuple._2
 
     jsonBuilder.append('[')
-    SerializerFactory.getSerializer(first).serialize(first, jsonBuilder)
+    SerializerFactory.getSerializer(first.getClass).serialize(first, jsonBuilder)
     jsonBuilder.append(',')
-    SerializerFactory.getSerializer(second).serialize(second, jsonBuilder)
+    SerializerFactory.getSerializer(second.getClass).serialize(second, jsonBuilder)
     jsonBuilder.append(']')
   }
 }

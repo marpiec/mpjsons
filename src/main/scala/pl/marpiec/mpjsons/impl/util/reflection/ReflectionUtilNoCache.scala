@@ -6,7 +6,7 @@ import java.lang.reflect.{AccessibleObject, Field}
  * Utility object to support reflection.
  * @author Marcin Pieciukiewicz
  */
-object ReflectionUtilNoCache {
+private[reflection] object ReflectionUtilNoCache {
 
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.

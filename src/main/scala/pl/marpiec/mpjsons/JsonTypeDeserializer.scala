@@ -1,6 +1,8 @@
 package pl.marpiec.mpjsons
 
 import java.lang.reflect.Field
+import pl.marpiec.mpjsons.impl.StringIterator
+
 /**
  * Class that supports deserialization of json String to object.
  * @author Marcin Pieciukiewicz

@@ -12,7 +12,7 @@ object MapSerializer extends JsonTypeSerializer {
 
   def serialize(obj: Any, jsonBuilder: StringBuilder) = {
 
-    val map: Map[_, _] = obj.asInstanceOf[Map[_, _]]
+    val map: scala.collection.Map[_, _] = obj.asInstanceOf[scala.collection.Map[_, _]]
 
     jsonBuilder.append('[')
     var nonFirstField = false

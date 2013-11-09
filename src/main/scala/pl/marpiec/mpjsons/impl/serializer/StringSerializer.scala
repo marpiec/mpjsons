@@ -9,7 +9,7 @@ import pl.marpiec.mpjsons.JsonTypeSerializer
 object StringSerializer extends JsonTypeSerializer {
   def serialize(obj: Any, jsonBuilder: StringBuilder) {
 
-    val string = obj.asInstanceOf[String]
+    val string = obj.toString
     val stringLength = string.length
 
     var nextIndex = 0

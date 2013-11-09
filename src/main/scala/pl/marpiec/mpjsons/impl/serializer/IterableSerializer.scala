@@ -7,10 +7,10 @@ import pl.marpiec.mpjsons.JsonTypeSerializer
  * @author Marcin Pieciukiewicz
  */
 
-object SeqSerializer extends JsonTypeSerializer {
+object IterableSerializer extends JsonTypeSerializer {
 
   def serialize(obj: Any, jsonBuilder: StringBuilder) = {
-    IteratorSerializer.serialize(obj.asInstanceOf[Seq[_]].iterator, jsonBuilder)
+    IteratorSerializer.serialize(obj.asInstanceOf[scala.collection.Iterable[_]].iterator, jsonBuilder)
   }
 
 }

@@ -26,43 +26,43 @@ class DeserializerFactoryImpl {
   }
 
   def getDeserializer(clazz: Class[_]): JsonTypeDeserializer[_] = {
-    if (clazz.equals(classOf[Long])) {
+    if (clazz == classOf[Long]) {
       return LongDeserializer
-    } else if (clazz.equals(classOf[Int])) {
+    } else if (clazz == classOf[Int]) {
       return IntDeserializer
-    } else if (clazz.equals(classOf[Boolean])) {
+    } else if (clazz == classOf[Boolean]) {
       return BooleanDeserializer
-    } else if (clazz.equals(classOf[String])) {
+    } else if (clazz == classOf[String]) {
       return StringDeserializer
-    } else if (clazz.equals(classOf[Double])) {
+    } else if (clazz == classOf[Double]) {
       return DoubleDeserializer
-    } else if (clazz.equals(classOf[Float])) {
+    } else if (clazz == classOf[Float]) {
       return FloatDeserializer
-    } else if (clazz.equals(classOf[Short])) {
+    } else if (clazz == classOf[Short]) {
       return ShortDeserializer
-    } else if (clazz.equals(classOf[Byte])) {
+    } else if (clazz == classOf[Byte]) {
       return ByteDeserializer
-    } else if (clazz.equals(classOf[Char])) {
+    } else if (clazz == classOf[Char]) {
       return CharDeserializer
     } else if (clazz.isArray) {
       return ArrayDeserializer
-    } else if (clazz.equals(classOf[List[_]])) {
+    } else if (clazz == classOf[List[_]]) {
       return ListDeserializer
-    } else if (clazz.equals(classOf[Vector[_]])) {
+    } else if (clazz == classOf[Vector[_]]) {
       return VectorDeserializer
-    } else if (clazz.equals(classOf[Stream[_]])) {
+    } else if (clazz == classOf[Stream[_]]) {
       return StreamDeserializer
-    } else if (clazz.equals(classOf[Queue[_]])) {
+    } else if (clazz == classOf[Queue[_]]) {
       return ImmutableQueueDeserializer
-    } else if (clazz.equals(classOf[Stack[_]])) {
+    } else if (clazz == classOf[Stack[_]]) {
       return ImmutableStackDeserializer
-    } else if (clazz.equals(classOf[Set[_]])) {
+    } else if (clazz == classOf[Set[_]]) {
       return SetDeserializer
-    } else if (clazz.equals(classOf[(_, _)])) {
+    } else if (clazz == classOf[(_, _)]) {
       return Tuple2Deserializer
-    } else if (clazz.equals(classOf[Option[_]])) {
+    } else if (clazz == classOf[Option[_]]) {
       return OptionDeserializer
-    } else if (clazz.equals(classOf[Map[_, _]])) {
+    } else if (clazz == classOf[Map[_, _]]) {
       return MapDeserializer
     }
 
@@ -72,7 +72,7 @@ class DeserializerFactoryImpl {
       }
     }
 
-    if (clazz.equals(classOf[ListBuffer[_]])) {
+    if (clazz == classOf[ListBuffer[_]]) {
       throw new IllegalArgumentException("ListBuffer is not supported, use immutable List instead")
     }
 

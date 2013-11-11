@@ -5,6 +5,7 @@ import scala.Any
 import pl.marpiec.mpjsons.{JsonTypeDeserializer}
 import pl.marpiec.mpjsons.impl.{DeserializerFactory, StringIterator}
 import scala.collection.mutable.ArrayBuffer
+import pl.marpiec.mpjsons.impl.util.TypesUtil
 
 
 /**
@@ -46,7 +47,7 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
     buffer
   }
 
-  protected def getSubElementsType(clazz: Class[_], field: Field): Class[_]
+  protected def getSubElementsType(clazz: Class[_], field: Field) = TypesUtil.getSubElementsType(field)
 
   protected def toDesiredCollection(elementsType: Class[_], buffer: ArrayBuffer[Any]): T
 

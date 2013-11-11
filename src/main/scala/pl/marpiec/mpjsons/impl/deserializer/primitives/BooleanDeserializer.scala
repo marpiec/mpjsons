@@ -19,7 +19,11 @@ object BooleanDeserializer extends JsonTypeDeserializer[Boolean] {
       jsonIterator.nextChar()
     }
 
-    booleanString.toBoolean
+    booleanString.toString() match {
+      case "true" => true
+      case "false" => false
+      case _ => throw new IllegalArgumentException("Invalid boolean value: \""+booleanString+"\"")
+    }
   }
 
 }

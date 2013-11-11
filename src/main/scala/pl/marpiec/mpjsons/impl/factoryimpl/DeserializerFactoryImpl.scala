@@ -6,7 +6,11 @@ import pl.marpiec.mpjsons.impl.deserializer.primitives._
 import pl.marpiec.mpjsons.impl.deserializer._
 import pl.marpiec.mpjsons.JsonTypeDeserializer
 import pl.marpiec.mpjsons.impl.deserializer.array._
-import scala.collection.immutable.{Stack, Queue}
+import scala.collection.immutable._
+import pl.marpiec.mpjsons.impl.deserializer.array.set._
+import pl.marpiec.mpjsons.impl.deserializer.array.seq._
+import pl.marpiec.mpjsons.impl.deserializer.map.{ListMapDeserializer, MapDeserializer, HashMapDeserializer}
+
 
 /**
  * @author Marcin Pieciukiewicz
@@ -46,18 +50,6 @@ class DeserializerFactoryImpl {
       return CharDeserializer
     } else if (clazz.isArray) {
       return ArrayDeserializer
-    } else if (clazz == classOf[List[_]]) {
-      return ListDeserializer
-    } else if (clazz == classOf[Vector[_]]) {
-      return VectorDeserializer
-    } else if (clazz == classOf[Stream[_]]) {
-      return StreamDeserializer
-    } else if (clazz == classOf[Queue[_]]) {
-      return ImmutableQueueDeserializer
-    } else if (clazz == classOf[Stack[_]]) {
-      return ImmutableStackDeserializer
-    } else if (clazz == classOf[Set[_]]) {
-      return SetDeserializer
     } else if (clazz == classOf[(_, _)]) {
       return Tuple2Deserializer
     } else if (clazz == classOf[Option[_]]) {
@@ -65,6 +57,48 @@ class DeserializerFactoryImpl {
     } else if (clazz == classOf[Map[_, _]]) {
       return MapDeserializer
     }
+
+    // seq
+    if (clazz == classOf[List[_]]) {
+      return ListDeserializer
+    } else if (clazz == classOf[Vector[_]]) {
+      return VectorDeserializer
+    } else if (clazz == classOf[Stream[_]]) {
+      return StreamDeserializer
+    } else if (clazz == classOf[Queue[_]]) {
+      return QueueDeserializer
+    } else if (clazz == classOf[Stack[_]]) {
+      return StackDeserializer
+    }
+
+    // set
+    if (clazz == classOf[Set[_]]) {
+      return SetDeserializer
+    } else if (clazz == classOf[HashSet[_]]) {
+      return HashSetDeserializer
+    } else if (clazz == classOf[ListSet[_]]) {
+      return ListSetDeserializer
+//    } else if (clazz == classOf[SortedSet[_]]) {
+//      return SortedSetDeserializer
+//    } else if (clazz == classOf[TreeSet[_]]) {
+//      return TreeSetDeserializer
+    } else if (clazz == classOf[BitSet]) {
+      return BitSetDeserializer
+    }
+
+    // map
+    if (clazz == classOf[Map[_,_]]) {
+      return MapDeserializer
+    } else if (clazz == classOf[HashMap[_,_]]) {
+      return HashMapDeserializer
+//    } else if (clazz == classOf[SortedMap[_,_]]) {
+//      return SortedMapDeserializer
+//    } else if (clazz == classOf[TreeMap[_,_]]) {
+//      return TreeMapDeserializer
+    } else if (clazz == classOf[ListMap[_,_]]) {
+      return ListMapDeserializer
+    }
+
 
     for ((clazzType, deserializer) <- additionalSuperclassDeserializers) {
       if (clazzType.isAssignableFrom(clazz)) {

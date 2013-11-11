@@ -100,7 +100,7 @@ class SerializerFactoryImpl {
     return additionalSerializers.get(clazz).getOrElse(BeanSerializer)
 
 
-    //TODO BitSet, Range, NumericRange
+    //TODO Range, NumericRange
   }
 
 

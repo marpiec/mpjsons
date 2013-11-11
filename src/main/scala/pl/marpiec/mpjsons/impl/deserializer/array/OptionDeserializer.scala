@@ -11,8 +11,6 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object OptionDeserializer extends AbstractJsonArrayDeserializer[Option[_]] {
 
-  override protected def getSubElementsType(clazz: Class[_], field: Field) = TypesUtil.getSubElementsType(field)
-
   override protected def toDesiredCollection(elementsType: Class[_], buffer: ArrayBuffer[Any]) = {
     if(buffer.isEmpty) {
       None

@@ -17,7 +17,11 @@ class StringIterator(private val stringValue: String) {
   }
 
   def nextChar(): Unit = {
-    currentChar = stringValue.charAt(nextIndex)
+    currentChar = if(nextIndex < stringLength) {
+      stringValue.charAt(nextIndex)
+    } else {
+      '\0'
+    }
     nextIndex = nextIndex + 1
   }
 

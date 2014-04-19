@@ -3,6 +3,7 @@ package pl.marpiec.mpjsons
 import pl.marpiec.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator, JsonInnerException}
 import pl.marpiec.mpjsons.impl.deserializer.BeanDeserializer
 import pl.marpiec.mpjsons.impl.serializer.BeanSerializer
+import java.lang.reflect.Field
 
 
 /**
@@ -17,10 +18,31 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  def deserialize(json: String, clazz: Class[_]): Any = {
+  def deserialize[T](json: String, clazz: Class[T]): Any = {
+    deserializeWithField(json, clazz, null)
+  }
+
+  /**
+   * Creates object from gives json String and type of class.
+   * @param json String containing json that represents object of given clazz
+   * @param clazz type f the object to deserialize
+   * @return created object
+   */
+  def deserializeGeneric[T](json: String, clazz: Class[T], field: Field): Any = {
+    deserializeWithField(json, clazz, field)
+  }
+
+  /**
+   * Creates object from gives json String and type of class.
+   * @param json String containing json that represents object of given clazz
+   * @param clazz type f the object to deserialize
+   * @return created object
+   */
+  private def deserializeWithField[T](json: String, clazz: Class[T], field: Field): Any = {
+    case class Tmp(f: T)
     val jsonIterator = new StringIterator(json)
     try {
-      DeserializerFactory.getDeserializer(clazz).deserialize(jsonIterator, clazz, null)
+      DeserializerFactory.getDeserializer(clazz).deserialize(jsonIterator, clazz, field)
     } catch {
       case e: RuntimeException => throw new JsonInnerException("Problem deserializing:\n" + json + "\n" + jsonIterator.debugShowConsumedString, e)
     }

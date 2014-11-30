@@ -38,6 +38,15 @@ object ObjectConstructionUtil {
     }
   }
 
+  /**
+   * Retrieves instance of "object" singleton/
+   * @param clazz type of object to retrieve
+   * @return retrieved object
+   */
+  def retrieveObjectInstance(clazz: Class[_]):AnyRef = {
+    clazz.getField("MODULE$").get(clazz)
+  }
+
 
   private def getPreparedUnsafeObject: sun.misc.Unsafe = {
     try {

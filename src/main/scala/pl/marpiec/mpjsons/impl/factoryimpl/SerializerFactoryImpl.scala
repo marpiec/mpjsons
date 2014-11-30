@@ -2,11 +2,9 @@ package pl.marpiec.mpjsons.impl.factoryimpl
 
 import pl.marpiec.mpjsons.impl.serializer._
 import pl.marpiec.mpjsons.JsonTypeSerializer
+import pl.marpiec.mpjsons.impl.util.reflection.ReflectionUtil
 import scala.collection.immutable._
 import scala.collection.mutable
-import scala.Vector
-import scala.Stream
-import scala.List
 
 /**
  * @author Marcin Pieciukiewicz
@@ -97,7 +95,11 @@ class SerializerFactoryImpl {
       }
     }
 
-    return additionalSerializers.get(clazz).getOrElse(BeanSerializer)
+    if (ReflectionUtil.getAllAccessibleFields(clazz).exists(_.getName == "MODULE$")) {
+        return SingletonObjectSerializer
+    }
+
+    additionalSerializers.getOrElse(clazz, BeanSerializer)
 
 
     //TODO Range, NumericRange

@@ -1,5 +1,7 @@
 package pl.marpiec.mpjsons.impl.factoryimpl
 
+import pl.marpiec.mpjsons.impl.util.reflection.ReflectionUtil
+
 import collection.mutable.ListBuffer
 
 import pl.marpiec.mpjsons.impl.deserializer.primitives._
@@ -110,7 +112,12 @@ class DeserializerFactoryImpl {
       throw new IllegalArgumentException("ListBuffer is not supported, use immutable List instead")
     }
 
-    return additionalDeserializers.get(clazz).getOrElse(BeanDeserializer)
+
+    if (ReflectionUtil.getAllAccessibleFields(clazz).exists(_.getName == "MODULE$")) {
+      return SingletonObjectDeserializer
+    }
+
+    additionalDeserializers.getOrElse(clazz, BeanDeserializer)
   }
 
 }

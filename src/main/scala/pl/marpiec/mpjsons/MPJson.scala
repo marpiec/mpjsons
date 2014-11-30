@@ -18,8 +18,8 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  def deserialize[T](json: String, clazz: Class[T]): Any = {
-    deserializeWithField(json, clazz, null)
+  def deserialize[T](json: String, clazz: Class[T]): T = {
+    deserializeWithField(json, clazz, null).asInstanceOf[T]
   }
 
   /**
@@ -28,8 +28,8 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  def deserializeGeneric[T](json: String, clazz: Class[T], field: Field): Any = {
-    deserializeWithField(json, clazz, field)
+  def deserializeGeneric[T](json: String, clazz: Class[T], field: Field): T = {
+    deserializeWithField(json, clazz, field).asInstanceOf[T]
   }
 
   /**

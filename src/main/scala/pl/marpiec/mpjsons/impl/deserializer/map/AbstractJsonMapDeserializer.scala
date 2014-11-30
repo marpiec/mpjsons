@@ -49,7 +49,7 @@ trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
      toDesiredCollection(keyType, valueType, mapArray)
    }
 
-   def deserializeValue(jsonIterator: StringIterator, field: Field, valueType: Class[_]): Any = {
+   private def deserializeValue(jsonIterator: StringIterator, field: Field, valueType: Class[_]): Any = {
      DeserializerFactory.getDeserializer(valueType).deserialize(jsonIterator, valueType, field)
    }
 

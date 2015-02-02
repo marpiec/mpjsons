@@ -99,7 +99,15 @@ class SerializerFactoryImpl {
         return SingletonObjectSerializer
     }
 
-    additionalSerializers.getOrElse(clazz, BeanSerializer)
+    val additionalSerializerOption = additionalSerializers.get(clazz)
+
+    if(additionalSerializerOption.isDefined) {
+      additionalSerializerOption.get
+    } else if (classOf[Class[_]].isAssignableFrom(clazz)) {
+      throw new IllegalArgumentException("Unsupported data type: Class, please provide custom serializer for " + clazz)
+    } else {
+      BeanSerializer
+    }
 
 
     //TODO Range, NumericRange

@@ -1,5 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
 
+import pl.mpieciukiewicz.mpjsons.impl.serializer.BeanSerializer
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 
 import collection.mutable.ListBuffer
@@ -117,7 +118,16 @@ class DeserializerFactoryImpl {
       return SingletonObjectDeserializer
     }
 
-    additionalDeserializers.getOrElse(clazz, BeanDeserializer)
+
+    val additionalDeserializerOption = additionalDeserializers.get(clazz)
+
+    if(additionalDeserializerOption.isDefined) {
+      additionalDeserializerOption.get
+    } else if (classOf[Class[_]].isAssignableFrom(clazz)) {
+      throw new IllegalArgumentException("Unsupported data type: Class, please provide custom deserializer for " + clazz)
+    } else {
+      BeanDeserializer
+    }
   }
 
 }

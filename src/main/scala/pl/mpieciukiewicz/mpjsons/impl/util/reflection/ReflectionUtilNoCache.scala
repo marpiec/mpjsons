@@ -14,7 +14,7 @@ private[reflection] object ReflectionUtilNoCache {
    * @return array containing all defined fields in class
    */
   def getAllAccessibleFields(clazz: Class[_]): Array[Field] = {
-    val declaredFields: Array[Field] = clazz.getDeclaredFields
+    val declaredFields: Array[Field] = clazz.getDeclaredFields.filterNot(_.isSynthetic)
     AccessibleObject.setAccessible(declaredFields.asInstanceOf[Array[AccessibleObject]], true)
     if (clazz.getSuperclass.equals(classOf[Object])) {
       declaredFields

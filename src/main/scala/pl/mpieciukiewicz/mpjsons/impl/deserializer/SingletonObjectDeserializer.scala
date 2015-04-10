@@ -8,7 +8,7 @@ import pl.mpieciukiewicz.mpjsons.impl.util.ObjectConstructionUtil
 
 object SingletonObjectDeserializer extends JsonTypeDeserializer[Any] {
 
-  override def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): Any = {
+  override def deserialize(jsonIterator: StringIterator, clazz: Class[Any], field: Field): Any = {
 
     jsonIterator.consumeObjectStart()
     val instance = ObjectConstructionUtil.retrieveObjectInstance(clazz)

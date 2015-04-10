@@ -16,5 +16,5 @@ trait JsonTypeDeserializer[T] {
    *              possibility to read FirstSubType and SecondSubType annotations. Might be null.
    * @return created object
    */
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): T
+  def deserialize(jsonIterator: StringIterator, clazz: Class[T], field: Field): T
 }

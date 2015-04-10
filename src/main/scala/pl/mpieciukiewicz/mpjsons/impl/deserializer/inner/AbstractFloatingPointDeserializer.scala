@@ -9,7 +9,7 @@ import pl.mpieciukiewicz.mpjsons.impl.StringIterator
  */
 trait AbstractFloatingPointDeserializer[T] extends JsonTypeDeserializer[T] {
 
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): T = {
+  def deserialize(jsonIterator: StringIterator, clazz: Class[T], field: Field): T = {
 
     jsonIterator.skipWhitespaceChars()
 

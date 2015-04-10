@@ -10,9 +10,9 @@ import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
  * @author Marcin Pieciukiewicz
  */
 
-object BeanDeserializer extends JsonTypeDeserializer[Any] {
+object BeanDeserializer extends JsonTypeDeserializer[AnyRef] {
 
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): Any = {
+  def deserialize(jsonIterator: StringIterator, clazz: Class[AnyRef], field: Field): AnyRef = {
 
     jsonIterator.consumeObjectStart()
     val instance = ObjectConstructionUtil.createInstance(clazz)
@@ -21,7 +21,7 @@ object BeanDeserializer extends JsonTypeDeserializer[Any] {
 
       val identifier = IdentifierDeserializer.deserialize(jsonIterator)
       val field = ReflectionUtil.getAccessibleField(clazz, identifier)
-      val fieldType = field.getType
+      val fieldType = field.getType.asInstanceOf[Class[Any]]
 
       jsonIterator.consumeFieldValueSeparator()
 

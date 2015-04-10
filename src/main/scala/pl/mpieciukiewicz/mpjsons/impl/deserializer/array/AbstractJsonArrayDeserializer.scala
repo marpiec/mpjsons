@@ -14,11 +14,11 @@ import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
 
 
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): T = {
+  def deserialize(jsonIterator: StringIterator, clazz: Class[T], field: Field): T = {
 
     jsonIterator.consumeArrayStart()
 
-    val elementsType = getSubElementsType(clazz, field)
+    val elementsType: Class[Any] = getSubElementsType(clazz, field)
 
     val buffer = readElementsIntoBuffer(elementsType, jsonIterator, field)
 
@@ -26,7 +26,7 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
 
   }
 
-  private def readElementsIntoBuffer(elementsType: Class[_], jsonIterator: StringIterator, field: Field): ArrayBuffer[Any] = {
+  private def readElementsIntoBuffer(elementsType: Class[Any], jsonIterator: StringIterator, field: Field): ArrayBuffer[Any] = {
     val buffer = ArrayBuffer[Any]()
 
     val deserializer = DeserializerFactory.getDeserializer(elementsType)
@@ -47,8 +47,8 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
     buffer
   }
 
-  protected def getSubElementsType(clazz: Class[_], field: Field) = TypesUtil.getSubElementsType(field)
+  protected def getSubElementsType[S](clazz: Class[T], field: Field): Class[S] = TypesUtil.getSubElementsType(field)
 
-  protected def toDesiredCollection(elementsType: Class[_], buffer: ArrayBuffer[Any]): T
+  protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): T
 
 }

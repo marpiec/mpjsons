@@ -11,6 +11,5 @@ import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeseri
 
 object ListDeserializer extends AbstractJsonArrayDeserializer[List[_]] {
 
-  override protected def toDesiredCollection(elementsType: Class[_], buffer: ArrayBuffer[Any]) = buffer.toList
-
+  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): List[_] = buffer.toList
 }

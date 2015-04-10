@@ -8,7 +8,7 @@ import pl.mpieciukiewicz.mpjsons.impl.StringIterator
  * @author Marcin Pieciukiewicz
  */
 object BooleanDeserializer extends JsonTypeDeserializer[Boolean] {
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): Boolean = {
+  def deserialize(jsonIterator: StringIterator, clazz: Class[Boolean], field: Field): Boolean = {
 
     val booleanString = new StringBuilder()
 

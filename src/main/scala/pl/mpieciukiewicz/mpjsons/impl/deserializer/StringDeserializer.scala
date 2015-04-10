@@ -9,7 +9,8 @@ import pl.mpieciukiewicz.mpjsons.impl.StringIterator
  */
 
 object StringDeserializer extends JsonTypeDeserializer[String] {
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): String = {
+
+  override def deserialize(jsonIterator: StringIterator, clazz: Class[String], field: Field): String = {
 
     jsonIterator.skipWhitespaceChars()
 
@@ -51,5 +52,4 @@ object StringDeserializer extends JsonTypeDeserializer[String] {
 
     stringValue.toString()
   }
-
 }

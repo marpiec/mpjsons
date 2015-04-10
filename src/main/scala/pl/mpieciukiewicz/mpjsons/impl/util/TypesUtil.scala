@@ -10,13 +10,13 @@ import pl.mpieciukiewicz.mpjsons.annotation.{FirstSubType, SecondSubType}
  */
 object TypesUtil {
 
-  def getSubElementsType(field: Field): Class[_] = {
-    getSubElementsTypeForAnnotation(field, classOf[FirstSubType], 0)
+  def getSubElementsType[T](field: Field): Class[T] = {
+    getSubElementsTypeForAnnotation(field, classOf[FirstSubType], 0).asInstanceOf[Class[T]]
   }
 
-  def getDoubleSubElementsType(field: Field): (Class[_], Class[_]) = {
-    (getSubElementsTypeForAnnotation(field, classOf[FirstSubType], 0),
-      getSubElementsTypeForAnnotation(field, classOf[SecondSubType], 1))
+  def getDoubleSubElementsType[A, B](field: Field): (Class[A], Class[B]) = {
+    (getSubElementsTypeForAnnotation(field, classOf[FirstSubType], 0).asInstanceOf[Class[A]],
+      getSubElementsTypeForAnnotation(field, classOf[SecondSubType], 1).asInstanceOf[Class[B]])
   }
 
 
@@ -41,8 +41,8 @@ object TypesUtil {
     elementsType
   }
 
-  def getArraySubElementsType(arrayClass: Class[_]): Class[_] = {
-    arrayClass.getComponentType
+  def getArraySubElementsType[S](arrayClass: Class[S]): Class[S] = {
+    arrayClass.getComponentType.asInstanceOf[Class[S]]
   }
 
 

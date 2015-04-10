@@ -19,18 +19,18 @@ import scala.collection.mutable.ListBuffer
 
 class DeserializerFactoryImpl {
 
-  private var additionalDeserializers: Map[Class[_], JsonTypeDeserializer[_]] = Map[Class[_], JsonTypeDeserializer[_]]()
-  private var additionalSuperclassDeserializers: Map[Class[_], JsonTypeDeserializer[_]] = Map[Class[_], JsonTypeDeserializer[_]]()
+  private var additionalDeserializers: Map[Class[_], JsonTypeDeserializer[_ <: Any]] = Map[Class[_], JsonTypeDeserializer[Any]]()
+  private var additionalSuperclassDeserializers: Map[Class[_], JsonTypeDeserializer[_ <: Any]] = Map[Class[_], JsonTypeDeserializer[Any]]()
 
-  def registerDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_]) {
+  def registerDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_ <: Any]) {
     additionalDeserializers += clazz -> deserializer
   }
 
-  def registerSuperclassDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_]) {
+  def registerSuperclassDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_ <: Any]) {
     additionalSuperclassDeserializers += clazz -> deserializer
   }
 
-  def getDeserializer(clazz: Class[_]): JsonTypeDeserializer[_] = {
+  def getDeserializer(clazz: Class[_]): JsonTypeDeserializer[_ <: Any] = {
     if (clazz == classOf[Long]) {
       return LongDeserializer
     } else if (clazz == classOf[Int]) {

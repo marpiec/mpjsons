@@ -10,12 +10,12 @@ import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
  * @author Marcin Pieciukiewicz
  */
 
-object Tuple2Deserializer extends JsonTypeDeserializer[(_, _)] {
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): (_, _) = {
+object Tuple2Deserializer extends JsonTypeDeserializer[(Any, Any)] {
+  def deserialize(jsonIterator: StringIterator, clazz: Class[(Any, Any)], field: Field): (Any, Any) = {
 
     jsonIterator.consumeArrayStart()
 
-    val (firstElementType, secondElementType) = TypesUtil.getDoubleSubElementsType(field)
+    val (firstElementType, secondElementType): (Class[Any], Class[Any]) = TypesUtil.getDoubleSubElementsType(field)
 
     val first = DeserializerFactory.getDeserializer(firstElementType).deserialize(jsonIterator, firstElementType, field)
 

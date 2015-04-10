@@ -13,14 +13,13 @@ import scala.collection.immutable.BitSet
 object BitSetDeserializer extends AbstractJsonArrayDeserializer[BitSet] {
 
 
-  override protected def getSubElementsType(clazz: Class[_], field: Field) = classOf[Int]
+  override protected def getSubElementsType[S](clazz: Class[BitSet], field: Field): Class[S] = classOf[Int].asInstanceOf[Class[S]]
 
-  override protected def toDesiredCollection(elementsType: Class[_], buffer: ArrayBuffer[Any]) = {
+  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): BitSet = {
     val intBuffer = ArrayBuffer[Int]() // TODO optimize
     for(elem <- buffer) {
       intBuffer += elem.asInstanceOf[Int]
     }
     BitSet(intBuffer.toArray:_*)
   }
-
- }
+}

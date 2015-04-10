@@ -12,6 +12,5 @@ import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeseri
 
 object QueueDeserializer extends AbstractJsonArrayDeserializer[Queue[_]] {
 
-  override protected def toDesiredCollection(elementsType: Class[_], buffer: ArrayBuffer[Any]) = Queue(buffer.toArray:_*)
-
+  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): Queue[_] = Queue(buffer.toArray:_*)
 }

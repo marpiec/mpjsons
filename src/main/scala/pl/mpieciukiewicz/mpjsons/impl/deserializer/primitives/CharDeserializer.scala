@@ -10,9 +10,9 @@ import pl.mpieciukiewicz.mpjsons.impl.StringIterator
  */
 object CharDeserializer extends JsonTypeDeserializer[Char] {
 
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): Char = {
+  def deserialize(jsonIterator: StringIterator, clazz: Class[Char], field: Field): Char = {
 
-    val deserializedString: String = StringDeserializer.deserialize(jsonIterator, clazz, field)
+    val deserializedString: String = StringDeserializer.deserialize(jsonIterator, classOf[String], field)
 
     if(deserializedString.length == 1) {
       deserializedString.charAt(0)

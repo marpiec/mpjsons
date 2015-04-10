@@ -9,8 +9,7 @@ import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeseri
  * @author Marcin Pieciukiewicz
  */
 
-object SetDeserializer extends AbstractJsonArrayDeserializer[Set[_]] {
+object SetDeserializer extends AbstractJsonArrayDeserializer[Set[Any]] {
 
-  override protected def toDesiredCollection(elementsType: Class[_], buffer: ArrayBuffer[Any]) = buffer.toSet
-
+  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): Set[Any] = buffer.toSet
 }

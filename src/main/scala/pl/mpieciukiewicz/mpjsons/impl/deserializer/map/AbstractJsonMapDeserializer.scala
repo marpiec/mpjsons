@@ -13,11 +13,11 @@ import scala.collection.mutable.ArrayBuffer
 trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
 
 
-   def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): T = {
+   def deserialize(jsonIterator: StringIterator, clazz: Class[T], field: Field): T = {
 
      jsonIterator.consumeArrayStart()
 
-     val (keyType, valueType) = getDoubleSubElementsType(clazz, field)
+     val (keyType, valueType): (Class[Any], Class[Any]) = getDoubleSubElementsType(clazz, field)
      var mapArray = ArrayBuffer[(Any, Any)]()
 
      jsonIterator.skipWhitespaceChars()
@@ -49,11 +49,11 @@ trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
      toDesiredCollection(keyType, valueType, mapArray)
    }
 
-   private def deserializeValue(jsonIterator: StringIterator, field: Field, valueType: Class[_]): Any = {
+   private def deserializeValue(jsonIterator: StringIterator, field: Field, valueType: Class[Any]): Any = {
      DeserializerFactory.getDeserializer(valueType).deserialize(jsonIterator, valueType, field)
    }
 
-  protected def getDoubleSubElementsType(clazz: Class[_], field: Field) = TypesUtil.getDoubleSubElementsType(field)
+  protected def getDoubleSubElementsType[A, B](clazz: Class[T], field: Field): (Class[A], Class[B]) = TypesUtil.getDoubleSubElementsType(field)
 
   protected def toDesiredCollection(keyType: Class[_], valueType: Class[_], buffer: ArrayBuffer[(Any, Any)]): T
 

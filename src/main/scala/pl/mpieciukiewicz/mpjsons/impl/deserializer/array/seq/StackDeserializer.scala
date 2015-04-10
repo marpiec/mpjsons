@@ -12,6 +12,5 @@ import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeseri
 
 object StackDeserializer extends AbstractJsonArrayDeserializer[Stack[_]] {
 
-  override protected def toDesiredCollection(elementsType: Class[_], buffer: ArrayBuffer[Any]) = Stack(buffer.toArray:_*)
-
+  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): Stack[_] = Stack(buffer.toArray:_*)
 }

@@ -9,22 +9,22 @@ import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 
 class DeserializerFactoryMemoizer(private val deserializerFactory: DeserializerFactoryImpl) {
 
-  private var getDeserializerCache: Map[Class[_], JsonTypeDeserializer[_]] = Map()
+  private var getDeserializerCache: Map[Class[_], JsonTypeDeserializer[_ <: Any]] = Map()
 
-  def registerDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_]) {
+  def registerDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_ <: Any]) {
     deserializerFactory.registerDeserializer(clazz, deserializer)
   }
 
-  def registerSuperclassDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_]) {
+  def registerSuperclassDeserializer(clazz: Class[_], deserializer: JsonTypeDeserializer[_ <: Any]) {
     deserializerFactory.registerSuperclassDeserializer(clazz, deserializer)
   }
 
-  def getDeserializer(clazz: Class[_]): JsonTypeDeserializer[_] = {
-    getDeserializerCache.get(clazz).getOrElse {
+  def getDeserializer[T](clazz: Class[T]): JsonTypeDeserializer[T] = {
+    getDeserializerCache.getOrElse(clazz, {
       val deserializer = deserializerFactory.getDeserializer(clazz)
       getDeserializerCache += clazz -> deserializer
       deserializer
-    }
+    }).asInstanceOf[JsonTypeDeserializer[T]]
   }
 
 }

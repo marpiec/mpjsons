@@ -2,7 +2,6 @@ package pl.mpieciukiewicz.mpjsons
 
 import org.testng.annotations.Test
 import org.testng.Assert._
-import pl.mpieciukiewicz.mpjsons.annotation.{FirstSubType, SecondSubType}
 import scala.collection.immutable.{Stack, Queue}
 
 
@@ -14,41 +13,24 @@ class SimpleDataObject {
   var longValue: Long = _
   var stringValue: String = _
   var tuple: (String, String) = _
-  @FirstSubType(classOf[Int])
-  @SecondSubType(classOf[Long])
   var tuplePrimitive: (Int, Long) = _
 }
 
 class OptionalDataObject {
-  @FirstSubType(classOf[Int])
   var intOption: Option[Int] = _
-  @FirstSubType(classOf[Long])
   var smallLongOption: Option[Long] = _
-  @FirstSubType(classOf[Long])
   var longOption: Option[Long] = _
-  @FirstSubType(classOf[Double])
   var doubleOption: Option[Double] = _
-  @FirstSubType(classOf[Boolean])
   var booleanOption: Option[Boolean] = _
   var stringOption: Option[String] = _
   var sdo: Option[SimpleDataObject] = _
 }
 
-class EitherDataObject {
-  @FirstSubType(classOf[Int])
-  @SecondSubType(classOf[Int])
-  var intInt: Either[Int, Int] = _
-  @FirstSubType(classOf[Boolean])
-  var booleanString: Either[Boolean, String] = _
-}
-
 class CollectionsDataObject {
   var stringsList: List[String] = _
-  @FirstSubType(classOf[Long])
   var longsList: List[Long] = _
   var emptyList: List[String] = _
   var emptyArray: Array[Long] = Array()
-  @FirstSubType(classOf[Long])
   var longsSet: Set[Long] = _
   var stringsVector: Vector[String] = _
   var stringsStream: Stream[String] = _
@@ -109,7 +91,6 @@ class JsonSerializerTest {
   }
 
 
-
   def testFilledOptionSerializationAndDeserialization() {
 
     val odo = new OptionalDataObject
@@ -147,30 +128,6 @@ class JsonSerializerTest {
     assertEquals(dataObject.asInstanceOf[OptionalDataObject].stringOption.get, odo.stringOption.get)
     assertEquals(dataObject.asInstanceOf[OptionalDataObject].sdo.get.longValue, odo.sdo.get.longValue)
     assertEquals(dataObject.asInstanceOf[OptionalDataObject].sdo.get.stringValue, odo.sdo.get.stringValue)
-
-  }
-
-
-  def testEitherSerializationAndDeserialization(): Unit = {
-    val edo = new EitherDataObject
-    edo.booleanString = Left(false)
-    edo.intInt = Right(2)
-
-    var simpleJson = MPJson.serialize(edo)
-    var deserializedObject = MPJson.deserialize(simpleJson, classOf[EitherDataObject])
-
-    assertEquals(deserializedObject.booleanString, Left(false))
-    assertEquals(deserializedObject.intInt, Right(2))
-
-
-    edo.booleanString = Right("hello")
-    edo.intInt = Left(3)
-
-    simpleJson = MPJson.serialize(edo)
-    deserializedObject = MPJson.deserialize(simpleJson, classOf[EitherDataObject])
-
-    assertEquals(deserializedObject.booleanString, Right("hello"))
-    assertEquals(deserializedObject.intInt, Left(3))
 
   }
 

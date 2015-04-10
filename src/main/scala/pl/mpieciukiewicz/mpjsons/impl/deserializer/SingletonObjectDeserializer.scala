@@ -4,14 +4,15 @@ import java.lang.reflect.Field
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.StringIterator
-import pl.mpieciukiewicz.mpjsons.impl.util.ObjectConstructionUtil
+import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, ObjectConstructionUtil}
+import scala.reflect.runtime.universe._
 
 object SingletonObjectDeserializer extends JsonTypeDeserializer[Any] {
 
-  override def deserialize(jsonIterator: StringIterator, clazz: Class[Any], field: Field): Any = {
+  override def deserialize(jsonIterator: StringIterator, classType: ClassType): Any = {
 
     jsonIterator.consumeObjectStart()
-    val instance = ObjectConstructionUtil.retrieveObjectInstance(clazz)
+    val instance = ObjectConstructionUtil.retrieveObjectInstance(classType.clazz)
 
     if (jsonIterator.currentChar == '}') {
       jsonIterator.nextCharOrNullIfLast

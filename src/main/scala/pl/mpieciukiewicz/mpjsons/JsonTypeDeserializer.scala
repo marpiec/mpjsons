@@ -2,6 +2,9 @@ package pl.mpieciukiewicz.mpjsons
 
 import java.lang.reflect.Field
 import pl.mpieciukiewicz.mpjsons.impl.StringIterator
+import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
+
+import scala.reflect.runtime.universe._
 
 /**
  * Class that supports deserialization of json String to object.
@@ -16,5 +19,5 @@ trait JsonTypeDeserializer[T] {
    *              possibility to read FirstSubType and SecondSubType annotations. Might be null.
    * @return created object
    */
-  def deserialize(jsonIterator: StringIterator, clazz: Class[T], field: Field): T
+  def deserialize(jsonIterator: StringIterator, classType: ClassType): T
 }

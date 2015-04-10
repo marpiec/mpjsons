@@ -1,7 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.map
 
-import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
+import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, TypesUtil}
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 import scala.collection.mutable.ArrayBuffer
@@ -13,11 +12,11 @@ import scala.collection.mutable.ArrayBuffer
 trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
 
 
-   def deserialize(jsonIterator: StringIterator, clazz: Class[T], field: Field): T = {
+   override def deserialize(jsonIterator: StringIterator, classType: ClassType): T = {
 
      jsonIterator.consumeArrayStart()
 
-     val (keyType, valueType): (Class[Any], Class[Any]) = getDoubleSubElementsType(clazz, field)
+     val (keyType, valueType) = getDoubleSubElementsType(classType)
      var mapArray = ArrayBuffer[(Any, Any)]()
 
      jsonIterator.skipWhitespaceChars()
@@ -26,12 +25,12 @@ trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
 
        jsonIterator.consumeArrayStart()
 
-       val key = deserializeValue(jsonIterator, field, keyType)
+       val key = deserializeValue(jsonIterator, keyType)
 
        jsonIterator.consumeArrayValuesSeparator()
 
 
-       val value = deserializeValue(jsonIterator, field, valueType)
+       val value = deserializeValue(jsonIterator, valueType)
 
        mapArray.+=((key, value))
 
@@ -46,14 +45,14 @@ trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
      }
 
      jsonIterator.nextChar()
-     toDesiredCollection(keyType, valueType, mapArray)
+     toDesiredCollection(keyType.clazz, valueType.clazz, mapArray)
    }
 
-   private def deserializeValue(jsonIterator: StringIterator, field: Field, valueType: Class[Any]): Any = {
-     DeserializerFactory.getDeserializer(valueType).deserialize(jsonIterator, valueType, field)
+   private def deserializeValue(jsonIterator: StringIterator, classType: ClassType): Any = {
+     DeserializerFactory.getDeserializer(classType.clazz).deserialize(jsonIterator, classType)
    }
 
-  protected def getDoubleSubElementsType[A, B](clazz: Class[T], field: Field): (Class[A], Class[B]) = TypesUtil.getDoubleSubElementsType(field)
+  protected def getDoubleSubElementsType(classType: ClassType): (ClassType, ClassType) = TypesUtil.getDoubleSubElementsType(classType.tpe)
 
   protected def toDesiredCollection(keyType: Class[_], valueType: Class[_], buffer: ArrayBuffer[(Any, Any)]): T
 

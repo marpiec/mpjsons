@@ -1,14 +1,16 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.primitives
 
 import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.{JsonTypeDeserializer}
+import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
+import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.StringIterator
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 object BooleanDeserializer extends JsonTypeDeserializer[Boolean] {
-  def deserialize(jsonIterator: StringIterator, clazz: Class[Boolean], field: Field): Boolean = {
+  def deserialize(jsonIterator: StringIterator, classType: ClassType): Boolean = {
 
     val booleanString = new StringBuilder()
 

@@ -3,7 +3,6 @@ package pl.mpieciukiewicz.mpjsons
 
 import org.testng.Assert._
 import org.testng.annotations.Test
-import pl.mpieciukiewicz.mpjsons.annotation.FirstSubType
 
 /**
  * @author Marcin Pieciukiewicz
@@ -24,13 +23,11 @@ class MPSimpleDataObject {
   var arrayObject: Array[String] = _
   var arrayPrimitive: Array[Long] = _
   var listObject: List[String] = _
-  @FirstSubType(classOf[Int])
   var listPrimitive: List[Int] = _
   var emptyArray: Array[Long] = _
 }
 
 class TupleDataObject {
-  @FirstSubType(classOf[Int])
   var tuple:(Int, String) = _
 }
 

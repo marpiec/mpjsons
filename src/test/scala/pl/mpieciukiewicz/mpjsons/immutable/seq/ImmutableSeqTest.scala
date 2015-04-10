@@ -54,8 +54,7 @@ class ImmutableSeqTest {
     val list = List("Zxy", "Xyz", "ZyX")
 
     val json = MPJson.serialize(list)
-    case class T(f:List[String])
-    val objectDeserialized = MPJson.deserializeGeneric(json, classOf[List[String]], classOf[T].getDeclaredField("f"))
+    val objectDeserialized = MPJson.deserializeGeneric(json, classOf[List[String]])
 
     assertEquals(list, objectDeserialized)
   }

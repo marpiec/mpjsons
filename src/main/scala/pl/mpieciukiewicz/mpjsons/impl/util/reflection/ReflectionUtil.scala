@@ -2,6 +2,13 @@ package pl.mpieciukiewicz.mpjsons.impl.util.reflection
 
 import java.lang.reflect.Field
 
+import pl.mpieciukiewicz.mpjsons.impl.JsonInnerException
+import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
+
+import scala.reflect.runtime.universe._
+
+case class FieldWithTypeInfo(field: Field, tpe: Type)
+
 /**
  * ReflectionUtilNoCache wrapper that caches results of function calls.
  * @author Marcin Pieciukiewicz
@@ -31,12 +38,20 @@ object ReflectionUtil {
    * @param fieldName field name
    * @return retrieved Field or null if field does not exists.
    */
-  def getAccessibleField(clazz: Class[_], fieldName: String): Field = {
-    getAccessibleFieldCache.get((clazz, fieldName)).getOrElse {
-      val field: Field = ReflectionUtilNoCache.getAccessibleField(clazz, fieldName)
-      getAccessibleFieldCache += (clazz, fieldName) -> field
-      field
+
+  def getAccessibleField(classType: ClassType, fieldName: String):FieldWithTypeInfo = {
+    val member = classType.tpe.members.filterNot(_.isMethod).find(_.name.toString.trim == fieldName)
+    //tag.tpe.members.filter(member => !member.isMethod && member.name == TermName(fieldName))
+    if(member.isEmpty) {
+      throw new JsonInnerException("No member with name " + fieldName, null)
+    } else {
+      val info = member.get.info
+      val field = getAccessibleFieldCache.getOrElse((classType.clazz, fieldName), {
+        val f: Field = ReflectionUtilNoCache.getAccessibleField(classType.clazz, fieldName)
+        getAccessibleFieldCache += (classType.clazz, fieldName) -> f
+        f
+      })
+      FieldWithTypeInfo(field, info)
     }
   }
-
 }

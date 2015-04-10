@@ -1,8 +1,9 @@
 package pl.mpieciukiewicz.mpjsons.impl.util
 
 import java.lang.reflect.{Field, ParameterizedType}
+import scala.reflect.runtime.universe._
 
-import pl.mpieciukiewicz.mpjsons.annotation.{FirstSubType, SecondSubType}
+case class ClassType(clazz: Class[_], tpe: Type)
 
 /**
  * Utility object to support manipulation of Types acquired by reflections.
@@ -10,39 +11,24 @@ import pl.mpieciukiewicz.mpjsons.annotation.{FirstSubType, SecondSubType}
  */
 object TypesUtil {
 
-  def getSubElementsType[T](field: Field): Class[T] = {
-    getSubElementsTypeForAnnotation(field, classOf[FirstSubType], 0).asInstanceOf[Class[T]]
+  def getSubElementsType(tpe: Type): ClassType = {
+    getSubElementsTypeOnPosition(tpe, 0)
   }
 
-  def getDoubleSubElementsType[A, B](field: Field): (Class[A], Class[B]) = {
-    (getSubElementsTypeForAnnotation(field, classOf[FirstSubType], 0).asInstanceOf[Class[A]],
-      getSubElementsTypeForAnnotation(field, classOf[SecondSubType], 1).asInstanceOf[Class[B]])
+  def getDoubleSubElementsType(tpe: Type): (ClassType, ClassType) = {
+    (getSubElementsTypeOnPosition(tpe, 0),
+      getSubElementsTypeOnPosition(tpe, 1))
   }
 
 
-  private def getSubElementsTypeForAnnotation(field: Field, subTypeAnnotation: Class[_ <: java.lang.annotation.Annotation], typeIndex: Int): Class[_] = {
-    val argument = field.getGenericType.asInstanceOf[ParameterizedType].getActualTypeArguments()(typeIndex)
-    var elementsType = if(argument.isInstanceOf[ParameterizedType]) {
-      argument.asInstanceOf[ParameterizedType].getRawType.asInstanceOf[Class[_]]
-    } else {
-      argument.asInstanceOf[Class[_]]
-    }
-
-    if (elementsType.equals(classOf[Object])) {
-      val subtype = field.getAnnotation(subTypeAnnotation)
-      if (subtype == null) {
-        throw new IllegalStateException("No @" + subTypeAnnotation.getSimpleName + " defined for type of field " + field.getName)
-      } else {
-        //that's because annotations cannot have common interface :(
-        elementsType = subTypeAnnotation.getMethod("value").invoke(subtype).asInstanceOf[Class[_]]
-      }
-    }
-
-    elementsType
+  private def getSubElementsTypeOnPosition(tpe: Type, typeIndex: Int): ClassType = {
+    val argsTpe = tpe.typeArgs(typeIndex)
+    val clazz = runtimeMirror(getClass.getClassLoader).runtimeClass(argsTpe)
+    ClassType(clazz, argsTpe)
   }
 
-  def getArraySubElementsType[S](arrayClass: Class[S]): Class[S] = {
-    arrayClass.getComponentType.asInstanceOf[Class[S]]
+  def getArraySubElementsType(classType: ClassType): ClassType = {
+    ClassType(classType.clazz.getComponentType, classType.tpe.typeArgs(0))
   }
 
 

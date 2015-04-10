@@ -1,25 +1,28 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set
 
 import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
+import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
+
 import scala.collection.immutable.BitSet
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.runtime.universe._
 
 /**
-  * @author Marcin Pieciukiewicz
-  */
+ * @author Marcin Pieciukiewicz
+ */
 
 object BitSetDeserializer extends AbstractJsonArrayDeserializer[BitSet] {
 
 
-  override protected def getSubElementsType[S](clazz: Class[BitSet], field: Field): Class[S] = classOf[Int].asInstanceOf[Class[S]]
+  override protected def getSubElementsType[S](classType: ClassType) = ClassType(classOf[Int], typeOf[Int])
 
   override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): BitSet = {
     val intBuffer = ArrayBuffer[Int]() // TODO optimize
-    for(elem <- buffer) {
+    for (elem <- buffer) {
       intBuffer += elem.asInstanceOf[Int]
     }
-    BitSet(intBuffer.toArray:_*)
+    BitSet(intBuffer.toArray: _*)
   }
 }

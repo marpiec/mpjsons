@@ -6,18 +6,14 @@ package pl.mpieciukiewicz.mpjsons
 
 import org.testng.Assert._
 import org.testng.annotations.Test
-import pl.mpieciukiewicz.mpjsons.annotation.SecondSubType
-import pl.mpieciukiewicz.mpjsons.annotation.{SecondSubType, FirstSubType}
 
 // this tests also non default constructor and final fields
 class MapElement(var intValue: Int, val stringValue: String)
 
 class SimpleMapsObject {
 
-  @FirstSubType(classOf[Int]) @SecondSubType(classOf[Long])
   var emptyMap:Map[Int, Long] = Map()
   var simpleMap:Map[String, String] = _
-  @FirstSubType(classOf[Int]) @SecondSubType(classOf[Long])
   var primitiveMap:Map[Int, Long] = _
   var objectMap:Map[MapElement, MapElement] = _
   

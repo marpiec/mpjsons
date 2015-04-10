@@ -1,10 +1,11 @@
 package pl.mpieciukiewicz.mpjsons
 
+import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator, JsonInnerException}
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.BeanDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.serializer.BeanSerializer
 import java.lang.reflect.Field
-
+import scala.reflect.runtime.universe._
 
 /**
  * Main class of json serialization library.
@@ -18,8 +19,8 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  def deserialize[T](json: String, clazz: Class[T]): T = {
-    deserializeWithField(json, clazz, null).asInstanceOf[T]
+  def deserialize[T](json: String, clazz: Class[T])(implicit tag: TypeTag[T]): T = {
+    deserializeWithField(json, clazz)
   }
 
   /**
@@ -28,8 +29,8 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  def deserializeGeneric[T](json: String, clazz: Class[T], field: Field): T = {
-    deserializeWithField(json, clazz, field).asInstanceOf[T]
+  def deserializeGeneric[T](json: String, clazz: Class[T])(implicit tag: TypeTag[T]): T = {
+    deserializeWithField(json, clazz)
   }
 
   /**
@@ -38,11 +39,10 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  private def deserializeWithField[T](json: String, clazz: Class[T], field: Field): Any = {
-    case class Tmp(f: T)
+  private def deserializeWithField[T](json: String, clazz: Class[T])(implicit tag: TypeTag[T]): T = {
     val jsonIterator = new StringIterator(json)
     try {
-      DeserializerFactory.getDeserializer(clazz).deserialize(jsonIterator, clazz, field)
+      DeserializerFactory.getDeserializer(clazz).deserialize(jsonIterator, ClassType(clazz, tag.tpe))
     } catch {
       case e: RuntimeException => throw new JsonInnerException("Problem deserializing:\n" + json + "\n" + jsonIterator.debugShowConsumedString, e)
     }

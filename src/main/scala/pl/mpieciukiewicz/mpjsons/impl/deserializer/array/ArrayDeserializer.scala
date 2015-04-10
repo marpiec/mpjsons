@@ -1,9 +1,9 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array
 
 import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.util.{TypesUtil, ObjectConstructionUtil}
+import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, TypesUtil, ObjectConstructionUtil}
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
@@ -11,7 +11,7 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 object ArrayDeserializer extends AbstractJsonArrayDeserializer[Array[_]] {
 
-  override protected def getSubElementsType[S](clazz: Class[Array[_]], field: Field): Class[S] = TypesUtil.getArraySubElementsType(clazz).asInstanceOf[Class[S]]
+  override protected def getSubElementsType[S](classType: ClassType) = TypesUtil.getArraySubElementsType(classType)
 
   override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): Array[_] = {
 

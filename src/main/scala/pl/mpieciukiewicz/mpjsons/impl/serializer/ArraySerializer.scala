@@ -10,8 +10,8 @@ import scala.reflect.runtime.universe._
 
 object ArraySerializer extends JsonTypeSerializer[Array[_]] {
 
-  override def serialize(obj: Any, jsonBuilder: StringBuilder) = {
-    IteratorSerializer.serialize(obj.asInstanceOf[Array[_]].iterator, jsonBuilder)
+  override def serialize(obj: Array[_], jsonBuilder: StringBuilder) = {
+    IteratorSerializer.serialize(obj.iterator, jsonBuilder)
   }
 
 }

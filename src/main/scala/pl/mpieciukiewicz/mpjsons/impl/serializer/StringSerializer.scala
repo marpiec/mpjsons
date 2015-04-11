@@ -1,15 +1,15 @@
 package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object StringSerializer extends JsonTypeSerializer {
-  def serialize(obj: Any, jsonBuilder: StringBuilder) {
+object StringSerializer extends JsonTypeSerializer[String] {
+  override def serialize(string: String, jsonBuilder: StringBuilder) {
 
-    val string = obj.toString
     val stringLength = string.length
 
     var nextIndex = 0

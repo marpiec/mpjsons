@@ -15,26 +15,26 @@ case class FieldWithTypeInfo(field: Field, tpe: Type)
  */
 object ReflectionUtil {
 
-  private var getAllAccessibleFieldsCache: Map[Class[_], Array[Field]] = Map()
+  private var getAllAccessibleFieldsCache: Map[Type, Array[Field]] = Map()
 
-  private var getAccessibleFieldCache: Map[(Class[_], String), Field] = Map()
+  private var getAccessibleFieldCache: Map[(Type, String), Field] = Map()
   
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
-   * @param clazz class from which the fields should be retrieved
+   * @param tpe class from which the fields should be retrieved
    * @return array containing all defined fields in class
    */
-  def getAllAccessibleFields(clazz: Class[_]): Array[Field] = {
-    getAllAccessibleFieldsCache.get(clazz).getOrElse {
-      val allFields: Array[Field] = ReflectionUtilNoCache.getAllAccessibleFields(clazz)
-      getAllAccessibleFieldsCache += clazz -> allFields
+  def getAllAccessibleFields(tpe: Type): Array[Field] = {
+    getAllAccessibleFieldsCache.get(tpe).getOrElse {
+      val allFields: Array[Field] = ReflectionUtilNoCache.getAllAccessibleFields(tpe)
+      getAllAccessibleFieldsCache += tpe -> allFields
       allFields
     }
   }
 
   /**
    * Returns Field from given class, by given filed name. It supports type inheritance.
-   * @param clazz class from which the field should be retrieved
+   * @param tpe class from which the field should be retrieved
    * @param fieldName field name
    * @return retrieved Field or null if field does not exists.
    */
@@ -46,9 +46,10 @@ object ReflectionUtil {
       throw new JsonInnerException("No member with name " + fieldName, null)
     } else {
       val info = member.get.info
-      val field = getAccessibleFieldCache.getOrElse((classType.clazz, fieldName), {
-        val f: Field = ReflectionUtilNoCache.getAccessibleField(classType.clazz, fieldName)
-        getAccessibleFieldCache += (classType.clazz, fieldName) -> f
+      val field = getAccessibleFieldCache.getOrElse((classType.tpe, fieldName), {
+        //val f: Field = ReflectionUtilNoCache.getAccessibleField(classType.tpe, fieldName)
+        val f: Field = null
+        getAccessibleFieldCache += (classType.tpe, fieldName) -> f
         f
       })
       FieldWithTypeInfo(field, info)

@@ -12,5 +12,5 @@ import scala.collection.immutable.HashSet
 
 object HashSetDeserializer extends AbstractJsonArrayDeserializer[HashSet[_]] {
 
-  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): HashSet[_] = HashSet(buffer.toArray:_*)
+  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): HashSet[_] = HashSet(buffer.toArray:_*)
 }

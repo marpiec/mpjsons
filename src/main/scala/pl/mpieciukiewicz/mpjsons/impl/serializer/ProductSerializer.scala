@@ -2,16 +2,16 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import scala.reflect.runtime.universe._
+
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object ProductSerializer extends JsonTypeSerializer {
+object ProductSerializer extends JsonTypeSerializer[Product] {
 
-  def serialize(obj: Any, jsonBuilder: StringBuilder) = {
-
-    val tuple = obj.asInstanceOf[Product]
+  override def serialize(tuple: Product, tpe: Type, jsonBuilder: StringBuilder) = {
 
     jsonBuilder.append('[')
 

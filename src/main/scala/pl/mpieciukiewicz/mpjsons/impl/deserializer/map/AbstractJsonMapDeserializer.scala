@@ -45,16 +45,16 @@ trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
      }
 
      jsonIterator.nextChar()
-     toDesiredCollection(keyType.clazz, valueType.clazz, mapArray)
+     toDesiredCollection(mapArray)
    }
 
    private def deserializeValue(jsonIterator: StringIterator, classType: ClassType): Any = {
-     DeserializerFactory.getDeserializer(classType.clazz).deserialize(jsonIterator, classType)
+     DeserializerFactory.getDeserializer(classType.tpe).deserialize(jsonIterator, classType)
    }
 
   protected def getDoubleSubElementsType(classType: ClassType): (ClassType, ClassType) = TypesUtil.getDoubleSubElementsType(classType.tpe)
 
-  protected def toDesiredCollection(keyType: Class[_], valueType: Class[_], buffer: ArrayBuffer[(Any, Any)]): T
+  protected def toDesiredCollection(buffer: ArrayBuffer[(Any, Any)]): T
 
 
  }

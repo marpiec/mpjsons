@@ -24,14 +24,14 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
 
     val buffer = readElementsIntoBuffer(elementsType, jsonIterator)
 
-    toDesiredCollection(elementsType.clazz, buffer)
+    toDesiredCollection(buffer)
 
   }
 
   private def readElementsIntoBuffer(elementsType: ClassType, jsonIterator: StringIterator): ArrayBuffer[Any] = {
     val buffer = ArrayBuffer[Any]()
 
-    val deserializer = DeserializerFactory.getDeserializer(elementsType.clazz)
+    val deserializer = DeserializerFactory.getDeserializer(elementsType.tpe)
     
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
@@ -51,6 +51,6 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
 
   protected def getSubElementsType[S](classType: ClassType): ClassType = TypesUtil.getSubElementsType(classType.tpe)
 
-  protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): T
+  protected def toDesiredCollection(buffer: ArrayBuffer[Any]): T
 
 }

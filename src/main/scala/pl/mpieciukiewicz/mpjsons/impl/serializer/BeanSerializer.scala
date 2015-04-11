@@ -4,20 +4,21 @@ import java.lang.reflect.AccessibleObject
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object BeanSerializer extends JsonTypeSerializer {
+object BeanSerializer extends JsonTypeSerializer[AnyRef] {
 
 
-  def serialize(obj: Any, jsonBuilder: StringBuilder) = {
+  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder) = {
 
     jsonBuilder.append('{')
 
-    val clazz = obj.asInstanceOf[AnyRef].getClass
-    val fields = ReflectionUtil.getAllAccessibleFields(clazz)
+    val clazz = obj.getClass
+    val fields = ReflectionUtil.getAllAccessibleFields(tpe)
 
 
     var isNotFirstField = false
@@ -34,7 +35,7 @@ object BeanSerializer extends JsonTypeSerializer {
         }
 
         jsonBuilder.append('"').append(field.getName).append('"').append(':')
-        SerializerFactory.getSerializer(value.getClass).serialize(value, jsonBuilder)
+        SerializerFactory.getSerializer(value.getClass).asInstanceOf[JsonTypeSerializer[AnyRef]].serialize(value, jsonBuilder)
       }
     }
 

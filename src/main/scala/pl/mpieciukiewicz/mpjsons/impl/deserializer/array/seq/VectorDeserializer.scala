@@ -11,5 +11,5 @@ import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeseri
 
 object VectorDeserializer extends AbstractJsonArrayDeserializer[Vector[_]] {
 
-  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): Vector[_] = buffer.toVector
+  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): Vector[_] = buffer.toVector
 }

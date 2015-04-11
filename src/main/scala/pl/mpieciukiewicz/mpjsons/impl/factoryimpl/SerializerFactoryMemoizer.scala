@@ -1,6 +1,7 @@
 package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
@@ -8,22 +9,26 @@ import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 
 class SerializerFactoryMemoizer(private val serializerFactory: SerializerFactoryImpl) {
 
-  private var getSerializerCache: Map[Class[_], JsonTypeSerializer] = Map()
+  private var getSerializerCache: Map[Type, JsonTypeSerializer[_]] = Map()
 
-  def registerSerializer(clazz: Class[_], serializer: JsonTypeSerializer) {
-    serializerFactory.registerSerializer(clazz, serializer)
+  def registerSerializer(tpe: Type, serializer: JsonTypeSerializer[_]) {
+    serializerFactory.registerSerializer(tpe, serializer)
   }
 
-  def registerSuperclassSerializer(clazz: Class[_], serializer: JsonTypeSerializer) {
-    serializerFactory.registerSuperclassSerializer(clazz, serializer)
+  def registerSuperclassSerializer(tpe: Type, serializer: JsonTypeSerializer[_]) {
+    serializerFactory.registerSuperclassSerializer(tpe, serializer)
   }
 
-  def getSerializer(clazz: Class[_]): JsonTypeSerializer = {
-    getSerializerCache.get(clazz).getOrElse {
-      val serializer: JsonTypeSerializer = serializerFactory.getSerializer(clazz)
-      getSerializerCache += clazz -> serializer
+  def getSerializer(clazz: Class[_]): JsonTypeSerializer[_] = {
+    null
+  }
+
+  def getSerializer(tpe: Type): JsonTypeSerializer[_] = {
+    getSerializerCache.getOrElse(tpe, {
+      val serializer: JsonTypeSerializer[_] = serializerFactory.getSerializer(tpe)
+      getSerializerCache += tpe -> serializer
       serializer
-    }
+    })
 
   }
 }

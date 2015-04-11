@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 
 object OptionDeserializer extends AbstractJsonArrayDeserializer[Option[_]] {
 
-  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): Option[_] = {
+  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): Option[Any] = {
     if (buffer.isEmpty) {
       None
     } else {

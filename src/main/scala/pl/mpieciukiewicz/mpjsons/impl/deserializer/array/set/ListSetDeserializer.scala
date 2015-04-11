@@ -12,5 +12,5 @@ import scala.collection.immutable.ListSet
 
 object ListSetDeserializer extends AbstractJsonArrayDeserializer[ListSet[_]] {
 
-  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): ListSet[_] = ListSet(buffer.toArray:_*)
+  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): ListSet[_] = ListSet(buffer.toArray:_*)
 }

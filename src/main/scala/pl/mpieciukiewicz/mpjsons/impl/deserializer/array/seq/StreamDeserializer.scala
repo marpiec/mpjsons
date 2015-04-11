@@ -11,6 +11,6 @@ import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeseri
 
 object StreamDeserializer extends AbstractJsonArrayDeserializer[Stream[_]] {
 
-  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): Stream[_] = buffer.toStream
+  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): Stream[_] = buffer.toStream
 
 }

@@ -2,17 +2,17 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object MapSerializer extends JsonTypeSerializer {
+object MapSerializer extends JsonTypeSerializer[scala.collection.Map[_, _]] {
 
 
-  def serialize(obj: Any, jsonBuilder: StringBuilder) = {
+  override def serialize(map: scala.collection.Map[_, _], tpe: Type, jsonBuilder: StringBuilder) = {
 
-    val map: scala.collection.Map[_, _] = obj.asInstanceOf[scala.collection.Map[_, _]]
 
     jsonBuilder.append('[')
     var nonFirstField = false

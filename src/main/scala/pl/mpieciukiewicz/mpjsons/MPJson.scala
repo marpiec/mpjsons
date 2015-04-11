@@ -19,8 +19,8 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  def deserialize[T](json: String, clazz: Class[T])(implicit tag: TypeTag[T]): T = {
-    deserializeWithField(json, clazz)
+  def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
+    deserializeWithField(json)
   }
 
   /**
@@ -29,8 +29,8 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  def deserializeGeneric[T](json: String, clazz: Class[T])(implicit tag: TypeTag[T]): T = {
-    deserializeWithField(json, clazz)
+  def deserializeGeneric[T](json: String)(implicit tag: TypeTag[T]): T = {
+    deserializeWithField(json)
   }
 
   /**
@@ -39,10 +39,10 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  private def deserializeWithField[T](json: String, clazz: Class[T])(implicit tag: TypeTag[T]): T = {
+  private def deserializeWithField[T](json: String)(implicit tag: TypeTag[T]): T = {
     val jsonIterator = new StringIterator(json)
     try {
-      DeserializerFactory.getDeserializer(clazz).deserialize(jsonIterator, ClassType(clazz, tag.tpe))
+      DeserializerFactory.getDeserializer(tag.tpe).deserialize(jsonIterator, ClassType(tag.tpe))
     } catch {
       case e: RuntimeException => throw new JsonInnerException("Problem deserializing:\n" + json + "\n" + jsonIterator.debugShowConsumedString, e)
     }
@@ -53,9 +53,9 @@ object MPJson {
    * @param obj object to serialize
    * @return json String
    */
-  def serialize(obj: AnyRef): String = {
+  def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
     val json = new StringBuilder()
-    SerializerFactory.getSerializer(obj.getClass).serialize(obj, json)
+    SerializerFactory.getSerializer(tag.tpe).serialize(obj, tag.tpe, json)
     json.toString()
   }
 
@@ -64,9 +64,9 @@ object MPJson {
    * @param clazz type that is supported by given converter
    * @param converter converter that will be used to serialize and deserialize given type
    */
-  def registerConverter(clazz: Class[_], converter: JsonTypeConverter[_]) {
-    SerializerFactory.registerSerializer(clazz, converter)
-    DeserializerFactory.registerDeserializer(clazz, converter)
+  def registerConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
+    SerializerFactory.registerSerializer(tag.tpe, converter)
+    DeserializerFactory.registerDeserializer(tag.tpe, converter)
   }
 
   /**
@@ -74,9 +74,9 @@ object MPJson {
    * @param clazz type that is supported by given converter
    * @param converter converter that will be used to serialize and deserialize given type and its descendant
    */
-  def registerSuperclassConverter(clazz: Class[_], converter: JsonTypeConverter[_]) {
-    SerializerFactory.registerSuperclassSerializer(clazz, converter)
-    DeserializerFactory.registerSuperclassDeserializer(clazz, converter)
+  def registerSuperclassConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
+    SerializerFactory.registerSuperclassSerializer(tag.tpe, converter)
+    DeserializerFactory.registerSuperclassDeserializer(tag.tpe, converter)
   }
 
 }

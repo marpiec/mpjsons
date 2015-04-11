@@ -10,6 +10,6 @@ import scala.collection.mutable.ArrayBuffer
 
 object ListDeserializer extends AbstractJsonArrayDeserializer[List[_]] {
 
-  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): List[_] = buffer.toList
+  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): List[_] = buffer.toList
 
 }

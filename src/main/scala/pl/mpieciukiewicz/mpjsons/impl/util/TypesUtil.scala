@@ -3,7 +3,7 @@ package pl.mpieciukiewicz.mpjsons.impl.util
 import java.lang.reflect.{Field, ParameterizedType}
 import scala.reflect.runtime.universe._
 
-case class ClassType(clazz: Class[_], tpe: Type)
+case class ClassType(tpe: Type)
 
 /**
  * Utility object to support manipulation of Types acquired by reflections.
@@ -24,11 +24,12 @@ object TypesUtil {
   private def getSubElementsTypeOnPosition(tpe: Type, typeIndex: Int): ClassType = {
     val argsTpe = tpe.typeArgs(typeIndex)
     val clazz = runtimeMirror(getClass.getClassLoader).runtimeClass(argsTpe)
-    ClassType(clazz, argsTpe)
+    ClassType(argsTpe)
   }
 
   def getArraySubElementsType(classType: ClassType): ClassType = {
-    ClassType(classType.clazz.getComponentType, classType.tpe.typeArgs(0))
+    //ClassType(runtimeMirror(getClass.getClassLoader).runtimeClass(classType.tpe).getComponentType)
+    ClassType(null)
   }
 
 

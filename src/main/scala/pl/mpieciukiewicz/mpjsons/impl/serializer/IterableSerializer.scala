@@ -2,15 +2,16 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import common.IteratorSerializer
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object IterableSerializer extends JsonTypeSerializer {
+object IterableSerializer extends JsonTypeSerializer[scala.collection.Iterable[_]] {
 
-  def serialize(obj: Any, jsonBuilder: StringBuilder) = {
-    IteratorSerializer.serialize(obj.asInstanceOf[scala.collection.Iterable[_]].iterator, jsonBuilder)
+  override def serialize(obj: scala.collection.Iterable[_], jsonBuilder: StringBuilder) = {
+    IteratorSerializer.serialize(obj.iterator, jsonBuilder)
   }
 
 }

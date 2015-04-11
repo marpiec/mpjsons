@@ -7,5 +7,5 @@ import scala.collection.mutable.ArrayBuffer
  * @author Marcin Pieciukiewicz
  */
 object MapDeserializer extends AbstractJsonMapDeserializer[Map[_, _]] {
-  protected def toDesiredCollection(keyType: Class[_], valueType: Class[_], buffer: ArrayBuffer[(Any, Any)]) = Map(buffer.toArray:_*)
+  protected def toDesiredCollection(buffer: ArrayBuffer[(Any, Any)]) = Map(buffer.toArray:_*)
 }

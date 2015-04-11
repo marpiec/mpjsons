@@ -2,20 +2,19 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer.common
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object IteratorSerializer extends JsonTypeSerializer {
+object IteratorSerializer extends JsonTypeSerializer[Iterator[_]] {
 
-  def serialize(obj: Any, jsonBuilder: StringBuilder) = {
+  override def serialize(iterator: Iterator[_], jsonBuilder: StringBuilder) = {
 
     jsonBuilder.append('[')
 
     var isNotFirstField = false
-
-    val iterator = obj.asInstanceOf[Iterator[_]]
 
     iterator.foreach(element => {
 

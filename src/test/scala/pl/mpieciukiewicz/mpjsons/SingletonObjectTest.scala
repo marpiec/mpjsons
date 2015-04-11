@@ -3,6 +3,7 @@ package pl.mpieciukiewicz.mpjsons
 import org.testng.Assert
 import org.testng.Assert.{fail, assertEquals}
 import org.testng.annotations.Test
+import scala.reflect.runtime.universe._
 
 class User(val name: String)
 
@@ -15,20 +16,20 @@ class ObjectTest {
 
   def testObjectSerializationAndDeserialization() {
 
-    val userMarcinJson = MPJson.serialize(UserMarcin)
+    val userMarcinJson = MPJson.serialize()
 
     assertEquals(userMarcinJson, "{}")
 
-    val deserializedUserMarcin = MPJson.deserialize(userMarcinJson, UserMarcin.getClass)
+    val deserializedUserMarcin = MPJson.deserialize[User](userMarcinJson)
 
     assertEquals(UserMarcin, deserializedUserMarcin)
 
-    MPJson.deserialize("{}", UserMarcin.getClass)
+    MPJson.deserialize[User]("{}")
 
     assertEquals(UserMarcin, deserializedUserMarcin)
 
     try {
-      MPJson.deserialize( """{"name":"Marcin"}""", UserMarcin.getClass)
+      MPJson.deserialize[User]( """{"name":"Marcin"}""")
       fail("Expected Exception")
     } catch {
       case _:Exception => ()
@@ -41,7 +42,7 @@ class ObjectTest {
 
     assertEquals(message, "{}")
 
-    val deserializedMessage = MPJson.deserialize(message, UserRegisterMessage.getClass)
+    val deserializedMessage = MPJson.deserialize(message)
 
     assertEquals(UserRegisterMessage, deserializedMessage)
   }

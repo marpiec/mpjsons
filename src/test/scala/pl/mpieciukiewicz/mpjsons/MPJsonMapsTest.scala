@@ -58,7 +58,7 @@ class MPJsonMapsTest {
       "[ {\"intValue\":5,\"stringValue\":\"five\"},{\"intValue\":500,\"stringValue\":\"five hundred\"} ] " +
       "] } "
 
-    val smoDeserialized:SimpleMapsObject = MPJson.deserialize(serializedWithWhitespacesQuotes, classOf[SimpleMapsObject]).asInstanceOf[SimpleMapsObject]
+    val smoDeserialized:SimpleMapsObject = MPJson.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
 
     assertNotNull(smoDeserialized)
 

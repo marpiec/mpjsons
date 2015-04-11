@@ -34,7 +34,7 @@ class ImmutableMapTest {
 
     val json = MPJson.serialize(testObject)
 
-    val objectDeserialized = MPJson.deserialize(json, classOf[TestType])
+    val objectDeserialized = MPJson.deserialize[TestType](json)
 
     assertTrue(objectDeserialized.isInstanceOf[TestType])
     val testObjectDeserialized = objectDeserialized.asInstanceOf[TestType]

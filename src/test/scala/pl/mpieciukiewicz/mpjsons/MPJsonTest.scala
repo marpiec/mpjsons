@@ -91,7 +91,7 @@ class MPJsonTest {
 
   def testSimpleDeserialization() {
 
-    val deserialized: MPSimpleDataObject = MPJson.deserialize(properJsonSometimesIdentifiersWithoutQuotes, classOf[MPSimpleDataObject]).asInstanceOf[MPSimpleDataObject]
+    val deserialized = MPJson.deserialize[MPSimpleDataObject](properJsonSometimesIdentifiersWithoutQuotes)
 
     assertEquals(deserialized.longValue, sdo.longValue)
     assertEquals(deserialized.intValue, sdo.intValue)
@@ -136,7 +136,7 @@ class MPJsonTest {
   def testDeserializationWithFieldNamesInQuotes() {
     val json = "{\"intValue\":10,\"stringValue\":\"Hello\"}"
 
-    val deserialized = MPJson.deserialize(json, classOf[InnerObject]).asInstanceOf[InnerObject]
+    val deserialized = MPJson.deserialize[InnerObject](json)
 
     assertEquals(deserialized.intValue, 10)
     assertEquals(deserialized.stringValue, "Hello")
@@ -145,7 +145,7 @@ class MPJsonTest {
   def testDeserializationWithWhitespaces() {
     val json = " {  \"intValue\"  :  10  ,  stringValue  :   \"Hello\"   }   "
 
-    val deserialized = MPJson.deserialize(json, classOf[InnerObject]).asInstanceOf[InnerObject]
+    val deserialized = MPJson.deserialize[InnerObject](json)
 
     assertEquals(deserialized.intValue, 10)
     assertEquals(deserialized.stringValue, "Hello")
@@ -154,7 +154,7 @@ class MPJsonTest {
   def testTupleDeserializationWithWhitespaces() {
     val json = " {  tuple :  [ 5 , \"Hello\" ]  }   "
 
-    val deserialized = MPJson.deserialize(json, classOf[TupleDataObject]).asInstanceOf[TupleDataObject]
+    val deserialized = MPJson.deserialize[TupleDataObject](json)
 
     assertEquals(deserialized.tuple, (5, "Hello"))
   }

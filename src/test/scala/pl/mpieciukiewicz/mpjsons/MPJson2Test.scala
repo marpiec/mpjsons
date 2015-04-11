@@ -108,7 +108,7 @@ class JsonSerializerTest {
 
     val simpleJson = MPJson.serialize(odo)
 
-    val dataObject = MPJson.deserialize(simpleJson, classOf[OptionalDataObject])
+    val dataObject = MPJson.deserialize[OptionalDataObject](simpleJson)
 
     assertTrue(dataObject.isInstanceOf[OptionalDataObject])
 
@@ -147,7 +147,7 @@ class JsonSerializerTest {
 
 
     val simpleJson = MPJson.serialize(cdo)
-    val dataObject = MPJson.deserialize(simpleJson, classOf[CollectionsDataObject])
+    val dataObject = MPJson.deserialize[CollectionsDataObject](simpleJson)
 
     val deserializedObject = dataObject.asInstanceOf[CollectionsDataObject]
     assertEquals(deserializedObject.stringsList, cdo.stringsList)

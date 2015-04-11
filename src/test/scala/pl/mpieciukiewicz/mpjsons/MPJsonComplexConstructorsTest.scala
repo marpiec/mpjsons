@@ -24,7 +24,7 @@ class MPJsonComplexConstructorsTest {
     val containerObject = new ContainerObject(testObject)
 
     val json = MPJson.serialize(containerObject)
-    val deserialized = MPJson.deserialize(json, classOf[ContainerObject]).asInstanceOf[ContainerObject]
+    val deserialized = MPJson.deserialize[ContainerObject](json)
 
     assertNotNull(deserialized)
     assertEquals(deserialized.otherString, containerObject.otherString)

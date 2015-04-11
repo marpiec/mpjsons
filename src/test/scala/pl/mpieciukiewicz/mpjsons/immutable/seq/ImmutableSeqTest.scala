@@ -1,4 +1,4 @@
-package pl.mpieciukiewicz.mpjsons.immutableseq
+package pl.mpieciukiewicz.mpjsons.immutable.seq
 
 import scala.collection.immutable._
 import pl.mpieciukiewicz.mpjsons.MPJson
@@ -35,7 +35,7 @@ class ImmutableSeqTest {
 
     val json = MPJson.serialize(testObject)
 
-    val objectDeserialized = MPJson.deserialize(json, classOf[TestType])
+    val objectDeserialized = MPJson.deserialize[TestType](json)
 
     assertTrue(objectDeserialized.isInstanceOf[TestType])
     val testObjectDeserialized = objectDeserialized.asInstanceOf[TestType]
@@ -54,7 +54,7 @@ class ImmutableSeqTest {
     val list = List("Zxy", "Xyz", "ZyX")
 
     val json = MPJson.serialize(list)
-    val objectDeserialized = MPJson.deserializeGeneric(json, classOf[List[String]])
+    val objectDeserialized = MPJson.deserializeGeneric[List[String]](json)
 
     assertEquals(list, objectDeserialized)
   }

@@ -23,7 +23,7 @@ object IteratorSerializer extends JsonTypeSerializer[Iterator[_]] {
       } else {
         isNotFirstField = true
       }
-      SerializerFactory.getSerializer(element.getClass).serialize(element, jsonBuilder)
+      SerializerFactory.getSerializer(element.getClass).asInstanceOf[JsonTypeSerializer[Any]].serialize(element, jsonBuilder)
     })
 
 

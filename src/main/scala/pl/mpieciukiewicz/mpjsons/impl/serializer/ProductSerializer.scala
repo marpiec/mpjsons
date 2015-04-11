@@ -11,7 +11,7 @@ import scala.reflect.runtime.universe._
 
 object ProductSerializer extends JsonTypeSerializer[Product] {
 
-  override def serialize(tuple: Product, tpe: Type, jsonBuilder: StringBuilder) = {
+  override def serialize(tuple: Product, jsonBuilder: StringBuilder) = {
 
     jsonBuilder.append('[')
 
@@ -25,7 +25,7 @@ object ProductSerializer extends JsonTypeSerializer[Product] {
       } else {
         isNotFirstField = true
       }
-      SerializerFactory.getSerializer(element.getClass).serialize(element, jsonBuilder)
+      SerializerFactory.getSerializer(element.getClass).asInstanceOf[JsonTypeSerializer[Any]].serialize(element, jsonBuilder)
     })
 
 

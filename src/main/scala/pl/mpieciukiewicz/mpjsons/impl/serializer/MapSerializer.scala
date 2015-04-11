@@ -2,6 +2,7 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import scala.reflect.runtime.universe._
 
 /**
@@ -11,7 +12,7 @@ import scala.reflect.runtime.universe._
 object MapSerializer extends JsonTypeSerializer[scala.collection.Map[_, _]] {
 
 
-  override def serialize(map: scala.collection.Map[_, _], tpe: Type, jsonBuilder: StringBuilder) = {
+  override def serialize(map: scala.collection.Map[_, _], jsonBuilder: StringBuilder) = {
 
 
     jsonBuilder.append('[')
@@ -24,9 +25,10 @@ object MapSerializer extends JsonTypeSerializer[scala.collection.Map[_, _]] {
         nonFirstField = true
       }
       jsonBuilder.append("[")
-      SerializerFactory.getSerializer(key.getClass).serialize(key, jsonBuilder)
+
+      SerializerFactory.getSerializer(TypesUtil.getTypeFromClass(key.getClass)).asInstanceOf[JsonTypeSerializer[Any]].serialize(key, jsonBuilder)
       jsonBuilder.append(",")
-      SerializerFactory.getSerializer(value.getClass).serialize(value, jsonBuilder)
+      SerializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass)).asInstanceOf[JsonTypeSerializer[Any]].serialize(value, jsonBuilder)
       jsonBuilder.append("]")
     }
 

@@ -55,7 +55,7 @@ object MPJson {
    */
   def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
     val json = new StringBuilder()
-    SerializerFactory.getSerializer(tag.tpe).serialize(obj, tag.tpe, json)
+    SerializerFactory.getSerializer(tag.tpe).serialize(obj, json)
     json.toString()
   }
 
@@ -65,7 +65,7 @@ object MPJson {
    * @param converter converter that will be used to serialize and deserialize given type
    */
   def registerConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
-    SerializerFactory.registerSerializer(tag.tpe, converter)
+    SerializerFactory.registerSerializer[T](tag.tpe, converter)
     DeserializerFactory.registerDeserializer(tag.tpe, converter)
   }
 

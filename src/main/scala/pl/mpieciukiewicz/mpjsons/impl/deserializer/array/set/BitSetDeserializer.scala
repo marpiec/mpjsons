@@ -16,9 +16,9 @@ import scala.reflect.runtime.universe._
 object BitSetDeserializer extends AbstractJsonArrayDeserializer[BitSet] {
 
 
-  override protected def getSubElementsType[S](classType: ClassType) = ClassType(classOf[Int], typeOf[Int])
+  override protected def getSubElementsType[S](classType: ClassType) = ClassType(typeOf[Int])
 
-  override protected def toDesiredCollection[S](elementsType: Class[S], buffer: ArrayBuffer[Any]): BitSet = {
+  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): BitSet = {
     val intBuffer = ArrayBuffer[Int]() // TODO optimize
     for (elem <- buffer) {
       intBuffer += elem.asInstanceOf[Int]

@@ -25,11 +25,12 @@ object ReflectionUtil {
    * @return array containing all defined fields in class
    */
   def getAllAccessibleFields(tpe: Type): Array[Field] = {
-    getAllAccessibleFieldsCache.get(tpe).getOrElse {
-      val allFields: Array[Field] = ReflectionUtilNoCache.getAllAccessibleFields(tpe)
-      getAllAccessibleFieldsCache += tpe -> allFields
-      allFields
-    }
+//    getAllAccessibleFieldsCache.get(tpe).getOrElse {
+//      val allFields: Array[Field] = ReflectionUtilNoCache.getAllAccessibleFields(tpe)
+//      getAllAccessibleFieldsCache += tpe -> allFields
+//      allFields
+//    }
+    null
   }
 
   /**

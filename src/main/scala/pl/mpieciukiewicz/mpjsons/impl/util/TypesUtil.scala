@@ -23,8 +23,15 @@ object TypesUtil {
 
   private def getSubElementsTypeOnPosition(tpe: Type, typeIndex: Int): ClassType = {
     val argsTpe = tpe.typeArgs(typeIndex)
-    val clazz = runtimeMirror(getClass.getClassLoader).runtimeClass(argsTpe)
     ClassType(argsTpe)
+  }
+
+  def getTypeFromClass[T](clazz: Class[T]):Type = {
+    runtimeMirror(clazz.getClassLoader).classSymbol(clazz).toType
+  }
+
+  def getClassFromType[T](tpe: Type): Class[T] = {
+    runtimeMirror(getClass.getClassLoader).runtimeClass(tpe).asInstanceOf[Class[T]]
   }
 
   def getArraySubElementsType(classType: ClassType): ClassType = {

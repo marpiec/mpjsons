@@ -11,7 +11,7 @@ class SerializerFactoryMemoizer(private val serializerFactory: SerializerFactory
 
   private var getSerializerCache: Map[Type, JsonTypeSerializer[_]] = Map()
 
-  def registerSerializer(tpe: Type, serializer: JsonTypeSerializer[_]) {
+  def registerSerializer[T](tpe: Type, serializer: JsonTypeSerializer[T]) {
     serializerFactory.registerSerializer(tpe, serializer)
   }
 
@@ -23,12 +23,12 @@ class SerializerFactoryMemoizer(private val serializerFactory: SerializerFactory
     null
   }
 
-  def getSerializer(tpe: Type): JsonTypeSerializer[_] = {
+  def getSerializer[T](tpe: Type): JsonTypeSerializer[T] = {
     getSerializerCache.getOrElse(tpe, {
       val serializer: JsonTypeSerializer[_] = serializerFactory.getSerializer(tpe)
       getSerializerCache += tpe -> serializer
       serializer
-    })
+    }).asInstanceOf[JsonTypeSerializer[T]]
 
   }
 }

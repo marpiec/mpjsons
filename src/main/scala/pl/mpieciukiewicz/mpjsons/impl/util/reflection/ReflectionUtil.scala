@@ -3,7 +3,7 @@ package pl.mpieciukiewicz.mpjsons.impl.util.reflection
 import java.lang.reflect.Field
 
 import pl.mpieciukiewicz.mpjsons.impl.JsonInnerException
-import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
+import pl.mpieciukiewicz.mpjsons.impl.util.{TypesUtil, ClassType}
 
 import scala.reflect.runtime.universe._
 
@@ -25,12 +25,12 @@ object ReflectionUtil {
    * @return array containing all defined fields in class
    */
   def getAllAccessibleFields(tpe: Type): Array[Field] = {
-//    getAllAccessibleFieldsCache.get(tpe).getOrElse {
-//      val allFields: Array[Field] = ReflectionUtilNoCache.getAllAccessibleFields(tpe)
-//      getAllAccessibleFieldsCache += tpe -> allFields
-//      allFields
-//    }
-    null
+    val clazz = TypesUtil.getClassFromType(tpe)
+    getAllAccessibleFieldsCache.getOrElse(tpe, {
+      val allFields: Array[Field] = ReflectionUtilNoCache.getAllAccessibleFields(clazz)
+      getAllAccessibleFieldsCache += tpe -> allFields
+      allFields
+    })
   }
 
   /**
@@ -48,8 +48,7 @@ object ReflectionUtil {
     } else {
       val info = member.get.info
       val field = getAccessibleFieldCache.getOrElse((classType.tpe, fieldName), {
-        //val f: Field = ReflectionUtilNoCache.getAccessibleField(classType.tpe, fieldName)
-        val f: Field = null
+        val f: Field = ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(classType.tpe), fieldName)
         getAccessibleFieldCache += (classType.tpe, fieldName) -> f
         f
       })

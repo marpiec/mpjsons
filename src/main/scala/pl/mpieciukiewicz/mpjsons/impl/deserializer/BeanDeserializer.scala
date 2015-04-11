@@ -26,7 +26,7 @@ object BeanDeserializer extends JsonTypeDeserializer[AnyRef] {
 
       jsonIterator.consumeFieldValueSeparator()
 
-      val deserializer = DeserializerFactory.getDeserializer(fieldInfo.tpe)
+      val deserializer = DeserializerFactory.getDeserializer(fieldInfo.tpe).asInstanceOf[JsonTypeDeserializer[Any]]
       val value = deserializer.deserialize(jsonIterator, ClassType(fieldInfo.tpe))
 
       fieldInfo.field.set(instance, value)

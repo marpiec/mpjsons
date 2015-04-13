@@ -59,6 +59,8 @@ class DeserializerFactoryImpl {
       return OptionDeserializer
     } else if (clazz == classOf[Map[_, _]]) {
       return MapDeserializer
+    } else if (clazz == classOf[Either[_, _]]) {
+      return EitherDeserializer
     }
 
     // seq

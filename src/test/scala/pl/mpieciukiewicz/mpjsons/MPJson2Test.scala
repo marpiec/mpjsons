@@ -2,8 +2,7 @@ package pl.mpieciukiewicz.mpjsons
 
 import org.testng.annotations.Test
 import org.testng.Assert._
-import pl.mpieciukiewicz.mpjsons.annotation.SecondSubType
-import pl.mpieciukiewicz.mpjsons.annotation.{SecondSubType, FirstSubType}
+import pl.mpieciukiewicz.mpjsons.annotation.{FirstSubType, SecondSubType}
 import scala.collection.immutable.{Stack, Queue}
 
 
@@ -33,6 +32,14 @@ class OptionalDataObject {
   var booleanOption: Option[Boolean] = _
   var stringOption: Option[String] = _
   var sdo: Option[SimpleDataObject] = _
+}
+
+class EitherDataObject {
+  @FirstSubType(classOf[Int])
+  @SecondSubType(classOf[Int])
+  var intInt: Either[Int, Int] = _
+  @FirstSubType(classOf[Boolean])
+  var booleanString: Either[Boolean, String] = _
 }
 
 class CollectionsDataObject {
@@ -102,6 +109,7 @@ class JsonSerializerTest {
   }
 
 
+
   def testFilledOptionSerializationAndDeserialization() {
 
     val odo = new OptionalDataObject
@@ -139,6 +147,30 @@ class JsonSerializerTest {
     assertEquals(dataObject.asInstanceOf[OptionalDataObject].stringOption.get, odo.stringOption.get)
     assertEquals(dataObject.asInstanceOf[OptionalDataObject].sdo.get.longValue, odo.sdo.get.longValue)
     assertEquals(dataObject.asInstanceOf[OptionalDataObject].sdo.get.stringValue, odo.sdo.get.stringValue)
+
+  }
+
+
+  def testEitherSerializationAndDeserialization(): Unit = {
+    val edo = new EitherDataObject
+    edo.booleanString = Left(false)
+    edo.intInt = Right(2)
+
+    var simpleJson = MPJson.serialize(edo)
+    var deserializedObject = MPJson.deserialize(simpleJson, classOf[EitherDataObject])
+
+    assertEquals(deserializedObject.booleanString, Left(false))
+    assertEquals(deserializedObject.intInt, Right(2))
+
+
+    edo.booleanString = Right("hello")
+    edo.intInt = Left(3)
+
+    simpleJson = MPJson.serialize(edo)
+    deserializedObject = MPJson.deserialize(simpleJson, classOf[EitherDataObject])
+
+    assertEquals(deserializedObject.booleanString, Right("hello"))
+    assertEquals(deserializedObject.intInt, Left(3))
 
   }
 

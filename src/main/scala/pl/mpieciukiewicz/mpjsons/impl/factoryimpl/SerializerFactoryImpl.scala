@@ -2,6 +2,7 @@ package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
 
 import pl.mpieciukiewicz.mpjsons.impl.serializer._
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
+import pl.mpieciukiewicz.mpjsons.impl.serializer.either.{RightSerializer, LeftSerializer}
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 import scala.collection.immutable._
 import scala.collection.mutable
@@ -81,10 +82,18 @@ class SerializerFactoryImpl {
         return IterableSerializer
       }
 
+      if(classOf[Left[_, _]].isAssignableFrom(clazz)) {
+        return LeftSerializer
+      } else if(classOf[Right[_, _]].isAssignableFrom(clazz)) {
+        return RightSerializer
+      }
+
       // Every Tuple, Option
       if (classOf[Product].isAssignableFrom(clazz)) {
         return ProductSerializer
       }
+
+
 
     }
 

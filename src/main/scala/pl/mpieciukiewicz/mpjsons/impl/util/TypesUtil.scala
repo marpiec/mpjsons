@@ -26,7 +26,7 @@ object TypesUtil {
     ClassType(argsTpe)
   }
 
-  def getTypeFromClass[T](clazz: Class[T]):Type = {
+  def getTypeFromClass(clazz: Class[_]):Type = {
     runtimeMirror(clazz.getClassLoader).classSymbol(clazz).toType
   }
 

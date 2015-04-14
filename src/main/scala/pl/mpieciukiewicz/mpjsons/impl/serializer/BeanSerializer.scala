@@ -2,6 +2,7 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import java.lang.reflect.AccessibleObject
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
 import scala.reflect.runtime.universe._
@@ -18,7 +19,7 @@ object BeanSerializer extends JsonTypeSerializer[AnyRef] {
     jsonBuilder.append('{')
 
     val clazz = obj.getClass
-    val fields = ReflectionUtil.getAllAccessibleFields(tpe)
+    val fields = ReflectionUtil.getAllAccessibleFields(TypesUtil.getTypeFromClass(obj.getClass))
 
 
     var isNotFirstField = false
@@ -35,7 +36,7 @@ object BeanSerializer extends JsonTypeSerializer[AnyRef] {
         }
 
         jsonBuilder.append('"').append(field.getName).append('"').append(':')
-        SerializerFactory.getSerializer(value.getClass).asInstanceOf[JsonTypeSerializer[AnyRef]].serialize(value, jsonBuilder)
+        SerializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass)).asInstanceOf[JsonTypeSerializer[AnyRef]].serialize(value, jsonBuilder)
       }
     }
 

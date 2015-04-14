@@ -2,6 +2,7 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer.common
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import scala.reflect.runtime.universe._
 
 /**
@@ -23,7 +24,7 @@ object IteratorSerializer extends JsonTypeSerializer[Iterator[_]] {
       } else {
         isNotFirstField = true
       }
-      SerializerFactory.getSerializer(element.getClass).asInstanceOf[JsonTypeSerializer[Any]].serialize(element, jsonBuilder)
+      SerializerFactory.getSerializer(TypesUtil.getTypeFromClass(element.getClass)).asInstanceOf[JsonTypeSerializer[Any]].serialize(element, jsonBuilder)
     })
 
 

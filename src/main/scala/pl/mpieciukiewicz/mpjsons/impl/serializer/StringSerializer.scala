@@ -7,9 +7,10 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-object StringSerializer extends JsonTypeSerializer[String] {
-  override def serialize(string: String, jsonBuilder: StringBuilder) {
+object StringSerializer extends JsonTypeSerializer[Any] {
+  override def serialize(obj: Any, jsonBuilder: StringBuilder) {
 
+    val string = obj.toString
     val stringLength = string.length
 
     var nextIndex = 0

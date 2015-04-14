@@ -19,9 +19,6 @@ class SerializerFactoryMemoizer(private val serializerFactory: SerializerFactory
     serializerFactory.registerSuperclassSerializer(tpe, serializer)
   }
 
-  def getSerializer(clazz: Class[_]): JsonTypeSerializer[_] = {
-    null
-  }
 
   def getSerializer[T](tpe: Type): JsonTypeSerializer[T] = {
     getSerializerCache.getOrElse(tpe, {

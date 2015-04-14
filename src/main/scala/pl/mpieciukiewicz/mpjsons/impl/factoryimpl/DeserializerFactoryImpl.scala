@@ -91,15 +91,15 @@ class DeserializerFactoryImpl {
     }
 
     // map
-    if (tpe == typeOf[Map[_,_]]) {
+    if (tpe.typeSymbol == typeOf[Map[_,_]].typeSymbol) {
       return MapDeserializer
-    } else if (tpe == typeOf[HashMap[_,_]]) {
+    } else if (tpe.typeSymbol == typeOf[HashMap[_,_]].typeSymbol) {
       return HashMapDeserializer
 //    } else if (tpe == typeOf[SortedMap[_,_]]) {
 //      return SortedMapDeserializer
 //    } else if (tpe == typeOf[TreeMap[_,_]]) {
 //      return TreeMapDeserializer
-    } else if (tpe == typeOf[ListMap[_,_]]) {
+    } else if (tpe.typeSymbol == typeOf[ListMap[_,_]].typeSymbol) {
       return ListMapDeserializer
     }
 

@@ -1,9 +1,7 @@
 package pl.mpieciukiewicz.mpjsons
 
-import org.testng.Assert
-import org.testng.Assert.{fail, assertEquals}
-import org.testng.annotations.Test
-import scala.reflect.runtime.universe._
+import org.scalatest.FlatSpec
+import org.scalatest.MustMatchers._
 
 class User(val name: String)
 
@@ -11,22 +9,21 @@ case object UserMarcin extends User("Marcin")
 
 case object UserRegisterMessage
 
-@Test
-class ObjectTest {
+class SingletonObjectSpec extends FlatSpec {
 
   def testObjectSerializationAndDeserialization() {
 
     val userMarcinJson = MPJson.serialize()
 
-    assertEquals(userMarcinJson, "{}")
+    userMarcinJson mustBe "{}"
 
     val deserializedUserMarcin = MPJson.deserialize[User](userMarcinJson)
 
-    assertEquals(UserMarcin, deserializedUserMarcin)
+    deserializedUserMarcin mustBe UserMarcin
 
     MPJson.deserialize[User]("{}")
 
-    assertEquals(UserMarcin, deserializedUserMarcin)
+    deserializedUserMarcin mustBe UserMarcin
 
     try {
       MPJson.deserialize[User]( """{"name":"Marcin"}""")
@@ -40,11 +37,11 @@ class ObjectTest {
 
     val message = MPJson.serialize(UserRegisterMessage)
 
-    assertEquals(message, "{}")
+    message mustBe "{}"
 
-    val deserializedMessage = MPJson.deserialize(message)
+    val deserializedMessage = MPJson.deserialize[AnyRef](message)
 
-    assertEquals(UserRegisterMessage, deserializedMessage)
+    deserializedMessage mustBe UserRegisterMessage
   }
 
 }

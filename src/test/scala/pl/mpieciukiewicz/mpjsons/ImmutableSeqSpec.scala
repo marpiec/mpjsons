@@ -1,15 +1,15 @@
-package pl.mpieciukiewicz.mpjsons.immutable.seq
+package pl.mpieciukiewicz.mpjsons
+
+import org.scalatest.FlatSpec
+import org.scalatest.MustMatchers._
 
 import scala.collection.immutable._
-import pl.mpieciukiewicz.mpjsons.MPJson
-import org.testng.Assert._
-import org.testng.annotations.Test
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-class TestType {
+class ImmutableSeqType {
   var vector: Vector[String] = _
 //  var numericRange: NumericRange[String] = _
 //  var range: Range = _
@@ -20,13 +20,12 @@ class TestType {
 }
 
 
-@Test
-class ImmutableSeqTest {
+class ImmutableSeqSpec extends FlatSpec {
 
   def immutableSeqTest() {
 
 
-    val testObject = new TestType
+    val testObject = new ImmutableSeqType
     testObject.vector = Vector("Abc", "Bcd", "Eca")
     testObject.list = List("Zxy", "Xyz", "ZyX")
     testObject.stream = Stream("kkk","qwe", "dfs")
@@ -35,16 +34,16 @@ class ImmutableSeqTest {
 
     val json = MPJson.serialize(testObject)
 
-    val objectDeserialized = MPJson.deserialize[TestType](json)
+    val objectDeserialized = MPJson.deserialize[ImmutableSeqType](json)
 
-    assertTrue(objectDeserialized.isInstanceOf[TestType])
-    val testObjectDeserialized = objectDeserialized.asInstanceOf[TestType]
+    objectDeserialized mustBe an [ImmutableSeqType]
+    val testObjectDeserialized = objectDeserialized.asInstanceOf[ImmutableSeqType]
 
-    assertEquals(testObjectDeserialized.vector, testObject.vector)
-    assertEquals(testObjectDeserialized.list, testObject.list)
-    assertEquals(testObjectDeserialized.stream, testObject.stream)
-    assertEquals(testObjectDeserialized.queue, testObject.queue)
-    assertEquals(testObjectDeserialized.stack, testObject.stack)
+    testObjectDeserialized.vector mustEqual testObject.vector
+    testObjectDeserialized.list mustEqual testObject.list
+    testObjectDeserialized.stream mustEqual testObject.stream
+    testObjectDeserialized.queue mustEqual testObject.queue
+    testObjectDeserialized.stack mustEqual testObject.stack
 
 
   }
@@ -56,6 +55,6 @@ class ImmutableSeqTest {
     val json = MPJson.serialize(list)
     val objectDeserialized = MPJson.deserializeGeneric[List[String]](json)
 
-    assertEquals(list, objectDeserialized)
+    list mustEqual objectDeserialized
   }
 }

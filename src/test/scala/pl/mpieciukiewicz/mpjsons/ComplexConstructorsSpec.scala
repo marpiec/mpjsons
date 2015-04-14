@@ -1,7 +1,7 @@
 package pl.mpieciukiewicz.mpjsons
 
-import org.testng.Assert._
-import org.testng.annotations.Test
+import org.scalatest.FlatSpec
+import org.scalatest.MustMatchers._
 
 /**
  * @author Marcin Pieciukiewicz
@@ -15,8 +15,7 @@ class ContainerObject(testObject: TestObject) {
   var otherString: String = testObject.someString
 }
 
-@Test
-class MPJsonComplexConstructorsTest {
+class ComplexConstructorsSpec extends FlatSpec {
 
   def testDeserializationWithoutCallingConstructors() {
     val testObject = new TestObject
@@ -26,8 +25,8 @@ class MPJsonComplexConstructorsTest {
     val json = MPJson.serialize(containerObject)
     val deserialized = MPJson.deserialize[ContainerObject](json)
 
-    assertNotNull(deserialized)
-    assertEquals(deserialized.otherString, containerObject.otherString)
+    deserialized must not be null
+    deserialized.otherString mustEqual containerObject.otherString
 
   }
 

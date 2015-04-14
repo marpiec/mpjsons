@@ -12,8 +12,8 @@ object EitherSerializer extends JsonTypeSerializer {
     jsonBuilder.append('{')
 
     val value = obj match {
-      case left: Left[_, _] => jsonBuilder.append("\"left\":"); left
-      case right: Right[_, _] => jsonBuilder.append("\"right\":"); right
+      case left: Left[_, _] => jsonBuilder.append("\"left\":"); left.left.get
+      case right: Right[_, _] => jsonBuilder.append("\"right\":"); right.right.get
     }
 
     SerializerFactory.getSerializer(value.getClass).serialize(value, jsonBuilder)

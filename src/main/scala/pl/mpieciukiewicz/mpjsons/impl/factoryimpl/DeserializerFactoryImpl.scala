@@ -52,8 +52,8 @@ class DeserializerFactoryImpl {
       return ByteDeserializer
     } else if (tpe == typeOf[Char]) {
       return CharDeserializer
-//    } else if (tpe.isArray) { TODO fix
-//      return ArrayDeserializer
+    } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
+      return ArrayDeserializer
     } else if (tpe == typeOf[(_, _)]) {
       return Tuple2Deserializer
     } else if (tpe == typeOf[Option[_]]) {
@@ -63,30 +63,30 @@ class DeserializerFactoryImpl {
     }
 
     // seq
-    if (tpe == typeOf[List[_]]) {
+    if (tpe.typeSymbol == typeOf[List[_]].typeSymbol) {
       return ListDeserializer
-    } else if (tpe == typeOf[Vector[_]]) {
+    } else if (tpe.typeSymbol == typeOf[Vector[_]].typeSymbol) {
       return VectorDeserializer
-    } else if (tpe == typeOf[Stream[_]]) {
+    } else if (tpe.typeSymbol == typeOf[Stream[_]].typeSymbol) {
       return StreamDeserializer
-    } else if (tpe == typeOf[Queue[_]]) {
+    } else if (tpe.typeSymbol == typeOf[Queue[_]].typeSymbol) {
       return QueueDeserializer
-    } else if (tpe == typeOf[Stack[_]]) {
+    } else if (tpe.typeSymbol == typeOf[Stack[_]].typeSymbol) {
       return StackDeserializer
     }
 
     // set
-    if (tpe == typeOf[Set[_]]) {
+    if (tpe.typeSymbol == typeOf[Set[_]].typeSymbol) {
       return SetDeserializer
-    } else if (tpe == typeOf[HashSet[_]]) {
+    } else if (tpe.typeSymbol == typeOf[HashSet[_]].typeSymbol) {
       return HashSetDeserializer
-    } else if (tpe == typeOf[ListSet[_]]) {
+    } else if (tpe.typeSymbol == typeOf[ListSet[_]].typeSymbol) {
       return ListSetDeserializer
 //    } else if (tpe == typeOf[SortedSet[_]]) {
 //      return SortedSetDeserializer
 //    } else if (tpe == typeOf[TreeSet[_]]) {
 //      return TreeSetDeserializer
-    } else if (tpe == typeOf[BitSet]) {
+    } else if (tpe.typeSymbol == typeOf[BitSet].typeSymbol) {
       return BitSetDeserializer
     }
 
@@ -110,7 +110,7 @@ class DeserializerFactoryImpl {
 //      }
     }
 
-    if (tpe == typeOf[ListBuffer[_]]) {
+    if (tpe.typeSymbol == typeOf[ListBuffer[_]].typeSymbol) {
       throw new IllegalArgumentException("ListBuffer is not supported, use immutable List instead")
     }
 

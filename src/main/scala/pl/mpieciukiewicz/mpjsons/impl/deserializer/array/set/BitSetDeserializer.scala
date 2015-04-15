@@ -18,7 +18,7 @@ object BitSetDeserializer extends AbstractJsonArrayDeserializer[BitSet] {
 
   override protected def getSubElementsType[S](classType: ClassType) = ClassType(typeOf[Int])
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): BitSet = {
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: ClassType): BitSet = {
     val intBuffer = ArrayBuffer[Int]() // TODO optimize
     for (elem <- buffer) {
       intBuffer += elem.asInstanceOf[Int]

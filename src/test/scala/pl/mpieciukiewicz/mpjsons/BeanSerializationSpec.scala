@@ -124,7 +124,7 @@ class BeanSerializationSpec extends FlatSpec {
     deserialized.listPrimitive(2) mustEqual sdo.listPrimitive(2)
 
     deserialized.emptyArray must not be null
-    deserialized.emptyArray mustBe 'empty
+    deserialized.emptyArray.length mustBe 0
   }
 
 

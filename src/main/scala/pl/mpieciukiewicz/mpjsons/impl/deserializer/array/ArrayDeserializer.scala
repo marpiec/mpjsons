@@ -13,22 +13,23 @@ object ArrayDeserializer extends AbstractJsonArrayDeserializer[Array[_]] {
 
   override protected def getSubElementsType[S](classType: ClassType) = TypesUtil.getArraySubElementsType(classType)
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): Array[Any] = {
-    buffer.toArray
-//    if(buffer.isEmpty){
-//      ObjectConstructionUtil.createArrayInstance(elementsType, 0)
-//    } else {
-//      val array = ObjectConstructionUtil.createArrayInstance(elementsType, buffer.size)
-//      var list = buffer.toList
-//      var p = 0
-//
-//      while (list.nonEmpty) {
-//        java.lang.reflect.Array.set(array, p, list.head)
-//        list = list.tail
-//        p = p + 1
-//      }
-//      array
-//    }
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: ClassType): Array[_] = {
+
+    if(buffer.isEmpty){
+      ObjectConstructionUtil.createArrayInstance[Any](TypesUtil.getClassFromType[Any](elementsType.tpe), 0).asInstanceOf[Array[_]]
+    } else {
+      val arrayt: Any = ObjectConstructionUtil.createArrayInstance[Any](TypesUtil.getClassFromType[Any](elementsType.tpe), buffer.size)
+      val array = arrayt.asInstanceOf[Array[_]]
+      var list = buffer.toList
+      var p = 0
+
+      while (list.nonEmpty) {
+        java.lang.reflect.Array.set(array, p, list.head)
+        list = list.tail
+        p = p + 1
+      }
+      array
+    }
 
 
   }

@@ -1,7 +1,7 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set
 
 import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
+import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, TypesUtil}
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
 import scala.collection.immutable.HashSet
@@ -12,5 +12,5 @@ import scala.collection.immutable.HashSet
 
 object HashSetDeserializer extends AbstractJsonArrayDeserializer[HashSet[_]] {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[Any]): HashSet[_] = HashSet(buffer.toArray:_*)
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: ClassType): HashSet[_] = HashSet(buffer.toArray:_*)
 }

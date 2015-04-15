@@ -36,7 +36,7 @@ object TypesUtil {
 
   def getArraySubElementsType(classType: ClassType): ClassType = {
     //ClassType(runtimeMirror(getClass.getClassLoader).runtimeClass(classType.tpe).getComponentType)
-    ClassType(null)
+    ClassType(classType.tpe.typeArgs.head)
   }
 
 

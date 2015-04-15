@@ -18,8 +18,8 @@ object ObjectConstructionUtil {
    * @param size size of the created array
    * @return created Array object
    */
-  def createArrayInstance(elementsType: Class[_], size: Int): Array[_] = {
-    java.lang.reflect.Array.newInstance(elementsType, size).asInstanceOf[Array[_]]
+  def createArrayInstance[T](elementsType: Class[T], size: Int): Array[T] = {
+    java.lang.reflect.Array.newInstance(elementsType, size).asInstanceOf[Array[T]]
   }
 
 

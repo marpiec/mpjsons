@@ -13,11 +13,11 @@ class SingletonObjectSpec extends FlatSpec {
 
   "Serializer" must "handle singleton Objects" in {
 
-    val userMarcinJson = MPJson.serialize()
+    val userMarcinJson = MPJson.serialize(UserMarcin)
 
     userMarcinJson mustBe "{}"
 
-    val deserializedUserMarcin = MPJson.deserialize[User](userMarcinJson)
+    val deserializedUserMarcin = MPJson.deserialize[AnyRef](userMarcinJson)
 
     deserializedUserMarcin mustBe UserMarcin
 

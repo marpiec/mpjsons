@@ -47,7 +47,7 @@ class MapsSpec extends FlatSpec {
         |"objectMap":[[{"intValue":1,"stringValue":"one"},
         |{"intValue":100,"stringValue":"one hundred"}],
         |[{"intValue":5,"stringValue":"five"},
-        |{"intValue":500,"stringValue":"five hundred"}]]}""".stripMargin.format()
+        |{"intValue":500,"stringValue":"five hundred"}]]}""".stripMargin.lines.mkString("")
 
 
     val serializedWithWhitespacesQuotes =
@@ -57,7 +57,7 @@ class MapsSpec extends FlatSpec {
         |    "objectMap" : [ [  { "intValue" : 1 , "stringValue" : "one" } ,
         |     { "intValue" : 100 , "stringValue" : "one hundred" } ] ,
         |      [ {"intValue":5,"stringValue":"five"},
-        |      {"intValue":500,"stringValue":"five hundred"} ] ] } """.stripMargin.format()
+        |      {"intValue":500,"stringValue":"five hundred"} ] ] } """.stripMargin.lines.mkString("")
 
     val smoDeserialized:SimpleMapsObject = MPJson.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
 

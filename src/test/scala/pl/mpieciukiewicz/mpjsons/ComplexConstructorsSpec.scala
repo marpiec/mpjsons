@@ -17,7 +17,7 @@ class ContainerObject(testObject: TestObject) {
 
 class ComplexConstructorsSpec extends FlatSpec {
 
-  def testDeserializationWithoutCallingConstructors() {
+  "Serializer" must "handle deserialization without calling constructors" in {
     val testObject = new TestObject
     testObject.someString = "Some test string"
     val containerObject = new ContainerObject(testObject)

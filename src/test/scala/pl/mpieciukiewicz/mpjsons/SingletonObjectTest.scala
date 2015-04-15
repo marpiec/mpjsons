@@ -11,7 +11,7 @@ case object UserRegisterMessage
 
 class SingletonObjectSpec extends FlatSpec {
 
-  def testObjectSerializationAndDeserialization() {
+  "Serializer" must "handle singleton Objects" in {
 
     val userMarcinJson = MPJson.serialize()
 
@@ -33,7 +33,7 @@ class SingletonObjectSpec extends FlatSpec {
     }
   }
 
-  def testNoValueObjectSerializationAndDeserialization() {
+  "Serializer" must "handle singleton Objects without value" in {
 
     val message = MPJson.serialize(UserRegisterMessage)
 

@@ -18,7 +18,8 @@ class CollectionsDataObject {
 }
 
 class CollectionsSpec extends FlatSpec {
-  def testCollectionsSerialization() {
+
+  "Serializer" must "handle collections" in {
 
     val cdo = new CollectionsDataObject
 

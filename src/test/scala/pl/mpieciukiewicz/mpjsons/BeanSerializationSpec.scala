@@ -91,8 +91,7 @@ class BeanSerializationSpec extends FlatSpec {
     "}"
 
 
-  def testSimpleDeserialization() {
-
+  "Serializer" must "handle simple deserialization" in {
     val deserialized = MPJson.deserialize[SimpleDataObjectA](properJsonSometimesIdentifiersWithoutQuotes)
 
     deserialized.longValue mustEqual sdo.longValue
@@ -129,13 +128,14 @@ class BeanSerializationSpec extends FlatSpec {
   }
 
 
-  def testSimpleSerialization() {
+
+
+  "Serializer" must "handle simple serialization" in {
     val serialized = MPJson.serialize(sdo)
     serialized mustEqual properJsonNonWhitespaces
   }
 
-
-  def testDeserializationWithFieldNamesInQuotes() {
+  "Serializer" must "handle deserialization with field names in quotes" in {
     val json = "{\"intValue\":10,\"stringValue\":\"Hello\"}"
 
     val deserialized = MPJson.deserialize[InnerObject](json)
@@ -144,7 +144,7 @@ class BeanSerializationSpec extends FlatSpec {
     deserialized.stringValue mustEqual "Hello"
   }
 
-  def testDeserializationWithWhitespaces() {
+  "Serializer" must "handle deserialization with whitespaces" in {
     val json = " {  \"intValue\"  :  10  ,  stringValue  :   \"Hello\"   }   "
 
     val deserialized = MPJson.deserialize[InnerObject](json)
@@ -153,7 +153,7 @@ class BeanSerializationSpec extends FlatSpec {
     deserialized.stringValue mustEqual "Hello"
   }
 
-  def testSimpleObjectSerializationAndDeserialization() {
+  "Serializer" must "handle serialization and deserialization" in {
 
     val sdo = new SimpleDataObjectB
     sdo.longValue = 4

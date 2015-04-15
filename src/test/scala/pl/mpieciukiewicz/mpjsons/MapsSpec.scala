@@ -21,7 +21,7 @@ class SimpleMapsObject {
 
 class MapsSpec extends FlatSpec {
 
-  def testMapSerialization() {
+  "Serializer" must "handle maps" in {
 
     val smo = new SimpleMapsObject
 

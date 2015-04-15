@@ -24,7 +24,8 @@ class OptionalDataObject {
 class OptionSerializationSpec extends FlatSpec {
 
 
-  def testEmptyOptionSerializationAndDeserialization() {
+
+  "Serializer" must "handle empty Options" in {
 
 
     val odo = new OptionalDataObject
@@ -50,7 +51,8 @@ class OptionSerializationSpec extends FlatSpec {
   }
 
 
-  def testFilledOptionSerializationAndDeserialization() {
+
+  "Serializer" must "handle filled Options" in {
 
     val odo = new OptionalDataObject
     odo.intOption = Option[Int](3)

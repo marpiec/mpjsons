@@ -18,7 +18,7 @@ class ImmutableMapType {
 class ImmutableMapSpec extends FlatSpec {
 
 
-  "Serializer" should "handle maps" in {
+  "Serializer" must "handle maps" in {
 
     val testObject = new ImmutableMapType
     testObject.map = Map("a" -> "abc", "b" -> "bca", "c" -> "cab")

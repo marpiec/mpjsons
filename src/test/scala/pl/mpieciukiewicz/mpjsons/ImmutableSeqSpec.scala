@@ -22,8 +22,8 @@ class ImmutableSeqType {
 
 class ImmutableSeqSpec extends FlatSpec {
 
-  def immutableSeqTest() {
 
+  "Serializer" must "handle immutable sequences" in {
 
     val testObject = new ImmutableSeqType
     testObject.vector = Vector("Abc", "Bcd", "Eca")
@@ -48,8 +48,7 @@ class ImmutableSeqSpec extends FlatSpec {
 
   }
 
-
-  def collectionWIthoutWrapperTest() {
+  "Serializer" must "handle collections without wrappers" in {
     val list = List("Zxy", "Xyz", "ZyX")
 
     val json = MPJson.serialize(list)

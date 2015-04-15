@@ -21,8 +21,8 @@ class ImmutableSetType {
 
 class ImmutableSetSpec extends FlatSpec {
 
-  def immutableSetTest() {
 
+  "Serializer" must "handle immutable sets" in {
 
     val testObject = new ImmutableSetType
     testObject.set = Set("Abc", "Bcd", "Eca")

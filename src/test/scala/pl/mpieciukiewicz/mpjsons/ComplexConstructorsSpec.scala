@@ -17,13 +17,15 @@ class ContainerObject(testObject: TestObject) {
 
 class ComplexConstructorsSpec extends FlatSpec {
 
+  val mpjsons = new MPJsons
+
   "Serializer" must "handle deserialization without calling constructors" in {
     val testObject = new TestObject
     testObject.someString = "Some test string"
     val containerObject = new ContainerObject(testObject)
 
-    val json = MPJsonS.serialize(containerObject)
-    val deserialized = MPJsonS.deserialize[ContainerObject](json)
+    val json = mpjsons.serialize(containerObject)
+    val deserialized = mpjsons.deserialize[ContainerObject](json)
 
     deserialized must not be null
     deserialized.otherString mustEqual containerObject.otherString

@@ -19,6 +19,8 @@ class CollectionsDataObject {
 
 class CollectionsSpec extends FlatSpec {
 
+  val mpjsons = new MPJsons
+
   "Serializer" must "handle collections" in {
 
     val cdo = new CollectionsDataObject
@@ -33,8 +35,8 @@ class CollectionsSpec extends FlatSpec {
     cdo.stringsStream = Stream.iterate("A")(_ + "A").take(5)
 
 
-    val simpleJson = MPJsonS.serialize(cdo)
-    val dataObject = MPJsonS.deserialize[CollectionsDataObject](simpleJson)
+    val simpleJson = mpjsons.serialize(cdo)
+    val dataObject = mpjsons.deserialize[CollectionsDataObject](simpleJson)
 
     val deserializedObject = dataObject.asInstanceOf[CollectionsDataObject]
 

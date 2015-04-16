@@ -17,6 +17,7 @@ class ImmutableMapType {
 
 class ImmutableMapSpec extends FlatSpec {
 
+  val mpjsons = new MPJsons
 
   "Serializer" must "handle maps" in {
 
@@ -28,9 +29,9 @@ class ImmutableMapSpec extends FlatSpec {
     testObject.listMap = ListMap("a" -> "abc", "b" -> "bca", "c" -> "cab")
 
 
-    val json = MPJsonS.serialize(testObject)
+    val json = mpjsons.serialize(testObject)
 
-    val objectDeserialized = MPJsonS.deserialize[ImmutableMapType](json)
+    val objectDeserialized = mpjsons.deserialize[ImmutableMapType](json)
 
     objectDeserialized mustBe a [ImmutableMapType]
 

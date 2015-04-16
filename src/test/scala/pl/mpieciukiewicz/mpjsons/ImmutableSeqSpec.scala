@@ -22,6 +22,7 @@ class ImmutableSeqType {
 
 class ImmutableSeqSpec extends FlatSpec {
 
+  val mpjsons = new MPJsons
 
   "Serializer" must "handle immutable sequences" in {
 
@@ -32,9 +33,9 @@ class ImmutableSeqSpec extends FlatSpec {
     testObject.queue = Queue("AAA", "CCC", "BBB")
     testObject.stack = Stack("MMM", "efce", "abc")
 
-    val json = MPJsonS.serialize(testObject)
+    val json = mpjsons.serialize(testObject)
 
-    val objectDeserialized = MPJsonS.deserialize[ImmutableSeqType](json)
+    val objectDeserialized = mpjsons.deserialize[ImmutableSeqType](json)
 
     objectDeserialized mustBe an [ImmutableSeqType]
     val testObjectDeserialized = objectDeserialized.asInstanceOf[ImmutableSeqType]
@@ -51,8 +52,8 @@ class ImmutableSeqSpec extends FlatSpec {
   "Serializer" must "handle collections without wrappers" in {
     val list = List("Zxy", "Xyz", "ZyX")
 
-    val json = MPJsonS.serialize(list)
-    val objectDeserialized = MPJsonS.deserializeGeneric[List[String]](json)
+    val json = mpjsons.serialize(list)
+    val objectDeserialized = mpjsons.deserialize[List[String]](json)
 
     list mustEqual objectDeserialized
   }

@@ -22,7 +22,7 @@ class MPJsons {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  private def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
+  def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
     val jsonIterator = new StringIterator(json)
     try {
       deserializerFactory.getDeserializer(tag.tpe).deserialize(jsonIterator, ClassType(tag.tpe))

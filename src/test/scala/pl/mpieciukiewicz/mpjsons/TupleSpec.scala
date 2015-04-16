@@ -9,11 +9,13 @@ class TupleDataObject {
 
 class TupleSpec extends FlatSpec {
 
+  val mpjsons = new MPJsons
+
   "Serializer" must "handle tuples deserialization with whitespaces" in {
 
     val json = " {  tuple :  [ 5 , \"Hello\" ]  }   "
 
-    val deserialized = MPJsonS.deserialize[TupleDataObject](json)
+    val deserialized = mpjsons.deserialize[TupleDataObject](json)
 
     deserialized.tuple mustBe (5, "Hello")
   }

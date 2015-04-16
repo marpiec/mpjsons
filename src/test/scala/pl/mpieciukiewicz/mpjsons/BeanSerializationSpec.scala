@@ -36,6 +36,8 @@ class SimpleDataObjectB {
 
 class BeanSerializationSpec extends FlatSpec {
 
+  val mpjsons = new MPJsons
+
   val sdo = new SimpleDataObjectA
   sdo.charValue = 'M'
   sdo.longValue = 1234567891234L
@@ -92,7 +94,7 @@ class BeanSerializationSpec extends FlatSpec {
 
 
   "Serializer" must "handle simple deserialization" in {
-    val deserialized = MPJsonS.deserialize[SimpleDataObjectA](properJsonSometimesIdentifiersWithoutQuotes)
+    val deserialized = mpjsons.deserialize[SimpleDataObjectA](properJsonSometimesIdentifiersWithoutQuotes)
 
     deserialized.longValue mustEqual sdo.longValue
     deserialized.intValue mustEqual sdo.intValue
@@ -131,14 +133,14 @@ class BeanSerializationSpec extends FlatSpec {
 
 
   "Serializer" must "handle simple serialization" in {
-    val serialized = MPJsonS.serialize(sdo)
+    val serialized = mpjsons.serialize(sdo)
     serialized mustEqual properJsonNonWhitespaces
   }
 
   "Serializer" must "handle deserialization with field names in quotes" in {
     val json = "{\"intValue\":10,\"stringValue\":\"Hello\"}"
 
-    val deserialized = MPJsonS.deserialize[InnerObject](json)
+    val deserialized = mpjsons.deserialize[InnerObject](json)
 
     deserialized.intValue mustEqual 10
     deserialized.stringValue mustEqual "Hello"
@@ -147,7 +149,7 @@ class BeanSerializationSpec extends FlatSpec {
   "Serializer" must "handle deserialization with whitespaces" in {
     val json = " {  \"intValue\"  :  10  ,  stringValue  :   \"Hello\"   }   "
 
-    val deserialized = MPJsonS.deserialize[InnerObject](json)
+    val deserialized = mpjsons.deserialize[InnerObject](json)
 
     deserialized.intValue mustEqual 10
     deserialized.stringValue mustEqual "Hello"
@@ -161,9 +163,9 @@ class BeanSerializationSpec extends FlatSpec {
     sdo.tuple = ("test", "4")
     sdo.tuplePrimitive = (3, 15)
 
-    val simpleJson = MPJsonS.serialize(sdo)
+    val simpleJson = mpjsons.serialize(sdo)
 
-    val sdoFromJson = MPJsonS.deserialize[SimpleDataObjectB](simpleJson)
+    val sdoFromJson = mpjsons.deserialize[SimpleDataObjectB](simpleJson)
 
     sdoFromJson mustBe a [SimpleDataObjectB]
     sdoFromJson.asInstanceOf[SimpleDataObjectB].longValue mustEqual sdo.longValue

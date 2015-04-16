@@ -6,6 +6,7 @@ package pl.mpieciukiewicz.mpjsons
 
 import org.scalatest.FlatSpec
 import org.scalatest.MustMatchers._
+import pl.mpieciukiewicz.mpjsons.MPJsons
 
 // this tests also non default constructor and final fields
 class MapElement(var intValue: Int, val stringValue: String)
@@ -21,6 +22,8 @@ class SimpleMapsObject {
 
 class MapsSpec extends FlatSpec {
 
+  val mpjsons = new MPJsons
+
   "Serializer" must "handle maps" in {
 
     val smo = new SimpleMapsObject
@@ -32,7 +35,7 @@ class MapsSpec extends FlatSpec {
       new MapElement(1, "one") -> new MapElement(100, "one hundred"),
       new MapElement(5, "five") -> new MapElement(500, "five hundred"))
 
-    val serialized = MPJsonS.serialize(smo)
+    val serialized = mpjsons.serialize(smo)
 
     serialized mustBe
       """{"emptyMap":[],
@@ -53,7 +56,7 @@ class MapsSpec extends FlatSpec {
         |      [ {"intValue":5,"stringValue":"five"},
         |      {"intValue":500,"stringValue":"five hundred"} ] ] } """.stripMargin.lines.mkString("")
 
-    val smoDeserialized:SimpleMapsObject = MPJsonS.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
+    val smoDeserialized:SimpleMapsObject = mpjsons.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
 
     smoDeserialized must not be (null)
 

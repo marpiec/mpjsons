@@ -23,7 +23,7 @@ class OptionalDataObject {
 
 class OptionSerializationSpec extends FlatSpec {
 
-
+  val mpjsons = new MPJsons
 
   "Serializer" must "handle empty Options" in {
 
@@ -35,9 +35,9 @@ class OptionSerializationSpec extends FlatSpec {
     odo.booleanOption = None
     odo.stringOption = None
 
-    val simpleJson = MPJsonS.serialize(odo)
+    val simpleJson = mpjsons.serialize(odo)
 
-    val dataObject = MPJsonS.deserialize[OptionalDataObject](simpleJson)
+    val dataObject = mpjsons.deserialize[OptionalDataObject](simpleJson)
 
     dataObject mustBe a [OptionalDataObject]
 
@@ -67,9 +67,9 @@ class OptionSerializationSpec extends FlatSpec {
     sdo.stringValue = "testString"
     odo.sdo = Option[SimpleDataObjectB](sdo)
 
-    val simpleJson = MPJsonS.serialize(odo)
+    val simpleJson = mpjsons.serialize(odo)
 
-    val dataObject = MPJsonS.deserialize[OptionalDataObject](simpleJson)
+    val dataObject = mpjsons.deserialize[OptionalDataObject](simpleJson)
 
     dataObject mustBe an [OptionalDataObject]
 

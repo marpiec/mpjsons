@@ -37,7 +37,7 @@ class OptionSerializationSpec extends FlatSpec {
 
     val simpleJson = MPJson.serialize(odo)
 
-    val dataObject = MPJson.deserialize[AnyRef](simpleJson)
+    val dataObject = MPJson.deserialize[OptionalDataObject](simpleJson)
 
     dataObject mustBe a [OptionalDataObject]
 

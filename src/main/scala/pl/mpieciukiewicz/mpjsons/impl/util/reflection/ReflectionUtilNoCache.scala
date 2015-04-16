@@ -21,8 +21,6 @@ private[reflection] object ReflectionUtilNoCache {
     AccessibleObject.setAccessible(declaredFields.asInstanceOf[Array[AccessibleObject]], true)
     if(clazz.equals(classOf[Object])) {
       Array()
-    } else if (clazz == null || clazz.getSuperclass == null) {
-      throw new IllegalStateException(clazz+"")
     } else if(clazz.getSuperclass.equals(classOf[Object])) {
       declaredFields
     } else {

@@ -84,7 +84,7 @@ class SerializerFactoryImpl {
       }
 
       // Every Tuple, Option
-      if (typeOf[Product].typeSymbol == tpe.typeSymbol) {
+      if (tpe.baseClasses.contains(typeOf[Product].typeSymbol)) {
         return ProductSerializer
       }
 

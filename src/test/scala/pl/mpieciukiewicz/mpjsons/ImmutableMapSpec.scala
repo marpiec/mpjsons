@@ -28,9 +28,9 @@ class ImmutableMapSpec extends FlatSpec {
     testObject.listMap = ListMap("a" -> "abc", "b" -> "bca", "c" -> "cab")
 
 
-    val json = MPJson.serialize(testObject)
+    val json = MPJsonS.serialize(testObject)
 
-    val objectDeserialized = MPJson.deserialize[ImmutableMapType](json)
+    val objectDeserialized = MPJsonS.deserialize[ImmutableMapType](json)
 
     objectDeserialized mustBe a [ImmutableMapType]
 

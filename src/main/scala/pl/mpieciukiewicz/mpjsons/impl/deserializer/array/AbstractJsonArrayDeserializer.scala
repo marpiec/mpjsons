@@ -16,7 +16,7 @@ import scala.reflect.runtime.universe._
 trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
 
 
-  def deserialize(jsonIterator: StringIterator, classType: ClassType): T = {
+  def deserialize(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): T = {
 
     jsonIterator.consumeArrayStart()
 
@@ -28,10 +28,10 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
 
   }
 
-  private def readElementsIntoBuffer(elementsType: ClassType, jsonIterator: StringIterator): ArrayBuffer[T] = {
+  private def readElementsIntoBuffer(elementsType: ClassType, jsonIterator: StringIterator)(implicit deserializerFactory: DeserializerFactory): ArrayBuffer[T] = {
     val buffer = ArrayBuffer[T]()
 
-    val deserializer = DeserializerFactory.getDeserializer[T](elementsType.tpe)
+    val deserializer = deserializerFactory.getDeserializer[T](elementsType.tpe)
     
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {

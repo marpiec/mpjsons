@@ -11,7 +11,10 @@ import scala.reflect.runtime.universe._
  * Main class of json serialization library.
  * @author Marcin Pieciukiewicz
  */
-object MPJson {
+class MPJsons {
+
+  implicit val deserializerFactory = new DeserializerFactory
+  implicit val serializerFactory = new SerializerFactory
 
   /**
    * Creates object from gives json String and type of class.
@@ -19,30 +22,10 @@ object MPJson {
    * @param clazz type f the object to deserialize
    * @return created object
    */
-  def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
-    deserializeWithField(json)
-  }
-
-  /**
-   * Creates object from gives json String and type of class.
-   * @param json String containing json that represents object of given clazz
-   * @param clazz type f the object to deserialize
-   * @return created object
-   */
-  def deserializeGeneric[T](json: String)(implicit tag: TypeTag[T]): T = {
-    deserializeWithField(json)
-  }
-
-  /**
-   * Creates object from gives json String and type of class.
-   * @param json String containing json that represents object of given clazz
-   * @param clazz type f the object to deserialize
-   * @return created object
-   */
-  private def deserializeWithField[T](json: String)(implicit tag: TypeTag[T]): T = {
+  private def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
     val jsonIterator = new StringIterator(json)
     try {
-      DeserializerFactory.getDeserializer(tag.tpe).deserialize(jsonIterator, ClassType(tag.tpe))
+      deserializerFactory.getDeserializer(tag.tpe).deserialize(jsonIterator, ClassType(tag.tpe))
     } catch {
       case e: RuntimeException => throw new JsonInnerException("Problem deserializing:\n" + json + "\n" + jsonIterator.debugShowConsumedString, e)
     }
@@ -55,7 +38,7 @@ object MPJson {
    */
   def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
     val json = new StringBuilder()
-    SerializerFactory.getSerializer(tag.tpe).serialize(obj, json)
+    serializerFactory.getSerializer(tag.tpe).serialize(obj, json)
     json.toString()
   }
 
@@ -65,8 +48,8 @@ object MPJson {
    * @param converter converter that will be used to serialize and deserialize given type
    */
   def registerConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
-    SerializerFactory.registerSerializer[T](tag.tpe, converter)
-    DeserializerFactory.registerDeserializer(tag.tpe, converter)
+    serializerFactory.registerSerializer[T](tag.tpe, converter)
+    deserializerFactory.registerDeserializer(tag.tpe, converter)
   }
 
   /**
@@ -75,8 +58,8 @@ object MPJson {
    * @param converter converter that will be used to serialize and deserialize given type and its descendant
    */
   def registerSuperclassConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
-    SerializerFactory.registerSuperclassSerializer(tag.tpe, converter)
-    DeserializerFactory.registerSuperclassDeserializer(tag.tpe, converter)
+    serializerFactory.registerSuperclassSerializer(tag.tpe, converter)
+    deserializerFactory.registerSuperclassDeserializer(tag.tpe, converter)
   }
 
 }

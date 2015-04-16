@@ -13,7 +13,7 @@ class TupleSpec extends FlatSpec {
 
     val json = " {  tuple :  [ 5 , \"Hello\" ]  }   "
 
-    val deserialized = MPJson.deserialize[TupleDataObject](json)
+    val deserialized = MPJsonS.deserialize[TupleDataObject](json)
 
     deserialized.tuple mustBe (5, "Hello")
   }

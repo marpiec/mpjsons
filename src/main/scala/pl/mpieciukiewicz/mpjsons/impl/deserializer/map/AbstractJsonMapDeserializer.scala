@@ -12,7 +12,7 @@ import scala.collection.mutable.ArrayBuffer
 trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
 
 
-   override def deserialize(jsonIterator: StringIterator, classType: ClassType): T = {
+   override def deserialize(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): T = {
 
      jsonIterator.consumeArrayStart()
 
@@ -48,8 +48,8 @@ trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
      toDesiredCollection(mapArray)
    }
 
-   private def deserializeValue(jsonIterator: StringIterator, classType: ClassType): Any = {
-     DeserializerFactory.getDeserializer(classType.tpe).deserialize(jsonIterator, classType)
+   private def deserializeValue(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): Any = {
+     deserializerFactory.getDeserializer(classType.tpe).deserialize(jsonIterator, classType)
    }
 
   protected def getDoubleSubElementsType(classType: ClassType): (ClassType, ClassType) = TypesUtil.getDoubleSubElementsType(classType.tpe)

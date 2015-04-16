@@ -2,7 +2,7 @@ package pl.mpieciukiewicz.mpjsons.impl.deserializer
 
 import java.lang.reflect.Field
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.StringIterator
+import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
 import scala.reflect.runtime.universe._
 
@@ -12,7 +12,7 @@ import scala.reflect.runtime.universe._
 
 object StringDeserializer extends JsonTypeDeserializer[String] {
 
-  override def deserialize(jsonIterator: StringIterator, classType: ClassType): String = {
+  override def deserialize(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): String = {
 
     jsonIterator.skipWhitespaceChars()
 

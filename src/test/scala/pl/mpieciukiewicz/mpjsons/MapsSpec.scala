@@ -32,7 +32,7 @@ class MapsSpec extends FlatSpec {
       new MapElement(1, "one") -> new MapElement(100, "one hundred"),
       new MapElement(5, "five") -> new MapElement(500, "five hundred"))
 
-    val serialized = MPJson.serialize(smo)
+    val serialized = MPJsonS.serialize(smo)
 
     serialized mustBe
       """{"emptyMap":[],
@@ -53,7 +53,7 @@ class MapsSpec extends FlatSpec {
         |      [ {"intValue":5,"stringValue":"five"},
         |      {"intValue":500,"stringValue":"five hundred"} ] ] } """.stripMargin.lines.mkString("")
 
-    val smoDeserialized:SimpleMapsObject = MPJson.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
+    val smoDeserialized:SimpleMapsObject = MPJsonS.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
 
     smoDeserialized must not be (null)
 

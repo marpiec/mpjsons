@@ -1,7 +1,7 @@
 package pl.mpieciukiewicz.mpjsons
 
 import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.StringIterator
+import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
 
 import scala.reflect.runtime.universe._
@@ -19,5 +19,5 @@ trait JsonTypeDeserializer[T] {
    *              possibility to read FirstSubType and SecondSubType annotations. Might be null.
    * @return created object
    */
-  def deserialize(jsonIterator: StringIterator, classType: ClassType): T
+  def deserialize(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): T
 }

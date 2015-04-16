@@ -32,9 +32,9 @@ class ImmutableSetSpec extends FlatSpec {
     testObject.bitSet = BitSet(12, 15, 3, 7)
     testObject.listSet = ListSet("AAA", "CCC", "BBB")
 
-    val json = MPJson.serialize(testObject)
+    val json = MPJsonS.serialize(testObject)
 
-    val objectDeserialized = MPJson.deserialize[ImmutableSetType](json)
+    val objectDeserialized = MPJsonS.deserialize[ImmutableSetType](json)
 
     objectDeserialized mustBe an [ImmutableSetType]
     val testObjectDeserialized = objectDeserialized.asInstanceOf[ImmutableSetType]

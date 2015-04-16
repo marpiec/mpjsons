@@ -22,8 +22,8 @@ class ComplexConstructorsSpec extends FlatSpec {
     testObject.someString = "Some test string"
     val containerObject = new ContainerObject(testObject)
 
-    val json = MPJson.serialize(containerObject)
-    val deserialized = MPJson.deserialize[ContainerObject](json)
+    val json = MPJsonS.serialize(containerObject)
+    val deserialized = MPJsonS.deserialize[ContainerObject](json)
 
     deserialized must not be null
     deserialized.otherString mustEqual containerObject.otherString

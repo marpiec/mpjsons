@@ -12,4 +12,4 @@ import pl.mpieciukiewicz.mpjsons.impl.factoryimpl.{DeserializerFactoryMemoizer, 
  * @author Marcin Pieciukiewicz
  */
 
-object DeserializerFactory extends DeserializerFactoryMemoizer(new DeserializerFactoryImpl)
+class DeserializerFactory extends DeserializerFactoryMemoizer(new DeserializerFactoryImpl)

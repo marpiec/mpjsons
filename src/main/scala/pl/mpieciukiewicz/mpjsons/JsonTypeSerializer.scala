@@ -1,5 +1,7 @@
 package pl.mpieciukiewicz.mpjsons
 
+import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+
 import scala.reflect.runtime.universe._
 
 /**
@@ -12,5 +14,5 @@ abstract class JsonTypeSerializer[T](implicit tag: TypeTag[T]) {
    * @param obj object to serialize
    * @return json String
    */
-  def serialize(obj: T, jsonBuilder: StringBuilder)
+  def serialize(obj: T, jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory)
 }

@@ -1,6 +1,7 @@
 package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
+import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
 import scala.reflect.runtime.universe._
 
 /**
@@ -8,7 +9,7 @@ import scala.reflect.runtime.universe._
  */
 
 object StringSerializer extends JsonTypeSerializer[Any] {
-  override def serialize(obj: Any, jsonBuilder: StringBuilder) {
+  override def serialize(obj: Any, jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory) {
 
     val string = obj.toString
     val stringLength = string.length

@@ -11,7 +11,7 @@ import scala.reflect.runtime.universe._
 
 object IteratorSerializer extends JsonTypeSerializer[Iterator[_]] {
 
-  override def serialize(iterator: Iterator[_], jsonBuilder: StringBuilder) = {
+  override def serialize(iterator: Iterator[_], jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory) = {
 
     jsonBuilder.append('[')
 
@@ -24,7 +24,7 @@ object IteratorSerializer extends JsonTypeSerializer[Iterator[_]] {
       } else {
         isNotFirstField = true
       }
-      SerializerFactory.getSerializer(TypesUtil.getTypeFromClass(element.getClass)).asInstanceOf[JsonTypeSerializer[Any]].serialize(element, jsonBuilder)
+      serializerFactory.getSerializer(TypesUtil.getTypeFromClass(element.getClass)).asInstanceOf[JsonTypeSerializer[Any]].serialize(element, jsonBuilder)
     })
 
 

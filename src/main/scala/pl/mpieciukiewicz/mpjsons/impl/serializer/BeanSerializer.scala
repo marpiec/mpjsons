@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
 object BeanSerializer extends JsonTypeSerializer[AnyRef] {
 
 
-  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder) = {
+  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory) = {
 
     jsonBuilder.append('{')
 
@@ -36,7 +36,7 @@ object BeanSerializer extends JsonTypeSerializer[AnyRef] {
         }
 
         jsonBuilder.append('"').append(field.getName).append('"').append(':')
-        SerializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass)).asInstanceOf[JsonTypeSerializer[AnyRef]].serialize(value, jsonBuilder)
+        serializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass)).asInstanceOf[JsonTypeSerializer[AnyRef]].serialize(value, jsonBuilder)
       }
     }
 

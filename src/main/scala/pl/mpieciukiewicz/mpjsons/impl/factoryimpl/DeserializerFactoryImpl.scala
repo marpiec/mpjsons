@@ -34,23 +34,23 @@ class DeserializerFactoryImpl {
 
   def getDeserializer(tpe: Type): JsonTypeDeserializer[_ <: Any] = {
 
-    if (tpe == typeOf[Long]) {
+    if (tpe.typeSymbol == typeOf[Long].typeSymbol) {
       return LongDeserializer
-    } else if (tpe == typeOf[Int]) {
+    } else if (tpe.typeSymbol == typeOf[Int].typeSymbol) {
       return IntDeserializer
-    } else if (tpe == typeOf[Boolean]) {
+    } else if (tpe.typeSymbol == typeOf[Boolean].typeSymbol) {
       return BooleanDeserializer
-    } else if (tpe == typeOf[String]) {
+    } else if (tpe.typeSymbol == typeOf[String].typeSymbol) {
       return StringDeserializer
-    } else if (tpe == typeOf[Double]) {
+    } else if (tpe.typeSymbol == typeOf[Double].typeSymbol) {
       return DoubleDeserializer
-    } else if (tpe == typeOf[Float]) {
+    } else if (tpe.typeSymbol == typeOf[Float].typeSymbol) {
       return FloatDeserializer
-    } else if (tpe == typeOf[Short]) {
+    } else if (tpe.typeSymbol == typeOf[Short].typeSymbol) {
       return ShortDeserializer
-    } else if (tpe == typeOf[Byte]) {
+    } else if (tpe.typeSymbol == typeOf[Byte].typeSymbol) {
       return ByteDeserializer
-    } else if (tpe == typeOf[Char]) {
+    } else if (tpe.typeSymbol == typeOf[Char].typeSymbol) {
       return CharDeserializer
     } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
       return ArrayDeserializer

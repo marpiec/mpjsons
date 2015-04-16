@@ -25,18 +25,12 @@ class MapsSpec extends FlatSpec {
 
     val smo = new SimpleMapsObject
 
-    smo.simpleMap = Map()
-    smo.simpleMap += "a" -> "Ala"
-    smo.simpleMap += "k" -> "Kot"
+    smo.simpleMap = Map("a" -> "Ala", "k" -> "Kot")
+    smo.primitiveMap = Map(1 -> 1224, 5 -> 5324)
 
-    smo.primitiveMap = Map()
-    smo.primitiveMap += 1 -> 1224
-    smo.primitiveMap += 5 -> 5324
-
-    smo.objectMap = Map()
-    
-    smo.objectMap += new MapElement(1, "one") -> new MapElement(100, "one hundred")
-    smo.objectMap += new MapElement(5, "five") -> new MapElement(500, "five hundred")
+    smo.objectMap = Map(
+      new MapElement(1, "one") -> new MapElement(100, "one hundred"),
+      new MapElement(5, "five") -> new MapElement(500, "five hundred"))
 
     val serialized = MPJson.serialize(smo)
 

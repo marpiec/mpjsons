@@ -16,11 +16,11 @@ object Tuple2Deserializer extends JsonTypeDeserializer[(Any, Any)] {
 
     val (firstElementType, secondElementType): (ClassType, ClassType) = TypesUtil.getDoubleSubElementsType(classType.tpe)
 
-    val first = DeserializerFactory.getDeserializer(firstElementType.tpe).deserialize(jsonIterator, firstElementType)
+    val first = DeserializerFactory.getDeserializer[Any](firstElementType.tpe).deserialize(jsonIterator, firstElementType)
 
     jsonIterator.consumeArrayValuesSeparator()
 
-    val second = DeserializerFactory.getDeserializer(secondElementType.tpe).deserialize(jsonIterator, secondElementType)
+    val second = DeserializerFactory.getDeserializer[Any](secondElementType.tpe).deserialize(jsonIterator, secondElementType)
 
     jsonIterator.consumeArrayEnd()
 

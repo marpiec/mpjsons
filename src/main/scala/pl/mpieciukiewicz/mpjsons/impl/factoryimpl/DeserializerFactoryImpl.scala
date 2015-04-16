@@ -54,11 +54,11 @@ class DeserializerFactoryImpl {
       return CharDeserializer
     } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
       return ArrayDeserializer
-    } else if (tpe == typeOf[(_, _)]) {
+    } else if (tpe.typeSymbol == typeOf[(_, _)].typeSymbol) {
       return Tuple2Deserializer
-    } else if (tpe == typeOf[Option[_]]) {
+    } else if (tpe.typeSymbol == typeOf[Option[_]].typeSymbol) {
       return OptionDeserializer
-    } else if (tpe == typeOf[Map[_, _]]) {
+    } else if (tpe.typeSymbol == typeOf[Map[_, _]].typeSymbol) {
       return MapDeserializer
     }
 

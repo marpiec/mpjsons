@@ -17,7 +17,7 @@ object ReflectionUtil {
 
   private var getAllAccessibleFieldsCache: Map[Type, Array[Field]] = Map()
 
-  private var getAccessibleFieldCache: Map[(Type, String), Field] = Map()
+  private var getAccessibleFieldCache: Map[(Type, String), FieldWithTypeInfo] = Map()
 
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
@@ -25,8 +25,8 @@ object ReflectionUtil {
    * @return array containing all defined fields in class
    */
   def getAllAccessibleFields(tpe: Type): Array[Field] = {
-    val clazz = TypesUtil.getClassFromType(tpe)
     getAllAccessibleFieldsCache.getOrElse(tpe, {
+      val clazz = TypesUtil.getClassFromType(tpe)
       val allFields: Array[Field] = ReflectionUtilNoCache.getAllAccessibleFields(clazz)
       getAllAccessibleFieldsCache += tpe -> allFields
       allFields
@@ -41,18 +41,19 @@ object ReflectionUtil {
    */
 
   def getAccessibleField(tpe: Type, fieldName: String): FieldWithTypeInfo = {
-    val member = tpe.members.filterNot(_.isMethod).find(_.name.toString.trim == fieldName)
-    //tag.tpe.members.filter(member => !member.isMethod && member.name == TermName(fieldName))
-    if (member.isEmpty) {
-      throw new JsonInnerException("No member with name " + fieldName, null)
-    } else {
-      val info = member.get.info
-      val field = getAccessibleFieldCache.getOrElse((tpe, fieldName), {
-        val f: Field = ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), fieldName)
-        getAccessibleFieldCache += (tpe, fieldName) -> f
-        f
-      })
-      FieldWithTypeInfo(field, info)
-    }
+
+    getAccessibleFieldCache.getOrElse((tpe, fieldName), {
+      val member = tpe.members.filterNot(_.isMethod).find(_.name.toString.trim == fieldName)
+      //tag.tpe.members.filter(member => !member.isMethod && member.name == TermName(fieldName))
+      if (member.isEmpty) {
+        throw new JsonInnerException("No member with name " + fieldName, null)
+      } else {
+        val info = member.get.info
+        val field: Field = ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), fieldName)
+        val fieldWithTypeInfo = FieldWithTypeInfo(field, info)
+        getAccessibleFieldCache += (tpe, fieldName) -> fieldWithTypeInfo
+        fieldWithTypeInfo
+      }
+    })
   }
 }

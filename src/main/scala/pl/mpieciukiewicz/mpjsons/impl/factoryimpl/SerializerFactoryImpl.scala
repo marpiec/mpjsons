@@ -14,14 +14,14 @@ import scala.reflect.runtime.universe._
 class SerializerFactoryImpl {
 
   private var additionalSerializers = Map[Type, JsonTypeSerializer[_]]()
-  private var additionalSuperclassSerializers = Map[Type, JsonTypeSerializer[_]]()
+  private var additionalSuperclassSerializers = Map[Symbol, JsonTypeSerializer[_]]()
 
   def registerSerializer(tpe: Type, serializer: JsonTypeSerializer[_]) {
     additionalSerializers += tpe -> serializer
   }
 
   def registerSuperclassSerializer(tpe: Type, serializer: JsonTypeSerializer[_]) {
-    additionalSuperclassSerializers += tpe -> serializer
+    additionalSuperclassSerializers += tpe.typeSymbol -> serializer
   }
 
   def getSerializer(tpe: Type): JsonTypeSerializer[_] = {
@@ -89,11 +89,16 @@ class SerializerFactoryImpl {
     }
 
 
-//    for ((tpeType, serializer) <- additionalSuperclassSerializers) {
-//      if (tpeType.isAssignableFrom(tpe)) {
-//        return serializer
-//      }
-//    }
+    additionalSuperclassSerializers.get(tpe.typeSymbol) match {
+      case Some(serializer) => return serializer
+      case None =>
+        for ((tpeType, serializer) <- additionalSuperclassSerializers) {
+          if (tpe.baseClasses.contains(tpeType)) {
+            return serializer
+          }
+        }
+    }
+
 
     if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.getName == "MODULE$")) {
         return SingletonObjectSerializer
@@ -103,8 +108,6 @@ class SerializerFactoryImpl {
 
     if(additionalSerializerOption.isDefined) {
       additionalSerializerOption.get
-//    } else if (typeOf[Type].isAssignableFrom(tpe)) {
-//      throw new IllegalArgumentException("Unsupported data type: Class, please provide custom serializer for " + tpe)
     } else {
       BeanSerializer
     }
@@ -112,6 +115,4 @@ class SerializerFactoryImpl {
     //TODO Range, NumericRange
   }
 
-
-  private def matches(tpe: Type, tpees: List[Type]) = tpees.contains(tpe)
 }

@@ -20,15 +20,15 @@ import scala.reflect.runtime.universe._
 
 class DeserializerFactoryImpl {
 
-  private var additionalDeserializers: Map[Type, JsonTypeDeserializer[_ <: Any]] = Map[Type, JsonTypeDeserializer[Any]]()
-  private var additionalSuperclassDeserializers: Map[Type, JsonTypeDeserializer[_ <: Any]] = Map[Type, JsonTypeDeserializer[Any]]()
+  private var additionalDeserializers = Map[Type, JsonTypeDeserializer[_ <: Any]]()
+  private var additionalSuperclassDeserializers = Map[Symbol, JsonTypeDeserializer[_ <: Any]]()
 
   def registerDeserializer(tpe: Type, deserializer: JsonTypeDeserializer[_ <: Any]) {
     additionalDeserializers += tpe -> deserializer
   }
 
   def registerSuperclassDeserializer(tpe: Type, deserializer: JsonTypeDeserializer[_ <: Any]) {
-    additionalSuperclassDeserializers += tpe -> deserializer
+    additionalSuperclassDeserializers += tpe.typeSymbol -> deserializer
   }
 
   def getDeserializer(tpe: Type): JsonTypeDeserializer[_ <: Any] = {
@@ -101,10 +101,15 @@ class DeserializerFactoryImpl {
     }
 
 
-    for ((tpeType, deserializer) <- additionalSuperclassDeserializers) {
-//      if (tpeType.isAssignableFrom(tpe)) { //TODO fix
-//        return deserializer
-//      }
+
+    additionalSuperclassDeserializers.get(tpe.typeSymbol) match {
+      case Some(deserializer) => return deserializer
+      case None =>
+        for ((tpeType, deserializer) <- additionalSuperclassDeserializers) {
+          if (tpe.baseClasses.contains(tpeType)) {
+            return deserializer
+          }
+        }
     }
 
     if (tpe.typeSymbol == typeOf[ListBuffer[_]].typeSymbol) {
@@ -121,8 +126,6 @@ class DeserializerFactoryImpl {
 
     if(additionalDeserializerOption.isDefined) {
       additionalDeserializerOption.get
-//    } else if (typeOf[Class[_]].isAssignableFrom(tpe)) { // TODO fix
-//      throw new IllegalArgumentException("Unsupported data type: Class, please provide custom deserializer for " + tpe)
     } else {
       BeanDeserializer
     }

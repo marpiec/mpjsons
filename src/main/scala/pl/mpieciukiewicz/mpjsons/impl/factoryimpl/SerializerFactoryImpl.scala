@@ -56,8 +56,6 @@ class SerializerFactoryImpl {
       return ArraySerializer
     }
 
-    println(tpe)
-
     // We don't want to support user's custom collections implicitly,
     // because there will be problem with deserialization, but we want to support standard subtypes
     if(tpe.typeSymbol.fullName.startsWith("scala.")) {

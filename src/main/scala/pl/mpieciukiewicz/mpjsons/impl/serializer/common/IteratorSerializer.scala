@@ -20,7 +20,7 @@ object IteratorSerializer extends JsonTypeSerializer[Iterator[_]] {
     iterator.foreach(element => {
 
       if (isNotFirstField) {
-        jsonBuilder.append(",")
+        jsonBuilder.append(',')
       } else {
         isNotFirstField = true
       }

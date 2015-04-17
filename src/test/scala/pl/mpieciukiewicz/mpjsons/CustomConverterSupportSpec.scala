@@ -22,7 +22,7 @@ class TypedConverter[T <: AnyRef](packageName: String) extends JsonTypeConverter
     val simpleName: String = obj.getClass.getSimpleName
     jsonBuilder.append("{\"" +simpleName + "\":")
     BeanSerializer.serialize(obj.asInstanceOf[AnyRef], jsonBuilder)
-    jsonBuilder.append("}")
+    jsonBuilder.append('}')
   }
 
   override def deserialize(jsonIterator: StringIterator, tpe: Type)

@@ -20,21 +20,21 @@ object MapSerializer extends JsonTypeSerializer[scala.collection.Map[_, _]] {
 
     for ((key: AnyRef, value: AnyRef) <- map) {
       if (nonFirstField) {
-        jsonBuilder.append(",")
+        jsonBuilder.append(',')
       } else {
         nonFirstField = true
       }
-      jsonBuilder.append("[")
+      jsonBuilder.append('[')
 
       serializerFactory.getSerializer(TypesUtil.getTypeFromClass(key.getClass))
         .asInstanceOf[JsonTypeSerializer[Any]].serialize(key, jsonBuilder)
 
-      jsonBuilder.append(",")
+      jsonBuilder.append(',')
 
       serializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass))
         .asInstanceOf[JsonTypeSerializer[Any]].serialize(value, jsonBuilder)
 
-      jsonBuilder.append("]")
+      jsonBuilder.append(']')
     }
 
     jsonBuilder.append(']')

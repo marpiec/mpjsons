@@ -21,7 +21,7 @@ object ProductSerializer extends JsonTypeSerializer[Product] {
 
     iterator.foreach(element => {
       if (isNotFirstField) {
-        jsonBuilder.append(",")
+        jsonBuilder.append(',')
       } else {
         isNotFirstField = true
       }

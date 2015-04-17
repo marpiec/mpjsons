@@ -29,7 +29,7 @@ object BeanSerializer extends JsonTypeSerializer[AnyRef] {
       if (value != null) {
 
         if (isNotFirstField) {
-          jsonBuilder.append(",")
+          jsonBuilder.append(',')
         } else {
           isNotFirstField = true
         }

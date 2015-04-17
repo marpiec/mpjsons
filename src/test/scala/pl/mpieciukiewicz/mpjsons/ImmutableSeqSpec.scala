@@ -16,7 +16,6 @@ class ImmutableSeqType {
   var list: List[String] = _
   var stream: Stream[String] = _
   var queue: Queue[String] = _
-  var stack: Stack[String] = _
 }
 
 
@@ -31,7 +30,6 @@ class ImmutableSeqSpec extends FlatSpec {
     testObject.list = List("Zxy", "Xyz", "ZyX")
     testObject.stream = Stream("kkk","qwe", "dfs")
     testObject.queue = Queue("AAA", "CCC", "BBB")
-    testObject.stack = Stack("MMM", "efce", "abc")
 
     val json = mpjsons.serialize(testObject)
 
@@ -44,7 +42,6 @@ class ImmutableSeqSpec extends FlatSpec {
     testObjectDeserialized.list mustEqual testObject.list
     testObjectDeserialized.stream mustEqual testObject.stream
     testObjectDeserialized.queue mustEqual testObject.queue
-    testObjectDeserialized.stack mustEqual testObject.stack
 
 
   }

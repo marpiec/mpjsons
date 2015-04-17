@@ -70,8 +70,6 @@ class DeserializerFactoryImpl {
       return StreamDeserializer
     } else if (tpe.typeSymbol == typeOf[Queue[_]].typeSymbol) {
       return QueueDeserializer
-    } else if (tpe.typeSymbol == typeOf[Stack[_]].typeSymbol) {
-      return StackDeserializer
     }
 
     // set

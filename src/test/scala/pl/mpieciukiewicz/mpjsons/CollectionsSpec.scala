@@ -1,9 +1,9 @@
 package pl.mpieciukiewicz.mpjsons
 
 import org.scalatest.FlatSpec
-
-import scala.collection.immutable.{Stack, Queue}
 import org.scalatest.MustMatchers._
+
+import scala.collection.immutable.Queue
 
 class CollectionsDataObject {
   var stringsList: List[String] = _
@@ -14,7 +14,6 @@ class CollectionsDataObject {
   var stringsVector: Vector[String] = _
   var stringsStream: Stream[String] = _
   var stringsQueue: Queue[String] = _
-  var stringsStack: Stack[String] = _
 }
 
 class CollectionsSpec extends FlatSpec {
@@ -31,7 +30,6 @@ class CollectionsSpec extends FlatSpec {
     cdo.longsSet = Set[Long](1, 11, 111)
     cdo.stringsVector = Vector[String]("x", "Y", "zz")
     cdo.stringsQueue = Queue("An", "Be", "Do")
-    cdo.stringsStack = Stack("F", "G", "h", "o")
     cdo.stringsStream = Stream.iterate("A")(_ + "A").take(5)
 
 
@@ -47,7 +45,6 @@ class CollectionsSpec extends FlatSpec {
     deserializedObject.longsSet mustEqual cdo.longsSet
     deserializedObject.stringsVector mustEqual cdo.stringsVector
     deserializedObject.stringsQueue mustEqual cdo.stringsQueue
-    deserializedObject.stringsStack mustEqual cdo.stringsStack
     deserializedObject.stringsStream mustEqual cdo.stringsStream
 
 

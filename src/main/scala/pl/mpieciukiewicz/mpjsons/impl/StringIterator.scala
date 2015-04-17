@@ -20,7 +20,7 @@ class StringIterator(private val stringValue: String) {
     currentChar = if(nextIndex < stringLength) {
       stringValue.charAt(nextIndex)
     } else {
-      '\0'
+      '\u0000'
     }
     nextIndex = nextIndex + 1
   }

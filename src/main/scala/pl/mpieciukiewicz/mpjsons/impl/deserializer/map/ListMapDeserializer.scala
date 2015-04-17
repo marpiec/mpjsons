@@ -1,6 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.map
 
-import scala.collection.immutable.{ListMap, HashMap}
+import scala.collection.immutable.ListMap
 import scala.collection.mutable.ArrayBuffer
 
 /**

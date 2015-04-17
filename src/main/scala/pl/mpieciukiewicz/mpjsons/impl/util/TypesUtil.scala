@@ -1,9 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl.util
 
-import java.lang.reflect.{Field, ParameterizedType}
 import scala.reflect.runtime.universe._
-
-case class ClassType(tpe: Type)
 
 /**
  * Utility object to support manipulation of Types acquired by reflections.
@@ -11,20 +8,16 @@ case class ClassType(tpe: Type)
  */
 object TypesUtil {
 
-  def getSubElementsType(tpe: Type): ClassType = {
+  def getSubElementsType(tpe: Type): Type = {
     getSubElementsTypeOnPosition(tpe, 0)
   }
 
-  def getDoubleSubElementsType(tpe: Type): (ClassType, ClassType) = {
+  def getDoubleSubElementsType(tpe: Type): (Type, Type) = {
     (getSubElementsTypeOnPosition(tpe, 0),
       getSubElementsTypeOnPosition(tpe, 1))
   }
 
-
-  private def getSubElementsTypeOnPosition(tpe: Type, typeIndex: Int): ClassType = {
-    val argsTpe = tpe.typeArgs(typeIndex)
-    ClassType(argsTpe)
-  }
+  private def getSubElementsTypeOnPosition(tpe: Type, typeIndex: Int): Type = tpe.typeArgs(typeIndex)
 
   def getTypeFromClass(clazz: Class[_]):Type = {
     runtimeMirror(clazz.getClassLoader).classSymbol(clazz).toType
@@ -34,10 +27,6 @@ object TypesUtil {
     runtimeMirror(getClass.getClassLoader).runtimeClass(tpe).asInstanceOf[Class[T]]
   }
 
-  def getArraySubElementsType(classType: ClassType): ClassType = {
-    //ClassType(runtimeMirror(getClass.getClassLoader).runtimeClass(classType.tpe).getComponentType)
-    ClassType(classType.tpe.typeArgs.head)
-  }
-
+  def getArraySubElementsType(tpe: Type): Type = tpe.typeArgs.head
 
 }

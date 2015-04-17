@@ -1,8 +1,7 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array
 
-import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, TypesUtil, ObjectConstructionUtil}
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import pl.mpieciukiewicz.mpjsons.impl.util.{TypesUtil, ObjectConstructionUtil}
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 /**
@@ -11,14 +10,14 @@ import scala.reflect.runtime.universe._
 
 object ArrayDeserializer extends AbstractJsonArrayDeserializer[Array[_]] {
 
-  override protected def getSubElementsType[S](classType: ClassType) = TypesUtil.getArraySubElementsType(classType)
+  override protected def getSubElementsType[S](tpe: Type) = TypesUtil.getArraySubElementsType(tpe)
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: ClassType): Array[_] = {
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Array[_] = {
 
     if(buffer.isEmpty){
-      ObjectConstructionUtil.createArrayInstance[Any](TypesUtil.getClassFromType[Any](elementsType.tpe), 0).asInstanceOf[Array[_]]
+      ObjectConstructionUtil.createArrayInstance[Any](TypesUtil.getClassFromType[Any](elementsType), 0).asInstanceOf[Array[_]]
     } else {
-      val arrayt: Any = ObjectConstructionUtil.createArrayInstance[Any](TypesUtil.getClassFromType[Any](elementsType.tpe), buffer.size)
+      val arrayt: Any = ObjectConstructionUtil.createArrayInstance[Any](TypesUtil.getClassFromType[Any](elementsType), buffer.size)
       val array = arrayt.asInstanceOf[Array[_]]
       var list = buffer.toList
       var p = 0

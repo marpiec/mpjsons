@@ -12,13 +12,14 @@ import scala.reflect.runtime.universe._
 object MapSerializer extends JsonTypeSerializer[scala.collection.Map[_, _]] {
 
 
-  override def serialize(map: scala.collection.Map[_, _], jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory) = {
+  override def serialize(map: scala.collection.Map[_, _], jsonBuilder: StringBuilder)
+                        (implicit serializerFactory: SerializerFactory) = {
 
 
     jsonBuilder.append('[')
     var nonFirstField = false
 
-    for ((key, value) <- map) {
+    for ((key: AnyRef, value:AnyRef) <- map) {
       if (nonFirstField) {
         jsonBuilder.append(",")
       } else {
@@ -26,9 +27,14 @@ object MapSerializer extends JsonTypeSerializer[scala.collection.Map[_, _]] {
       }
       jsonBuilder.append("[")
 
-      serializerFactory.getSerializer(TypesUtil.getTypeFromClass(key.getClass)).asInstanceOf[JsonTypeSerializer[Any]].serialize(key, jsonBuilder)
+      serializerFactory.getSerializer(TypesUtil.getTypeFromClass(key.getClass))
+        .asInstanceOf[JsonTypeSerializer[Any]].serialize(key, jsonBuilder)
+
       jsonBuilder.append(",")
-      serializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass)).asInstanceOf[JsonTypeSerializer[Any]].serialize(value, jsonBuilder)
+
+      serializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass))
+        .asInstanceOf[JsonTypeSerializer[Any]].serialize(value, jsonBuilder)
+
       jsonBuilder.append("]")
     }
 

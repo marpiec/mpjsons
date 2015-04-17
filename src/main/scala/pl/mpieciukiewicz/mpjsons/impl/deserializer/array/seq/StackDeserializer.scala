@@ -1,16 +1,14 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq
 
-import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, TypesUtil}
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
-import scala.collection.immutable.{Stack, Queue}
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.immutable.Stack
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
-
+import scala.reflect.runtime.universe._
 /**
  * @author Marcin Pieciukiewicz
  */
 
 object StackDeserializer extends AbstractJsonArrayDeserializer[Stack[_]] {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: ClassType): Stack[_] = Stack(buffer.toArray:_*)
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Stack[_] = Stack(buffer.toArray:_*)
 }

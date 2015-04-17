@@ -52,7 +52,7 @@ class SerializerFactoryImpl {
     }
 
     // Arrays
-    if (tpe.isInstanceOf[TypeRef] && tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
+    if (tpe.isInstanceOf[TypeRefApi] && tpe.asInstanceOf[TypeRefApi].sym == definitions.ArrayClass) {
       return ArraySerializer
     }
 

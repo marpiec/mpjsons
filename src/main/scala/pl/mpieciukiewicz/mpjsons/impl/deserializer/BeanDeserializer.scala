@@ -1,8 +1,7 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer
 
-import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.util.{TypesUtil, ClassType, ObjectConstructionUtil}
-import pl.mpieciukiewicz.mpjsons.{JsonTypeDeserializer}
+import pl.mpieciukiewicz.mpjsons.impl.util.{TypesUtil, ObjectConstructionUtil}
+import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 import scala.reflect.runtime.universe._
@@ -12,22 +11,20 @@ import scala.reflect.runtime.universe._
 
 object BeanDeserializer extends JsonTypeDeserializer[AnyRef] {
 
-
-
-  def deserialize(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): AnyRef = {
+  def deserialize(jsonIterator: StringIterator, tpe: Type)(implicit deserializerFactory: DeserializerFactory): AnyRef = {
 
     jsonIterator.consumeObjectStart()
-    val instance = ObjectConstructionUtil.createInstance(TypesUtil.getClassFromType(classType.tpe))
+    val instance = ObjectConstructionUtil.createInstance(TypesUtil.getClassFromType(tpe))
 
     while (jsonIterator.currentChar != '}') {
 
       val identifier = IdentifierDeserializer.deserialize(jsonIterator)
-      val fieldInfo = ReflectionUtil.getAccessibleField(classType, identifier)
+      val fieldInfo = ReflectionUtil.getAccessibleField(tpe, identifier)
 
       jsonIterator.consumeFieldValueSeparator()
 
       val deserializer = deserializerFactory.getDeserializer(fieldInfo.tpe).asInstanceOf[JsonTypeDeserializer[Any]]
-      val value = deserializer.deserialize(jsonIterator, ClassType(fieldInfo.tpe))
+      val value = deserializer.deserialize(jsonIterator, fieldInfo.tpe)
 
       fieldInfo.field.set(instance, value)
 

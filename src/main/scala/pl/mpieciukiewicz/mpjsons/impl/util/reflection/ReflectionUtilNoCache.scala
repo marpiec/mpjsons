@@ -2,9 +2,6 @@ package pl.mpieciukiewicz.mpjsons.impl.util.reflection
 
 import java.lang.reflect.{AccessibleObject, Field}
 
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
-
-import scala.reflect.runtime.universe._
 /**
  * Utility object to support reflection.
  * @author Marcin Pieciukiewicz
@@ -40,13 +37,12 @@ private[reflection] object ReflectionUtilNoCache {
       field.setAccessible(true)
       field
     } catch {
-      case e: NoSuchFieldException => {
+      case e: NoSuchFieldException =>
         if (clazz.getSuperclass.equals(classOf[Object])) {
-          return null
+          null
         } else {
           getAccessibleField(clazz.getSuperclass, fieldName)
         }
-      }
     }
   }
 

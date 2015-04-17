@@ -1,6 +1,5 @@
 package pl.mpieciukiewicz.mpjsons.impl.util
 
-import scala.Array
 import java.lang.reflect.Field
 
 /**
@@ -21,7 +20,6 @@ object ObjectConstructionUtil {
   def createArrayInstance[T](elementsType: Class[T], size: Int): Array[T] = {
     java.lang.reflect.Array.newInstance(elementsType, size).asInstanceOf[Array[T]]
   }
-
 
   /**
    * Creates instance of the given class.

@@ -1,11 +1,9 @@
 package pl.mpieciukiewicz.mpjsons.impl.serializer
 
-import java.lang.reflect.AccessibleObject
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
-import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
@@ -14,7 +12,8 @@ import scala.reflect.runtime.universe._
 object BeanSerializer extends JsonTypeSerializer[AnyRef] {
 
 
-  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory) = {
+  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder)
+                        (implicit serializerFactory: SerializerFactory) = {
 
     jsonBuilder.append('{')
 
@@ -36,7 +35,8 @@ object BeanSerializer extends JsonTypeSerializer[AnyRef] {
         }
 
         jsonBuilder.append('"').append(field.getName).append('"').append(':')
-        serializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass)).asInstanceOf[JsonTypeSerializer[AnyRef]].serialize(value, jsonBuilder)
+        serializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass))
+          .asInstanceOf[JsonTypeSerializer[AnyRef]].serialize(value, jsonBuilder)
       }
     }
 

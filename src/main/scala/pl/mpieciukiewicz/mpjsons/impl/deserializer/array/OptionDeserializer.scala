@@ -1,8 +1,7 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array
 
-import pl.mpieciukiewicz.mpjsons.impl.util.ClassType
-
 import scala.collection.mutable.ArrayBuffer
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
@@ -10,7 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 
 object OptionDeserializer extends AbstractJsonArrayDeserializer[Option[_]] {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: ClassType): Option[Any] = {
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Option[Any] = {
     if (buffer.isEmpty) {
       None
     } else {

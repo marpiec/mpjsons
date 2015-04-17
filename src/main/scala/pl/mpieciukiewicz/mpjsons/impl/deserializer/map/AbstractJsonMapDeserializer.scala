@@ -1,9 +1,11 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.map
 
-import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, TypesUtil}
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 import scala.collection.mutable.ArrayBuffer
+
+import scala.reflect.runtime.universe._
 
 /**
   * @author Marcin Pieciukiewicz
@@ -11,12 +13,12 @@ import scala.collection.mutable.ArrayBuffer
 
 trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
 
-
-   override def deserialize(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): T = {
+   override def deserialize(jsonIterator: StringIterator, tpe: Type)
+                           (implicit deserializerFactory: DeserializerFactory): T = {
 
      jsonIterator.consumeArrayStart()
 
-     val (keyType, valueType) = getDoubleSubElementsType(classType)
+     val (keyType, valueType) = getDoubleSubElementsType(tpe)
      var mapArray = ArrayBuffer[(Any, Any)]()
 
      jsonIterator.skipWhitespaceChars()
@@ -48,11 +50,12 @@ trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
      toDesiredCollection(mapArray)
    }
 
-   private def deserializeValue(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): Any = {
-     deserializerFactory.getDeserializer(classType.tpe).deserialize(jsonIterator, classType)
+   private def deserializeValue(jsonIterator: StringIterator, tpe: Type)
+                               (implicit deserializerFactory: DeserializerFactory): Any = {
+     deserializerFactory.getDeserializer(tpe).deserialize(jsonIterator, tpe)
    }
 
-  protected def getDoubleSubElementsType(classType: ClassType): (ClassType, ClassType) = TypesUtil.getDoubleSubElementsType(classType.tpe)
+  protected def getDoubleSubElementsType(tpe: Type): (Type, Type) = TypesUtil.getDoubleSubElementsType(tpe)
 
   protected def toDesiredCollection(buffer: ArrayBuffer[(Any, Any)]): T
 

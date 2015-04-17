@@ -1,11 +1,9 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array
 
-import java.lang.reflect.Field
-import scala.Any
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 import scala.collection.mutable.ArrayBuffer
-import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, TypesUtil}
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import scala.reflect.runtime.universe._
 
 
@@ -16,11 +14,12 @@ import scala.reflect.runtime.universe._
 trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
 
 
-  def deserialize(jsonIterator: StringIterator, classType: ClassType)(implicit deserializerFactory: DeserializerFactory): T = {
+  def deserialize(jsonIterator: StringIterator, tpe: Type)
+                 (implicit deserializerFactory: DeserializerFactory): T = {
 
     jsonIterator.consumeArrayStart()
 
-    val elementsType: ClassType = getSubElementsType(classType)
+    val elementsType: Type = getSubElementsType(tpe)
 
     val buffer = readElementsIntoBuffer(elementsType, jsonIterator)
 
@@ -28,10 +27,11 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
 
   }
 
-  private def readElementsIntoBuffer(elementsType: ClassType, jsonIterator: StringIterator)(implicit deserializerFactory: DeserializerFactory): ArrayBuffer[T] = {
+  private def readElementsIntoBuffer(elementsType: Type, jsonIterator: StringIterator)
+                                    (implicit deserializerFactory: DeserializerFactory): ArrayBuffer[T] = {
     val buffer = ArrayBuffer[T]()
 
-    val deserializer = deserializerFactory.getDeserializer[T](elementsType.tpe)
+    val deserializer = deserializerFactory.getDeserializer[T](elementsType)
     
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
@@ -49,8 +49,8 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
     buffer
   }
 
-  protected def getSubElementsType[S](classType: ClassType): ClassType = TypesUtil.getSubElementsType(classType.tpe)
+  protected def getSubElementsType[S](tpe: Type): Type = TypesUtil.getSubElementsType(tpe)
 
-  protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: ClassType): T
+  protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): T
 
 }

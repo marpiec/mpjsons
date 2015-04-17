@@ -6,7 +6,6 @@ package pl.mpieciukiewicz.mpjsons
 
 import org.scalatest.FlatSpec
 import org.scalatest.MustMatchers._
-import pl.mpieciukiewicz.mpjsons.MPJsons
 
 // this tests also non default constructor and final fields
 class MapElement(var intValue: Int, val stringValue: String)

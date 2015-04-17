@@ -1,9 +1,8 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq
 
-import java.lang.reflect.Field
-import pl.mpieciukiewicz.mpjsons.impl.util.{ClassType, TypesUtil}
-import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.collection.mutable.ArrayBuffer
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
@@ -11,6 +10,6 @@ import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeseri
 
 object StreamDeserializer extends AbstractJsonArrayDeserializer[Stream[_]] {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: ClassType): Stream[_] = buffer.toStream
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Stream[_] = buffer.toStream
 
 }

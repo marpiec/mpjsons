@@ -19,9 +19,13 @@ class MPJsons {
    * @return created object
    */
   def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
+    deserialize(json, tag.tpe)
+  }
+
+  def deserialize[T](json: String, tpe: Type): T = {
     val jsonIterator = new StringIterator(json)
     try {
-      deserializerFactory.getDeserializer(tag.tpe).deserialize(jsonIterator, tag.tpe)
+      deserializerFactory.getDeserializer(tpe).deserialize(jsonIterator, tpe)
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(
@@ -29,14 +33,19 @@ class MPJsons {
     }
   }
 
+
   /**
    * Creates json String that represents given object.
    * @param obj object to serialize
    * @return json String
    */
   def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
+   serialize(obj, tag.tpe)
+  }
+
+  def serialize[T](obj: T, tpe: Type): String = {
     val json = new StringBuilder()
-    serializerFactory.getSerializer(tag.tpe).serialize(obj, json)
+    serializerFactory.getSerializer(tpe).serialize(obj, json)
     json.toString()
   }
 

@@ -8,10 +8,16 @@ import pl.mpieciukiewicz.mpjsons.impl.serializer.common.IteratorSerializer
  * @author Marcin Pieciukiewicz
  */
 
-object IterableSerializer extends JsonTypeSerializer[scala.collection.Iterable[_]] {
+case class IterableSerializer[E, T <: Iterable[E]](protected val serializerFactory: SerializerFactory) extends IteratorSerializer[Iterable[E]] {
 
-  override def serialize(obj: scala.collection.Iterable[_], jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory) = {
-    IteratorSerializer.serialize(obj.iterator, jsonBuilder)
+  override def serialize(obj: Iterable[E], jsonBuilder: StringBuilder) {
+    serializeIterator(obj.iterator, jsonBuilder)
   }
 
 }
+
+
+
+
+
+

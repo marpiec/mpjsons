@@ -12,5 +12,5 @@ abstract class JsonTypeSerializer[T] {
    * @param obj object to serialize
    * @return json String
    */
-  def serialize(obj: T, jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory)
+  def serialize(obj: T, jsonBuilder: StringBuilder): Unit
 }

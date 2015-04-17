@@ -8,10 +8,11 @@ import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
  * @author Marcin Pieciukiewicz
  */
 
-object IteratorSerializer extends JsonTypeSerializer[Iterator[_]] {
+abstract class IteratorSerializer[T] extends JsonTypeSerializer[T] {
 
-  override def serialize(iterator: Iterator[_], jsonBuilder: StringBuilder)
-                        (implicit serializerFactory: SerializerFactory) = {
+  protected val serializerFactory: SerializerFactory
+
+  protected def serializeIterator(iterator: Iterator[_], jsonBuilder: StringBuilder) {
 
     jsonBuilder.append('[')
 
@@ -31,6 +32,4 @@ object IteratorSerializer extends JsonTypeSerializer[Iterator[_]] {
 
     jsonBuilder.append(']')
   }
-
-
 }

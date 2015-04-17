@@ -9,16 +9,15 @@ import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
  * @author Marcin Pieciukiewicz
  */
 
-object BeanSerializer extends JsonTypeSerializer[AnyRef] {
+case class BeanSerializer(serializerFactory: SerializerFactory) extends JsonTypeSerializer[AnyRef] {
 
 
-  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder)
-                        (implicit serializerFactory: SerializerFactory) = {
+  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder) = {
 
     jsonBuilder.append('{')
 
     val clazz = obj.getClass
-    val fields = ReflectionUtil.getAllAccessibleFields(TypesUtil.getTypeFromClass(obj.getClass))
+    val fields = ReflectionUtil.getAllAccessibleFields(TypesUtil.getTypeFromClass(clazz))
 
 
     var isNotFirstField = false

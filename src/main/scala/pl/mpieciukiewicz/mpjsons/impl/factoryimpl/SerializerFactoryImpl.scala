@@ -1,6 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
+import pl.mpieciukiewicz.mpjsons.{MPJsons, JsonTypeSerializer}
 import pl.mpieciukiewicz.mpjsons.impl.serializer._
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 
@@ -27,35 +27,38 @@ class SerializerFactoryImpl {
 
   def getSerializer(tpe: Type): JsonTypeSerializer[_] = {
 
+    val typeSymbol = tpe.typeSymbol
+    val serializerFactory = MPJsons.serializerFactory
 
     // Primitives, by toString (except Char)
     if (typeOf[Long] == tpe || typeOf[java.lang.Long] == tpe) {
-      return SimpleToStringSerializer
+      return SimpleToStringSerializer()
     } else if (typeOf[Int] == tpe || typeOf[java.lang.Integer] == tpe) {
-      return SimpleToStringSerializer
+      return SimpleToStringSerializer()
     } else if (typeOf[Short] == tpe || typeOf[java.lang.Short] == tpe) {
-      return SimpleToStringSerializer
+      return SimpleToStringSerializer()
     } else if (typeOf[Byte] == tpe || typeOf[java.lang.Byte] == tpe) {
-      return SimpleToStringSerializer
+      return SimpleToStringSerializer()
     } else if (typeOf[Boolean] == tpe || typeOf[java.lang.Boolean] == tpe) {
-      return SimpleToStringSerializer
+      return SimpleToStringSerializer()
     } else if (typeOf[Double] == tpe || typeOf[java.lang.Double] == tpe) {
-      return SimpleToStringSerializer
+      return SimpleToStringSerializer()
     } else if (typeOf[Float] == tpe || typeOf[java.lang.Float] == tpe) {
-      return SimpleToStringSerializer
+      return SimpleToStringSerializer()
     }
 
+
     // String, StringBuilder, Char
-    val typeSymbol = tpe.typeSymbol
+
     if (typeOf[String].typeSymbol == typeSymbol ||
       typeOf[mutable.StringBuilder].typeSymbol == typeSymbol ||
       typeOf[Char].typeSymbol == typeSymbol || typeOf[java.lang.Character].typeSymbol == typeSymbol) {
-      return StringSerializer
+      return StringSerializer()
     }
 
     // Arrays
     if (tpe.isInstanceOf[TypeRefApi] && tpe.asInstanceOf[TypeRefApi].sym == definitions.ArrayClass) {
-      return ArraySerializer
+      return ArraySerializer(serializerFactory)
     }
 
     // We don't want to support user's custom collections implicitly,
@@ -63,33 +66,33 @@ class SerializerFactoryImpl {
     if (typeSymbol.fullName.startsWith("scala.")) {
       //Every immutable collection
       if (typeOf[Seq[_]].typeSymbol == typeSymbol) {
-        return IterableSerializer
+        return IterableSerializer(serializerFactory)
       } else if (typeOf[Set[_]].typeSymbol == typeSymbol) {
-        return IterableSerializer
+        return IterableSerializer(serializerFactory)
       } else if (tpe.baseClasses.contains(typeOf[Map[_, _]].typeSymbol)) {
-        return MapSerializer
+        return MapSerializer(serializerFactory)
       } else if (tpe.baseClasses.contains(typeOf[Iterable[_]].typeSymbol)) {
-        return IterableSerializer
+        return IterableSerializer(serializerFactory)
       }
 
       //Every mutable collection
       if (typeOf[mutable.Seq[_]].typeSymbol == typeSymbol) {
-        return IterableSerializer
+        return IterableSerializer(serializerFactory)
       } else if (typeOf[mutable.Set[_]].typeSymbol == typeSymbol) {
-        return IterableSerializer
+        return IterableSerializer(serializerFactory)
       } else if (typeOf[mutable.Map[_, _]].typeSymbol == typeSymbol) {
-        return MapSerializer
+        return MapSerializer(serializerFactory)
       } else if (typeOf[mutable.Iterable[_]].typeSymbol == typeSymbol) {
-        return IterableSerializer
+        return IterableSerializer(serializerFactory)
       }
 
       if(tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
-        return EitherSerializer
+        return EitherSerializer(serializerFactory)
       }
 
       // Every Tuple, Option
       if (tpe.baseClasses.contains(typeOf[Product].typeSymbol)) {
-        return ProductSerializer
+        return ProductSerializer(serializerFactory)
       }
 
     }
@@ -107,7 +110,7 @@ class SerializerFactoryImpl {
 
 
     if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.getName == "MODULE$")) {
-      return SingletonObjectSerializer
+      return SingletonObjectSerializer()
     }
 
     val additionalSerializerOption = additionalSerializers.get(tpe)
@@ -115,7 +118,7 @@ class SerializerFactoryImpl {
     if (additionalSerializerOption.isDefined) {
       additionalSerializerOption.get
     } else {
-      BeanSerializer
+      BeanSerializer(serializerFactory)
     }
 
     //TODO Range, NumericRange

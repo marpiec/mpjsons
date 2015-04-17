@@ -7,8 +7,8 @@ import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
  * @author Marcin Pieciukiewicz
  */
 
-object SimpleToStringSerializer extends JsonTypeSerializer[Any] {
-  override def serialize(obj: Any, jsonBuilder: StringBuilder)(implicit serializerFactory: SerializerFactory) {
+case class SimpleToStringSerializer() extends JsonTypeSerializer[Any] {
+  override def serialize(obj: Any, jsonBuilder: StringBuilder) {
     jsonBuilder.append(obj)
   }
 }

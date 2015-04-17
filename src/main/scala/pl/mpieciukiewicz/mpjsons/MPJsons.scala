@@ -4,14 +4,18 @@ import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, JsonInnerException, 
 
 import scala.reflect.runtime.universe._
 
+object MPJsons {
+  implicit val deserializerFactory = new DeserializerFactory
+  implicit val serializerFactory = new SerializerFactory
+}
+
 /**
  * Main class of json serialization library.
  * @author Marcin Pieciukiewicz
  */
 class MPJsons {
+import MPJsons._
 
-  implicit val deserializerFactory = new DeserializerFactory
-  implicit val serializerFactory = new SerializerFactory
 
   private var extractTypeCache = Map[TypeTag[_], Type]()
 

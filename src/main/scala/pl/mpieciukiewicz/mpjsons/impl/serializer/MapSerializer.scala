@@ -8,17 +8,17 @@ import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
  * @author Marcin Pieciukiewicz
  */
 
-object MapSerializer extends JsonTypeSerializer[scala.collection.Map[_, _]] {
+case class MapSerializer[K,V](serializerFactory: SerializerFactory)
+  extends JsonTypeSerializer[scala.collection.Map[K, V]] {
 
 
-  override def serialize(map: scala.collection.Map[_, _], jsonBuilder: StringBuilder)
-                        (implicit serializerFactory: SerializerFactory) = {
+  override def serialize(map: scala.collection.Map[K, V], jsonBuilder: StringBuilder) = {
 
 
     jsonBuilder.append('[')
     var nonFirstField = false
 
-    for ((key: AnyRef, value: AnyRef) <- map) {
+    for ((key: K, value: V) <- map) {
       if (nonFirstField) {
         jsonBuilder.append(',')
       } else {

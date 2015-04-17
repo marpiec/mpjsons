@@ -8,11 +8,10 @@ import pl.mpieciukiewicz.mpjsons.impl.serializer.common.IteratorSerializer
  * @author Marcin Pieciukiewicz
  */
 
-object ArraySerializer extends JsonTypeSerializer[Array[_]] {
+case class ArraySerializer[E, T <: Array[E]](protected val serializerFactory: SerializerFactory) extends IteratorSerializer[Array[E]] {
 
-  override def serialize(obj: Array[_], jsonBuilder: StringBuilder)
-                        (implicit serializerFactory: SerializerFactory) = {
-    IteratorSerializer.serialize(obj.iterator, jsonBuilder)
+  override def serialize(obj: Array[E], jsonBuilder: StringBuilder) {
+    serializeIterator(obj.iterator, jsonBuilder)
   }
 
 }

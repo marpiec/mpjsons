@@ -32,7 +32,7 @@ import MPJsons._
    * @param json String containing json that represents object of given clazz
    * @return created object
    */
-  def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
+  def deserialize[T](json: String)(tag: TypeTag[T]): T = {
     deserialize(json, extractType(tag))
   }
 
@@ -53,7 +53,7 @@ import MPJsons._
    * @param obj object to serialize
    * @return json String
    */
-  def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
+  def serialize[T](obj: T)(tag: TypeTag[T]): String = {
    serialize(obj, extractType(tag))
   }
 

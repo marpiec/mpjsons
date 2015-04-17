@@ -2,6 +2,10 @@ package pl.mpieciukiewicz.mpjsons.impl.util.reflection
 
 import java.lang.reflect.{AccessibleObject, Field}
 
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
+
+import scala.reflect.runtime.universe._
+
 /**
  * Utility object to support reflection.
  * @author Marcin Pieciukiewicz
@@ -13,16 +17,25 @@ private[reflection] object ReflectionUtilNoCache {
    * @param clazz class from which the fields should be retrieved
    * @return array containing all defined fields in class
    */
-  def getAllAccessibleFields(clazz: Class[_]): Array[Field] = {
-    val declaredFields: Array[Field] = clazz.getDeclaredFields.filterNot(_.isSynthetic)
-    AccessibleObject.setAccessible(declaredFields.asInstanceOf[Array[AccessibleObject]], true)
-    if (clazz.equals(classOf[Object])) {
-      Array()
-    } else if (clazz.getSuperclass.equals(classOf[Object])) {
-      declaredFields
-    } else {
-      Array.concat(declaredFields, getAllAccessibleFields(clazz.getSuperclass))
-    }
+  def getAllAccessibleFields(tpe: Type): Array[FieldWithTypeInfo] = {
+    val members = tpe.members.filterNot(_.isMethod).filterNot(_.isSynthetic)
+
+    members.map { member =>
+      FieldWithTypeInfo(
+      ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), member.name.toString.trim),
+      member.info)
+
+
+    }.toArray
+
+//
+//    if (clazz.equals(classOf[Object])) {
+//      Array()
+//    } else if (clazz.getSuperclass.equals(classOf[Object])) {
+//      declaredFields
+//    } else {
+//      Array.concat(declaredFields, getAllAccessibleFields(clazz.getSuperclass))
+//    }
   }
 
   /**

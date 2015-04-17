@@ -2,29 +2,31 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
+
+import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-case class BeanSerializer(serializerFactory: SerializerFactory) extends JsonTypeSerializer[AnyRef] {
+class BeanSerializer(serializerFactory: SerializerFactory, tpe: Type) extends JsonTypeSerializer[AnyRef] {
+
+  val fields = ReflectionUtil.getAllAccessibleFields(tpe)
+  val fieldsWithSerializers = fields.map {field =>
+    (field.field, field.field.getName, serializerFactory.getSerializer(field.tpe)
+    .asInstanceOf[JsonTypeSerializer[AnyRef]])}
 
 
   override def serialize(obj: AnyRef, jsonBuilder: StringBuilder) = {
 
     jsonBuilder.append('{')
 
-    val clazz = obj.getClass
-    val fields = ReflectionUtil.getAllAccessibleFields(TypesUtil.getTypeFromClass(clazz))
-
-
     var isNotFirstField = false
 
-    for (field <- fields) {
+    for (field <- fieldsWithSerializers) {
 
-      val value = field.get(obj)
+      val value = field._1.get(obj)
       if (value != null) {
 
         if (isNotFirstField) {
@@ -33,15 +35,12 @@ case class BeanSerializer(serializerFactory: SerializerFactory) extends JsonType
           isNotFirstField = true
         }
 
-        jsonBuilder.append('"').append(field.getName).append('"').append(':')
-        serializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass))
-          .asInstanceOf[JsonTypeSerializer[AnyRef]].serialize(value, jsonBuilder)
+        jsonBuilder.append('"').append(field._2).append('"').append(':')
+        field._3.serialize(value, jsonBuilder)
       }
     }
 
-
     jsonBuilder.append('}')
   }
-
 
 }

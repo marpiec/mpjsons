@@ -4,15 +4,18 @@ import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
 import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 
+import scala.reflect.runtime.universe._
+
 /**
  * @author Marcin Pieciukiewicz
  */
 
-abstract class IteratorSerializer[T] extends JsonTypeSerializer[T] {
+abstract class IteratorSerializer[T, C](private val serializerFactory: SerializerFactory, private val tpe: Type)
+  extends JsonTypeSerializer[C] {
 
-  protected val serializerFactory: SerializerFactory
+  val subTypeSerializer = serializerFactory.getSerializer(TypesUtil.getSubElementsType(tpe)).asInstanceOf[JsonTypeSerializer[T]]
 
-  protected def serializeIterator(iterator: Iterator[_], jsonBuilder: StringBuilder) {
+  protected def serializeIterator(iterator: Iterator[T], jsonBuilder: StringBuilder) {
 
     jsonBuilder.append('[')
 
@@ -25,8 +28,7 @@ abstract class IteratorSerializer[T] extends JsonTypeSerializer[T] {
       } else {
         isNotFirstField = true
       }
-      serializerFactory.getSerializer(TypesUtil.getTypeFromClass(element.getClass))
-        .asInstanceOf[JsonTypeSerializer[Any]].serialize(element, jsonBuilder)
+      subTypeSerializer.serialize(element, jsonBuilder)
     })
 
 

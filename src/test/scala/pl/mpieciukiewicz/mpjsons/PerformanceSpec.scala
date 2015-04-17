@@ -1,7 +1,7 @@
 package pl.mpieciukiewicz.mpjsons
 
 import org.scalatest.{GivenWhenThen, MustMatchers, FlatSpec}
-
+import scala.reflect.runtime.universe._
 object PerformanceSpec {
   class SimpleDataObject {
     var charValue: Char = _
@@ -48,10 +48,12 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
     When("Trying to serialize and deserialize multiple times")
 
+    val tt= typeTag[PerformanceSpec.SimpleDataObject]
+
     for(i <- 0 to 1000) {
       sdo.intValue += 1
-      val serialized = mpjsons.serialize(sdo)
-      val deserialized = mpjsons.deserialize[PerformanceSpec.SimpleDataObject](serialized)
+      val serialized = mpjsons.serialize(sdo)(tt)
+      val deserialized = mpjsons.deserialize(serialized)(tt)
       sdo.intValue mustBe sdo.intValue
     }
 
@@ -59,8 +61,8 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
     for(i <- 0 to 5000) {
       sdo.intValue += 1
-      val serialized = mpjsons.serialize(sdo)
-      val deserialized = mpjsons.deserialize[PerformanceSpec.SimpleDataObject](serialized)
+      val serialized = mpjsons.serialize(sdo)(tt)
+      val deserialized = mpjsons.deserialize(serialized)(tt)
       sdo.intValue mustBe sdo.intValue
     }
 
@@ -68,7 +70,7 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
     Then("We have acceptable performance")
 
-    (end - start) must be < 100L
+    (end - start) must be < 5L
 
   }
 }

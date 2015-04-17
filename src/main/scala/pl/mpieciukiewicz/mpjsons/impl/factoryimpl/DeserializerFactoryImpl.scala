@@ -119,7 +119,7 @@ class DeserializerFactoryImpl {
     }
 
 
-    if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.getName == "MODULE$")) {
+    if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
       return SingletonObjectDeserializer
     }
 

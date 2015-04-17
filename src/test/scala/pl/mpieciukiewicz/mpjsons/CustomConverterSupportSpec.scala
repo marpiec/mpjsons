@@ -13,8 +13,8 @@ trait SpecialTypeTrait
 
 case class SomeSpecialType(name: String) extends SpecialTypeTrait
 
-class TypedConverter[T <: AnyRef](packageName: String)
-                                 (implicit serializerFactory: SerializerFactory)extends JsonTypeConverter[T] {
+class TypedConverter[T <: AnyRef](packageName: String, serializerFactory: SerializerFactory, tpe: Type)
+                                 extends JsonTypeConverter[T] {
 
 
 
@@ -22,7 +22,8 @@ class TypedConverter[T <: AnyRef](packageName: String)
                         : Unit = {
     val simpleName: String = obj.getClass.getSimpleName
     jsonBuilder.append("{\"" +simpleName + "\":")
-    BeanSerializer(MPJsons.serializerFactory).serialize(obj.asInstanceOf[AnyRef], jsonBuilder)
+
+    new BeanSerializer(MPJsons.serializerFactory, tpe).serialize(obj.asInstanceOf[AnyRef], jsonBuilder)
     jsonBuilder.append('}')
   }
 

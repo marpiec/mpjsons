@@ -15,7 +15,7 @@ case class FieldWithTypeInfo(field: Field, tpe: Type)
  */
 object ReflectionUtil {
 
-  private var getAllAccessibleFieldsCache: Map[Type, Array[Field]] = Map()
+  private var getAllAccessibleFieldsCache: Map[Type, Array[FieldWithTypeInfo]] = Map()
 
   private var getAccessibleFieldCache: Map[(Type, String), FieldWithTypeInfo] = Map()
 
@@ -24,10 +24,9 @@ object ReflectionUtil {
    * @param tpe class from which the fields should be retrieved
    * @return array containing all defined fields in class
    */
-  def getAllAccessibleFields(tpe: Type): Array[Field] = {
+  def getAllAccessibleFields(tpe: Type): Array[FieldWithTypeInfo] = {
     getAllAccessibleFieldsCache.getOrElse(tpe, {
-      val clazz = TypesUtil.getClassFromType(tpe)
-      val allFields: Array[Field] = ReflectionUtilNoCache.getAllAccessibleFields(clazz)
+      val allFields: Array[FieldWithTypeInfo] = ReflectionUtilNoCache.getAllAccessibleFields(tpe)
       getAllAccessibleFieldsCache += tpe -> allFields
       allFields
     })

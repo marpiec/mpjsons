@@ -1,8 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl
 
-import pl.mpieciukiewicz.mpjsons.impl.serializer._
-import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
-import pl.mpieciukiewicz.mpjsons.impl.factoryimpl.{SerializerFactoryMemoizer, SerializerFactoryImpl}
+import pl.mpieciukiewicz.mpjsons.impl.factoryimpl.{SerializerFactoryImpl, SerializerFactoryMemoizer}
 
 /**
  * @author Marcin Pieciukiewicz

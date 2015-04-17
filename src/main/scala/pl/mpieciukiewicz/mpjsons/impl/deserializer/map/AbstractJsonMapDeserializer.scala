@@ -1,63 +1,63 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.map
 
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
-import scala.collection.mutable.ArrayBuffer
 
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 /**
-  * @author Marcin Pieciukiewicz
-  */
+ * @author Marcin Pieciukiewicz
+ */
 
 trait AbstractJsonMapDeserializer[T] extends JsonTypeDeserializer[T] {
 
-   override def deserialize(jsonIterator: StringIterator, tpe: Type)
-                           (implicit deserializerFactory: DeserializerFactory): T = {
+  override def deserialize(jsonIterator: StringIterator, tpe: Type)
+                          (implicit deserializerFactory: DeserializerFactory): T = {
 
-     jsonIterator.consumeArrayStart()
+    jsonIterator.consumeArrayStart()
 
-     val (keyType, valueType) = getDoubleSubElementsType(tpe)
-     var mapArray = ArrayBuffer[(Any, Any)]()
+    val (keyType, valueType) = getDoubleSubElementsType(tpe)
+    var mapArray = ArrayBuffer[(Any, Any)]()
 
-     jsonIterator.skipWhitespaceChars()
+    jsonIterator.skipWhitespaceChars()
 
-     while (jsonIterator.currentChar != ']') {
+    while (jsonIterator.currentChar != ']') {
 
-       jsonIterator.consumeArrayStart()
+      jsonIterator.consumeArrayStart()
 
-       val key = deserializeValue(jsonIterator, keyType)
+      val key = deserializeValue(jsonIterator, keyType)
 
-       jsonIterator.consumeArrayValuesSeparator()
-
-
-       val value = deserializeValue(jsonIterator, valueType)
-
-       mapArray.+=((key, value))
+      jsonIterator.consumeArrayValuesSeparator()
 
 
-       jsonIterator.consumeArrayEnd() // ]
-       jsonIterator.skipWhitespaceChars()
+      val value = deserializeValue(jsonIterator, valueType)
 
-       if (jsonIterator.currentChar == ',') {
-         jsonIterator.nextChar()
-       }
+      mapArray.+=((key, value))
 
-     }
 
-     jsonIterator.nextChar()
-     toDesiredCollection(mapArray)
-   }
+      jsonIterator.consumeArrayEnd() // ]
+      jsonIterator.skipWhitespaceChars()
 
-   private def deserializeValue(jsonIterator: StringIterator, tpe: Type)
-                               (implicit deserializerFactory: DeserializerFactory): Any = {
-     deserializerFactory.getDeserializer(tpe).deserialize(jsonIterator, tpe)
-   }
+      if (jsonIterator.currentChar == ',') {
+        jsonIterator.nextChar()
+      }
+
+    }
+
+    jsonIterator.nextChar()
+    toDesiredCollection(mapArray)
+  }
+
+  private def deserializeValue(jsonIterator: StringIterator, tpe: Type)
+                              (implicit deserializerFactory: DeserializerFactory): Any = {
+    deserializerFactory.getDeserializer(tpe).deserialize(jsonIterator, tpe)
+  }
 
   protected def getDoubleSubElementsType(tpe: Type): (Type, Type) = TypesUtil.getDoubleSubElementsType(tpe)
 
   protected def toDesiredCollection(buffer: ArrayBuffer[(Any, Any)]): T
 
 
- }
+}

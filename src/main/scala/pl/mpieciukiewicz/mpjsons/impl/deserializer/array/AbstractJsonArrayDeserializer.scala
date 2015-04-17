@@ -1,11 +1,11 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
-import scala.collection.mutable.ArrayBuffer
 import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
-import scala.reflect.runtime.universe._
+import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 
+import scala.collection.mutable.ArrayBuffer
+import scala.reflect.runtime.universe._
 
 
 /**
@@ -32,10 +32,10 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
     val buffer = ArrayBuffer[T]()
 
     val deserializer = deserializerFactory.getDeserializer[T](elementsType)
-    
+
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
-      
+
       val value = deserializer.deserialize(jsonIterator, elementsType)
       buffer += value
 

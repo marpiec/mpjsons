@@ -41,7 +41,7 @@ object ObjectConstructionUtil {
    * @param clazz type of object to retrieve
    * @return retrieved object
    */
-  def retrieveObjectInstance(clazz: Class[_]):AnyRef = {
+  def retrieveObjectInstance(clazz: Class[_]): AnyRef = {
     clazz.getField("MODULE$").get(clazz)
   }
 

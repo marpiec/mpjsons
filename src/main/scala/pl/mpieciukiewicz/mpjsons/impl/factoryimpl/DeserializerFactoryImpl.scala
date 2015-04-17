@@ -1,17 +1,16 @@
 package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
 
+import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
+import pl.mpieciukiewicz.mpjsons.impl.deserializer._
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.array._
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq._
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set._
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.map.{HashMapDeserializer, ListMapDeserializer, MapDeserializer}
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.primitives._
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 
-import collection.mutable.ListBuffer
-
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.primitives._
-import pl.mpieciukiewicz.mpjsons.impl.deserializer._
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.array._
 import scala.collection.immutable._
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set._
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq._
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.map.{ListMapDeserializer, MapDeserializer, HashMapDeserializer}
+import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe._
 
 /**
@@ -79,24 +78,24 @@ class DeserializerFactoryImpl {
       return HashSetDeserializer
     } else if (tpe.typeSymbol == typeOf[ListSet[_]].typeSymbol) {
       return ListSetDeserializer
-//    } else if (tpe == typeOf[SortedSet[_]]) {
-//      return SortedSetDeserializer
-//    } else if (tpe == typeOf[TreeSet[_]]) {
-//      return TreeSetDeserializer
+      //    } else if (tpe == typeOf[SortedSet[_]]) {
+      //      return SortedSetDeserializer
+      //    } else if (tpe == typeOf[TreeSet[_]]) {
+      //      return TreeSetDeserializer
     } else if (tpe.typeSymbol == typeOf[BitSet].typeSymbol) {
       return BitSetDeserializer
     }
 
     // map
-    if (tpe.typeSymbol == typeOf[Map[_,_]].typeSymbol) {
+    if (tpe.typeSymbol == typeOf[Map[_, _]].typeSymbol) {
       return MapDeserializer
-    } else if (tpe.typeSymbol == typeOf[HashMap[_,_]].typeSymbol) {
+    } else if (tpe.typeSymbol == typeOf[HashMap[_, _]].typeSymbol) {
       return HashMapDeserializer
-//    } else if (tpe == typeOf[SortedMap[_,_]]) {
-//      return SortedMapDeserializer
-//    } else if (tpe == typeOf[TreeMap[_,_]]) {
-//      return TreeMapDeserializer
-    } else if (tpe.typeSymbol == typeOf[ListMap[_,_]].typeSymbol) {
+      //    } else if (tpe == typeOf[SortedMap[_,_]]) {
+      //      return SortedMapDeserializer
+      //    } else if (tpe == typeOf[TreeMap[_,_]]) {
+      //      return TreeMapDeserializer
+    } else if (tpe.typeSymbol == typeOf[ListMap[_, _]].typeSymbol) {
       return ListMapDeserializer
     }
 
@@ -124,7 +123,7 @@ class DeserializerFactoryImpl {
 
     val additionalDeserializerOption = additionalDeserializers.get(tpe)
 
-    if(additionalDeserializerOption.isDefined) {
+    if (additionalDeserializerOption.isDefined) {
       additionalDeserializerOption.get
     } else {
       BeanDeserializer

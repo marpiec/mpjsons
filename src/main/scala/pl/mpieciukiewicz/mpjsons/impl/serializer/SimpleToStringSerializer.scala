@@ -2,6 +2,7 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+
 /**
  * @author Marcin Pieciukiewicz
  */

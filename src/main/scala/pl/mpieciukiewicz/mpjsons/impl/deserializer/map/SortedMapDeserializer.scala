@@ -1,8 +1,5 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.map
 
-import scala.collection.immutable.{SortedMap, TreeMap, ListMap, HashMap}
-import scala.collection.mutable.ArrayBuffer
-
 /**
  * @author Marcin Pieciukiewicz
  */

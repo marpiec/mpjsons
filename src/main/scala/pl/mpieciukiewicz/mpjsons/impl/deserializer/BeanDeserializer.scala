@@ -1,10 +1,12 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer
 
-import pl.mpieciukiewicz.mpjsons.impl.util.{TypesUtil, ObjectConstructionUtil}
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
+import pl.mpieciukiewicz.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
+import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
+
 import scala.reflect.runtime.universe._
+
 /**
  * @author Marcin Pieciukiewicz
  */

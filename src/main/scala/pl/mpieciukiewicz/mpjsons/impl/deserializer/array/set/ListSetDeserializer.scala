@@ -7,10 +7,10 @@ import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 /**
-  * @author Marcin Pieciukiewicz
-  */
+ * @author Marcin Pieciukiewicz
+ */
 
 object ListSetDeserializer extends AbstractJsonArrayDeserializer[ListSet[_]] {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): ListSet[_] = ListSet(buffer.toArray:_*)
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): ListSet[_] = ListSet(buffer.toArray: _*)
 }

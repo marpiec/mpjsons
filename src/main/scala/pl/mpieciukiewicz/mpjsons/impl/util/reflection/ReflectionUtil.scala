@@ -18,7 +18,7 @@ object ReflectionUtil {
   private var getAllAccessibleFieldsCache: Map[Type, Array[Field]] = Map()
 
   private var getAccessibleFieldCache: Map[(Type, String), Field] = Map()
-  
+
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
    * @param tpe class from which the fields should be retrieved
@@ -40,10 +40,10 @@ object ReflectionUtil {
    * @return retrieved Field or null if field does not exists.
    */
 
-  def getAccessibleField(tpe: Type, fieldName: String):FieldWithTypeInfo = {
+  def getAccessibleField(tpe: Type, fieldName: String): FieldWithTypeInfo = {
     val member = tpe.members.filterNot(_.isMethod).find(_.name.toString.trim == fieldName)
     //tag.tpe.members.filter(member => !member.isMethod && member.name == TermName(fieldName))
-    if(member.isEmpty) {
+    if (member.isEmpty) {
       throw new JsonInnerException("No member with name " + fieldName, null)
     } else {
       val info = member.get.info

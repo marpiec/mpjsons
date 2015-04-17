@@ -2,6 +2,7 @@ package pl.mpieciukiewicz.mpjsons.impl.deserializer.inner
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
+
 import scala.reflect.runtime.universe._
 
 /**

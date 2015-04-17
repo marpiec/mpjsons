@@ -12,5 +12,5 @@ import scala.reflect.runtime.universe._
 
 object QueueDeserializer extends AbstractJsonArrayDeserializer[Queue[_]] {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Queue[_] = Queue(buffer.toArray:_*)
+  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Queue[_] = Queue(buffer.toArray: _*)
 }

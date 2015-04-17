@@ -1,6 +1,7 @@
 package pl.mpieciukiewicz.mpjsons
 
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator, JsonInnerException}
+import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
+
 import scala.reflect.runtime.universe._
 
 /**

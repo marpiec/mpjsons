@@ -1,9 +1,9 @@
 package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
+import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
 import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
-import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
 
 /**
  * @author Marcin Pieciukiewicz

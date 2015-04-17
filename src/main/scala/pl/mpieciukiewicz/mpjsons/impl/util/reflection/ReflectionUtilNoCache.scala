@@ -16,9 +16,9 @@ private[reflection] object ReflectionUtilNoCache {
   def getAllAccessibleFields(clazz: Class[_]): Array[Field] = {
     val declaredFields: Array[Field] = clazz.getDeclaredFields.filterNot(_.isSynthetic)
     AccessibleObject.setAccessible(declaredFields.asInstanceOf[Array[AccessibleObject]], true)
-    if(clazz.equals(classOf[Object])) {
+    if (clazz.equals(classOf[Object])) {
       Array()
-    } else if(clazz.getSuperclass.equals(classOf[Object])) {
+    } else if (clazz.getSuperclass.equals(classOf[Object])) {
       declaredFields
     } else {
       Array.concat(declaredFields, getAllAccessibleFields(clazz.getSuperclass))

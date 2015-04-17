@@ -19,7 +19,7 @@ object TypesUtil {
 
   private def getSubElementsTypeOnPosition(tpe: Type, typeIndex: Int): Type = tpe.typeArgs(typeIndex)
 
-  def getTypeFromClass(clazz: Class[_]):Type = {
+  def getTypeFromClass(clazz: Class[_]): Type = {
     runtimeMirror(clazz.getClassLoader).classSymbol(clazz).toType
   }
 

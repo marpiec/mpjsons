@@ -15,7 +15,7 @@ object CharDeserializer extends JsonTypeDeserializer[Char] {
 
     val deserializedString: String = StringDeserializer.deserialize(jsonIterator, tpe)
 
-    if(deserializedString.length == 1) {
+    if (deserializedString.length == 1) {
       deserializedString.charAt(0)
     } else {
       throw new IllegalArgumentException("Char value have to be 1 character long: [" + deserializedString + " ]")

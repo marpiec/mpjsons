@@ -1,6 +1,7 @@
 package pl.mpieciukiewicz.mpjsons
 
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
+
 import scala.reflect.runtime.universe._
 
 /**

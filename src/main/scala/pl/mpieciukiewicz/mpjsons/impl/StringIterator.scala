@@ -17,7 +17,7 @@ class StringIterator(private val stringValue: String) {
   }
 
   def nextChar(): Unit = {
-    currentChar = if(nextIndex < stringLength) {
+    currentChar = if (nextIndex < stringLength) {
       stringValue.charAt(nextIndex)
     } else {
       '\u0000'

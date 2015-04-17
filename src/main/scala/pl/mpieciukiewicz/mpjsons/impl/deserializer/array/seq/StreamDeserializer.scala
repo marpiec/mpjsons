@@ -1,7 +1,8 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq
 
-import scala.collection.mutable.ArrayBuffer
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
+
+import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 /**

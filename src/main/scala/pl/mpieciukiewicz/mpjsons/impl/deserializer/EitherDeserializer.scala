@@ -1,23 +1,22 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer
 
-import java.lang.reflect.Field
-
 import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.util.{TypesUtil, ObjectConstructionUtil}
-import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
-import pl.mpieciukiewicz.mpjsons.impl.{JsonInnerException, DeserializerFactory, StringIterator}
-
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
+import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, JsonInnerException, StringIterator}
+import scala.reflect.runtime.universe._
 /**
  * @author Marcin Pieciukiewicz
  */
 
 object EitherDeserializer extends JsonTypeDeserializer[Any] {
 
-  def deserialize(jsonIterator: StringIterator, clazz: Class[_], field: Field): Any = {
+  override def deserialize(jsonIterator: StringIterator, tpe: Type)
+                          (implicit deserializerFactory: DeserializerFactory): Any = {
+
 
     jsonIterator.consumeObjectStart()
 
-    val types = TypesUtil.getDoubleSubElementsType(field)
+    val types = TypesUtil.getDoubleSubElementsType(tpe)
 
     val identifier = IdentifierDeserializer.deserialize(jsonIterator)
 
@@ -31,8 +30,8 @@ object EitherDeserializer extends JsonTypeDeserializer[Any] {
 
     jsonIterator.consumeFieldValueSeparator()
 
-    val deserializer = DeserializerFactory.getDeserializer(elementType)
-    val value = deserializer.deserialize(jsonIterator, elementType, field)
+    val deserializer = deserializerFactory.getDeserializer(elementType).asInstanceOf[JsonTypeDeserializer[Any]]
+    val value = deserializer.deserialize(jsonIterator, elementType)
 
     jsonIterator.skipWhitespaceChars()
     if (jsonIterator.currentChar == ',') {

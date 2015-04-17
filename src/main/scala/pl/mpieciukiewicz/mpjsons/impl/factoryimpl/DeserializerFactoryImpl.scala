@@ -58,6 +58,8 @@ class DeserializerFactoryImpl {
       return OptionDeserializer
     } else if (tpe.typeSymbol == typeOf[Map[_, _]].typeSymbol) {
       return MapDeserializer
+    } else if (tpe.typeSymbol == typeOf[Either[_, _]].typeSymbol) {
+      return EitherDeserializer
     }
 
     // seq

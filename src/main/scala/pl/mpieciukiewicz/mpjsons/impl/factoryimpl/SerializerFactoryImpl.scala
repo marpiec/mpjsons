@@ -82,6 +82,10 @@ class SerializerFactoryImpl {
         return IterableSerializer
       }
 
+      if(tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
+        return EitherSerializer
+      }
+
       // Every Tuple, Option
       if (tpe.baseClasses.contains(typeOf[Product].typeSymbol)) {
         return ProductSerializer

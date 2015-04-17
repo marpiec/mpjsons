@@ -2,12 +2,13 @@ package pl.mpieciukiewicz.mpjsons.impl.serializer
 
 import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
 import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
 
-object EitherSerializer extends JsonTypeSerializer {
+object EitherSerializer extends JsonTypeSerializer[Either[_,_]] {
 
-  private case class LeftRepresentation(left: Any)
 
-  override def serialize(obj: Any, jsonBuilder: StringBuilder): Unit = {
+  override def serialize(obj: Either[_,_], jsonBuilder: StringBuilder)
+                        (implicit serializerFactory: SerializerFactory): Unit = {
 
     jsonBuilder.append('{')
 
@@ -16,7 +17,7 @@ object EitherSerializer extends JsonTypeSerializer {
       case right: Right[_, _] => jsonBuilder.append("\"right\":"); right.right.get
     }
 
-    SerializerFactory.getSerializer(value.getClass).serialize(value, jsonBuilder)
+    serializerFactory.getSerializer(TypesUtil.getTypeFromClass(value.getClass)).serialize(value, jsonBuilder)
 
     jsonBuilder.append('}')
 

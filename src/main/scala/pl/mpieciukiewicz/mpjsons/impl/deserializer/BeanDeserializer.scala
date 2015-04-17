@@ -13,7 +13,8 @@ import scala.reflect.runtime.universe._
 
 object BeanDeserializer extends JsonTypeDeserializer[AnyRef] {
 
-  def deserialize(jsonIterator: StringIterator, tpe: Type)(implicit deserializerFactory: DeserializerFactory): AnyRef = {
+  def deserialize(jsonIterator: StringIterator, tpe: Type)
+                 (implicit deserializerFactory: DeserializerFactory): AnyRef = {
 
     jsonIterator.consumeObjectStart()
     val instance = ObjectConstructionUtil.createInstance(TypesUtil.getClassFromType(tpe))

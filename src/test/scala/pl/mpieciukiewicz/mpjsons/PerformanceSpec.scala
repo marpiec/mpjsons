@@ -49,6 +49,14 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
 
     When("Trying to serialize and deserialize multiple times")
+
+    for(i <- 0 to 1000) {
+      sdo.intValue += 1
+      val serialized = MPJson.serialize(sdo)
+      val deserialized = MPJson.deserialize(serialized, classOf[PerformanceSpec.SimpleDataObject])
+      sdo.intValue mustBe deserialized.intValue
+    }
+
     val start = System.currentTimeMillis()
 
     for(i <- 0 to 5000) {
@@ -62,7 +70,7 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
     Then("We have acceptable performance")
 
-    (end - start) must be < 500L
+    (end - start) must be < 100L
 
   }
 }

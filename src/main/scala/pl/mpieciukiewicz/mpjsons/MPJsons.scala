@@ -13,13 +13,23 @@ class MPJsons {
   implicit val deserializerFactory = new DeserializerFactory
   implicit val serializerFactory = new SerializerFactory
 
+  private var extractTypeCache = Map[TypeTag[_], Type]()
+
+  private def extractType[T](tag: TypeTag[T]): Type = {
+    extractTypeCache.getOrElse(tag, {
+      val tpe = tag.tpe
+      extractTypeCache += tag -> tpe
+      tpe
+    })
+  }
+
   /**
    * Creates object from gives json String and type of class.
    * @param json String containing json that represents object of given clazz
    * @return created object
    */
   def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
-    deserialize(json, tag.tpe)
+    deserialize(json, extractType(tag))
   }
 
   def deserialize[T](json: String, tpe: Type): T = {
@@ -40,8 +50,9 @@ class MPJsons {
    * @return json String
    */
   def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
-   serialize(obj, tag.tpe)
+   serialize(obj, extractType(tag))
   }
+
 
   def serialize[T](obj: T, tpe: Type): String = {
     val json = new StringBuilder()
@@ -54,8 +65,8 @@ class MPJsons {
    * @param converter converter that will be used to serialize and deserialize given type
    */
   def registerConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
-    serializerFactory.registerSerializer[T](tag.tpe, converter)
-    deserializerFactory.registerDeserializer(tag.tpe, converter)
+    serializerFactory.registerSerializer[T](extractType(tag), converter)
+    deserializerFactory.registerDeserializer(extractType(tag), converter)
   }
 
   /**
@@ -63,8 +74,8 @@ class MPJsons {
    * @param converter converter that will be used to serialize and deserialize given type and its descendant
    */
   def registerSuperclassConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
-    serializerFactory.registerSuperclassSerializer(tag.tpe, converter)
-    deserializerFactory.registerSuperclassDeserializer(tag.tpe, converter)
+    serializerFactory.registerSuperclassSerializer(extractType(tag), converter)
+    deserializerFactory.registerSuperclassDeserializer(extractType(tag), converter)
   }
 
 }

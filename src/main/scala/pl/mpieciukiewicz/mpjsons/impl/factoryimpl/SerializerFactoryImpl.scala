@@ -46,9 +46,10 @@ class SerializerFactoryImpl {
     }
 
     // String, StringBuilder, Char
-    if (typeOf[String].typeSymbol == tpe.typeSymbol ||
-      typeOf[mutable.StringBuilder].typeSymbol == tpe.typeSymbol ||
-      typeOf[Char].typeSymbol == tpe.typeSymbol || typeOf[java.lang.Character].typeSymbol == tpe.typeSymbol) {
+    val typeSymbol = tpe.typeSymbol
+    if (typeOf[String].typeSymbol == typeSymbol ||
+      typeOf[mutable.StringBuilder].typeSymbol == typeSymbol ||
+      typeOf[Char].typeSymbol == typeSymbol || typeOf[java.lang.Character].typeSymbol == typeSymbol) {
       return StringSerializer
     }
 
@@ -59,11 +60,11 @@ class SerializerFactoryImpl {
 
     // We don't want to support user's custom collections implicitly,
     // because there will be problem with deserialization, but we want to support standard subtypes
-    if (tpe.typeSymbol.fullName.startsWith("scala.")) {
+    if (typeSymbol.fullName.startsWith("scala.")) {
       //Every immutable collection
-      if (typeOf[Seq[_]].typeSymbol == tpe.typeSymbol) {
+      if (typeOf[Seq[_]].typeSymbol == typeSymbol) {
         return IterableSerializer
-      } else if (typeOf[Set[_]].typeSymbol == tpe.typeSymbol) {
+      } else if (typeOf[Set[_]].typeSymbol == typeSymbol) {
         return IterableSerializer
       } else if (tpe.baseClasses.contains(typeOf[Map[_, _]].typeSymbol)) {
         return MapSerializer
@@ -72,13 +73,13 @@ class SerializerFactoryImpl {
       }
 
       //Every mutable collection
-      if (typeOf[mutable.Seq[_]].typeSymbol == tpe.typeSymbol) {
+      if (typeOf[mutable.Seq[_]].typeSymbol == typeSymbol) {
         return IterableSerializer
-      } else if (typeOf[mutable.Set[_]].typeSymbol == tpe.typeSymbol) {
+      } else if (typeOf[mutable.Set[_]].typeSymbol == typeSymbol) {
         return IterableSerializer
-      } else if (typeOf[mutable.Map[_, _]].typeSymbol == tpe.typeSymbol) {
+      } else if (typeOf[mutable.Map[_, _]].typeSymbol == typeSymbol) {
         return MapSerializer
-      } else if (typeOf[mutable.Iterable[_]].typeSymbol == tpe.typeSymbol) {
+      } else if (typeOf[mutable.Iterable[_]].typeSymbol == typeSymbol) {
         return IterableSerializer
       }
 
@@ -94,7 +95,7 @@ class SerializerFactoryImpl {
     }
 
 
-    additionalSuperclassSerializers.get(tpe.typeSymbol) match {
+    additionalSuperclassSerializers.get(typeSymbol) match {
       case Some(serializer) => return serializer
       case None =>
         for ((tpeType, serializer) <- additionalSuperclassSerializers) {

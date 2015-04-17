@@ -1,7 +1,6 @@
 package pl.mpieciukiewicz.mpjsons
 
 import org.scalatest.{GivenWhenThen, MustMatchers, FlatSpec}
-import pl.mpieciukiewicz.mpjsons.annotation.FirstSubType
 
 object PerformanceSpec {
   class SimpleDataObject {
@@ -12,12 +11,9 @@ object PerformanceSpec {
     var booleanValue: Boolean = _
     var innerObject: InnerObject = _
     var arrayObject: Array[String] = _
-    @FirstSubType(classOf[Long])
     var arrayPrimitive: Array[Long] = _
     var listObject: List[String] = _
-    @FirstSubType(classOf[Int])
     var listPrimitive: List[Int] = _
-    @FirstSubType(classOf[Long])
     var emptyArray: Array[Long] = _
   }
 }
@@ -29,6 +25,8 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
 
     Given("Simple Object")
+
+    val mpjsons = new MPJsons
 
     val sdo = new PerformanceSpec.SimpleDataObject
     sdo.charValue = 'M'
@@ -49,20 +47,12 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
 
     When("Trying to serialize and deserialize multiple times")
-
-    for(i <- 0 to 1000) {
-      sdo.intValue += 1
-      val serialized = MPJson.serialize(sdo)
-      val deserialized = MPJson.deserialize(serialized, classOf[PerformanceSpec.SimpleDataObject])
-      sdo.intValue mustBe deserialized.intValue
-    }
-
     val start = System.currentTimeMillis()
 
     for(i <- 0 to 5000) {
       sdo.intValue += 1
-      val serialized = MPJson.serialize(sdo)
-      val deserialized = MPJson.deserialize(serialized, classOf[PerformanceSpec.SimpleDataObject])
+      val serialized = mpjsons.serialize(sdo)
+      val deserialized = mpjsons.deserialize[PerformanceSpec.SimpleDataObject](serialized)
       sdo.intValue mustBe deserialized.intValue
     }
 
@@ -70,7 +60,7 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
     Then("We have acceptable performance")
 
-    (end - start) must be < 600L
+    (end - start) must be < 3000L
 
   }
 }

@@ -8,10 +8,9 @@ import scala.reflect.runtime.universe._
 /**
  * @author Marcin Pieciukiewicz
  */
-trait AbstractIntegerDeserializer[T] extends JsonTypeDeserializer[T] {
+abstract class AbstractIntegerDeserializer[T] extends JsonTypeDeserializer[T] {
 
-  override def deserialize(jsonIterator: StringIterator, tpe: Type)
-                          (implicit deserializerFactory: DeserializerFactory): T = {
+  protected def readNumberString(jsonIterator: StringIterator): String = {
 
     jsonIterator.skipWhitespaceChars()
 
@@ -22,10 +21,9 @@ trait AbstractIntegerDeserializer[T] extends JsonTypeDeserializer[T] {
       jsonIterator.nextChar()
     }
 
-    toProperInteger(identifier)
+    identifier.toString()
   }
 
-  protected def toProperInteger(identifier: StringBuilder): T
 
 
 }

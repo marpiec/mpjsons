@@ -6,9 +6,9 @@ import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.reflect.runtime.universe._
 
-object SingletonObjectDeserializer extends JsonTypeDeserializer[Any] {
+class SingletonObjectDeserializer(tpe: Type) extends JsonTypeDeserializer[AnyRef] {
 
-  override def deserialize(jsonIterator: StringIterator, tpe: Type)(implicit deserializerFactory: DeserializerFactory): Any = {
+  override def deserialize(jsonIterator: StringIterator): AnyRef = {
 
     jsonIterator.consumeObjectStart()
     val instance = ObjectConstructionUtil.retrieveObjectInstance(TypesUtil.getClassFromType(tpe))

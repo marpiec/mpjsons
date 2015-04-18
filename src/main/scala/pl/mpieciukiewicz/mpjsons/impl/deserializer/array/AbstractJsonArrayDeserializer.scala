@@ -11,32 +11,23 @@ import scala.reflect.runtime.universe._
 /**
  * @author Marcin Pieciukiewicz
  */
-trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
+abstract class AbstractJsonArrayDeserializer[T, C]
+(private val deserializerFactory: DeserializerFactory, private val tpe: Type)
+    extends JsonTypeDeserializer[C] {
 
+  val elementsType: Type = getSubElementsType(tpe)
+  val deserializer = deserializerFactory.getDeserializer[T](elementsType)
 
-  def deserialize(jsonIterator: StringIterator, tpe: Type)
-                 (implicit deserializerFactory: DeserializerFactory): T = {
+  protected def deserializeArray(jsonIterator: StringIterator, tpe: Type): ArrayBuffer[T] = {
 
     jsonIterator.consumeArrayStart()
 
-    val elementsType: Type = getSubElementsType(tpe)
-
-    val buffer = readElementsIntoBuffer(elementsType, jsonIterator)
-
-    toDesiredCollection(buffer, elementsType)
-
-  }
-
-  private def readElementsIntoBuffer(elementsType: Type, jsonIterator: StringIterator)
-                                    (implicit deserializerFactory: DeserializerFactory): ArrayBuffer[T] = {
     val buffer = ArrayBuffer[T]()
-
-    val deserializer = deserializerFactory.getDeserializer[T](elementsType)
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
 
-      val value = deserializer.deserialize(jsonIterator, elementsType)
+      val value = deserializer.deserialize(jsonIterator)
       buffer += value
 
       jsonIterator.skipWhitespaceChars()
@@ -49,8 +40,8 @@ trait AbstractJsonArrayDeserializer[T] extends JsonTypeDeserializer[T] {
     buffer
   }
 
-  protected def getSubElementsType[S](tpe: Type): Type = TypesUtil.getSubElementsType(tpe)
 
-  protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): T
+
+  protected def getSubElementsType[S](tpe: Type): Type = TypesUtil.getSubElementsType(tpe)
 
 }

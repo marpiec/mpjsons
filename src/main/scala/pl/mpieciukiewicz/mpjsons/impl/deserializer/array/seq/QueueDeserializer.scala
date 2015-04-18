@@ -1,16 +1,20 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq
 
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
+import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.immutable.Queue
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object QueueDeserializer extends AbstractJsonArrayDeserializer[Queue[_]] {
+class QueueDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type)
+  extends AbstractJsonArrayDeserializer[E, Queue[E]](deserializerFactory, tpe) {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Queue[_] = Queue(buffer.toArray: _*)
+  override def deserialize(jsonIterator: StringIterator): Queue[E] = {
+    Queue(deserializeArray(jsonIterator, tpe):_*)
+  }
+
 }

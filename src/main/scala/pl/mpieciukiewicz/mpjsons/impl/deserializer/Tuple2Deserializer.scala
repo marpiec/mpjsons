@@ -10,19 +10,20 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-object Tuple2Deserializer extends JsonTypeDeserializer[(Any, Any)] {
-  def deserialize(jsonIterator: StringIterator, tpe: Type)(implicit deserializerFactory: DeserializerFactory): (Any, Any) = {
+class Tuple2Deserializer[T1, T2](val deserializerFactory: DeserializerFactory, val tpe: Type)
+  extends JsonTypeDeserializer[(T1, T2)] {
+
+  val (firstType, secondType): (Type, Type) = TypesUtil.getDoubleSubElementsType(tpe)
+  val firstDeserializer = deserializerFactory.getDeserializer[T1](firstType)
+  val secondDeserializer = deserializerFactory.getDeserializer[T2](secondType)
+
+
+  def deserialize(jsonIterator: StringIterator): (T1, T2) = {
 
     jsonIterator.consumeArrayStart()
-
-    val (firstElementType, secondElementType): (Type, Type) = TypesUtil.getDoubleSubElementsType(tpe)
-
-    val first = deserializerFactory.getDeserializer[Any](firstElementType).deserialize(jsonIterator, firstElementType)
-
+    val first = firstDeserializer.deserialize(jsonIterator)
     jsonIterator.consumeArrayValuesSeparator()
-
-    val second = deserializerFactory.getDeserializer[Any](secondElementType).deserialize(jsonIterator, secondElementType)
-
+    val second = secondDeserializer.deserialize(jsonIterator)
     jsonIterator.consumeArrayEnd()
 
     (first, second)

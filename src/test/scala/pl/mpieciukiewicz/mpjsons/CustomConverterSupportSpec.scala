@@ -27,8 +27,7 @@ class TypedConverter[T <: AnyRef](packageName: String, serializerFactory: Serial
     jsonBuilder.append('}')
   }
 
-  override def deserialize(jsonIterator: StringIterator, tpe: Type)
-                          (implicit deserializerFactory: DeserializerFactory): T = {
+  override def deserialize(jsonIterator: StringIterator): T = {
 
     jsonIterator.consumeObjectStart()
 
@@ -41,7 +40,7 @@ class TypedConverter[T <: AnyRef](packageName: String, serializerFactory: Serial
     jsonIterator.nextChar()
 
     jsonIterator.skipWhitespaceChars()
-    val value = BeanDeserializer.deserialize(jsonIterator, elementType).asInstanceOf[T]
+    val value = new BeanDeserializer(MPJsons.deserializerFactory, tpe).deserialize(jsonIterator).asInstanceOf[T]
 
     jsonIterator.skipWhitespaceChars()
     jsonIterator.nextChar()
@@ -49,11 +48,10 @@ class TypedConverter[T <: AnyRef](packageName: String, serializerFactory: Serial
     value
   }
 
-  def extractTypeName(jsonIterator: StringIterator)
-                     (implicit deserializerFactory: DeserializerFactory): String = {
-    val deserializer = deserializerFactory.getDeserializer(typeOf[String])
+  def extractTypeName(jsonIterator: StringIterator): String = {
+    val deserializer = MPJsons.deserializerFactory.getDeserializer(typeOf[String])
     jsonIterator.skipWhitespaceChars()
-    deserializer.deserialize(jsonIterator, typeOf[String]).asInstanceOf[String]
+    deserializer.deserialize(jsonIterator).asInstanceOf[String]
   }
 
 }

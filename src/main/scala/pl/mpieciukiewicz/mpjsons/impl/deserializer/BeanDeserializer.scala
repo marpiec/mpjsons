@@ -1,6 +1,8 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
+import java.lang.reflect.Field
+
+import pl.mpieciukiewicz.mpjsons.{JsonTypeSerializer, JsonTypeDeserializer}
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 import pl.mpieciukiewicz.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
@@ -11,25 +13,32 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-object BeanDeserializer extends JsonTypeDeserializer[AnyRef] {
+class BeanDeserializer[T](private val deserializerFactory: DeserializerFactory,
+                                private val tpe: Type) extends JsonTypeDeserializer[T] {
 
-  def deserialize(jsonIterator: StringIterator, tpe: Type)
-                 (implicit deserializerFactory: DeserializerFactory): AnyRef = {
+  val clazz = TypesUtil.getClassFromType[T](tpe)
+  val constructor = clazz.getConstructor()
+  val fields = ReflectionUtil.getAllAccessibleFields(tpe)
+  val fieldsByName: Map[String,(Field, JsonTypeDeserializer[AnyRef])] = fields.map {field =>
+    field.field.getName -> (field.field, deserializerFactory.getDeserializer(field.tpe).asInstanceOf[JsonTypeDeserializer[AnyRef]])}.toMap
+
+
+
+  override def deserialize(jsonIterator: StringIterator): T = {
 
     jsonIterator.consumeObjectStart()
-    val instance = ObjectConstructionUtil.createInstance(TypesUtil.getClassFromType(tpe))
+    val instance = ObjectConstructionUtil.createInstance[T](clazz, constructor)
 
     while (jsonIterator.currentChar != '}') {
 
       val identifier = IdentifierDeserializer.deserialize(jsonIterator)
-      val fieldInfo = ReflectionUtil.getAccessibleField(tpe, identifier)
 
       jsonIterator.consumeFieldValueSeparator()
 
-      val deserializer = deserializerFactory.getDeserializer(fieldInfo.tpe).asInstanceOf[JsonTypeDeserializer[Any]]
-      val value = deserializer.deserialize(jsonIterator, fieldInfo.tpe)
+      val (field, deserializer) = fieldsByName(identifier)
+      val value = deserializer.deserialize(jsonIterator)
 
-      fieldInfo.field.set(instance, value)
+      field.set(instance, value)
 
       jsonIterator.skipWhitespaceChars()
       if (jsonIterator.currentChar == ',') {

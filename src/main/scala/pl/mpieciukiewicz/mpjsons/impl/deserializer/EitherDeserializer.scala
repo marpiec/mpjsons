@@ -8,30 +8,29 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-object EitherDeserializer extends JsonTypeDeserializer[Any] {
+class EitherDeserializer[L,R](val deserializerFactory: DeserializerFactory, tpe: Type)
+  extends JsonTypeDeserializer[Either[L, R]] {
 
-  override def deserialize(jsonIterator: StringIterator, tpe: Type)
-                          (implicit deserializerFactory: DeserializerFactory): Any = {
+  val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
+  val leftDeserializer = deserializerFactory.getDeserializer[L](leftType)
+  val rightDeserializer = deserializerFactory.getDeserializer[R](rightType)
 
+
+  override def deserialize(jsonIterator: StringIterator): Either[L, R] = {
 
     jsonIterator.consumeObjectStart()
 
-    val types = TypesUtil.getDoubleSubElementsType(tpe)
-
     val identifier = IdentifierDeserializer.deserialize(jsonIterator)
-
-    val elementType = if(identifier == "left") {
-      types._1
-    } else if(identifier == "right") {
-      types._2
-    } else {
-      throw new JsonInnerException("Incorrect identifier in Either " + identifier, null)
-    }
 
     jsonIterator.consumeFieldValueSeparator()
 
-    val deserializer = deserializerFactory.getDeserializer(elementType).asInstanceOf[JsonTypeDeserializer[Any]]
-    val value = deserializer.deserialize(jsonIterator, elementType)
+    val deserialized = if(identifier == "left") {
+      Left(leftDeserializer.deserialize(jsonIterator))
+    } else if(identifier == "right") {
+      Right(rightDeserializer.deserialize(jsonIterator))
+    } else {
+      throw new JsonInnerException("Incorrect identifier in Either " + identifier, null)
+    }
 
     jsonIterator.skipWhitespaceChars()
     if (jsonIterator.currentChar == ',') {
@@ -40,10 +39,6 @@ object EitherDeserializer extends JsonTypeDeserializer[Any] {
 
     jsonIterator.nextCharOrNullIfLast
 
-    if(identifier == "left") {
-      Left(value)
-    } else {
-      Right(value)
-    }
+    deserialized
   }
 }

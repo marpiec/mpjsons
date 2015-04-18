@@ -9,9 +9,9 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-object StringDeserializer extends JsonTypeDeserializer[String] {
+abstract class AbstractStringDeserializer[T] extends JsonTypeDeserializer[T] {
 
-  override def deserialize(jsonIterator: StringIterator, tpe: Type)(implicit deserializerFactory: DeserializerFactory): String = {
+  protected def readString(jsonIterator: StringIterator): String = {
 
     jsonIterator.skipWhitespaceChars()
 

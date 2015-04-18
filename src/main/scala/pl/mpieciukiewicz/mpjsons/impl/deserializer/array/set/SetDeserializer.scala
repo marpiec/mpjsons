@@ -1,15 +1,19 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set
 
+import pl.mpieciukiewicz.mpjsons.impl.{StringIterator, DeserializerFactory}
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
 
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object SetDeserializer extends AbstractJsonArrayDeserializer[Set[Any]] {
+class SetDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type)
+  extends AbstractJsonArrayDeserializer[E, Set[E]](deserializerFactory, tpe) {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Set[Any] = buffer.toSet
+  override def deserialize(jsonIterator: StringIterator): Set[E] = {
+    Set(deserializeArray(jsonIterator, tpe): _*)
+  }
+
 }

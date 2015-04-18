@@ -1,6 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
+import pl.mpieciukiewicz.mpjsons.{MPJsons, JsonTypeDeserializer}
 import pl.mpieciukiewicz.mpjsons.impl.deserializer._
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array._
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq._
@@ -33,6 +33,8 @@ class DeserializerFactoryImpl {
   def getDeserializer(tpe: Type): JsonTypeDeserializer[_ <: Any] = {
 
     val typeSymbol = tpe.typeSymbol
+    val deserializerFactory = MPJsons.deserializerFactory
+
     if (typeSymbol == typeOf[Long].typeSymbol) {
       return LongDeserializer
     } else if (typeSymbol == typeOf[Int].typeSymbol) {
@@ -52,54 +54,56 @@ class DeserializerFactoryImpl {
     } else if (typeSymbol == typeOf[Char].typeSymbol) {
       return CharDeserializer
     } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
-      return ArrayDeserializer
+      return new ArrayDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[(_, _)].typeSymbol) {
-      return Tuple2Deserializer
+      return new Tuple2Deserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[Option[_]].typeSymbol) {
-      return OptionDeserializer
+      return new OptionDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[Map[_, _]].typeSymbol) {
-      return MapDeserializer
+      return new MapDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[Either[_, _]].typeSymbol) {
-      return EitherDeserializer
+      return new EitherDeserializer(deserializerFactory, tpe)
     }
 
     // seq
     if (typeSymbol == typeOf[List[_]].typeSymbol) {
-      return ListDeserializer
+      return new ListDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[Vector[_]].typeSymbol) {
-      return VectorDeserializer
+      return new VectorDeserializer(deserializerFactory, tpe)
+    } else if (typeSymbol == typeOf[Seq[_]].typeSymbol) {
+      return new SeqDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[Stream[_]].typeSymbol) {
-      return StreamDeserializer
+      return new StreamDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[Queue[_]].typeSymbol) {
-      return QueueDeserializer
+      return new QueueDeserializer(deserializerFactory, tpe)
     }
 
     // set
     if (typeSymbol == typeOf[Set[_]].typeSymbol) {
-      return SetDeserializer
+      return new SetDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[HashSet[_]].typeSymbol) {
-      return HashSetDeserializer
+      return new HashSetDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[ListSet[_]].typeSymbol) {
-      return ListSetDeserializer
+      return new ListSetDeserializer(deserializerFactory, tpe)
       //    } else if (tpe == typeOf[SortedSet[_]]) {
       //      return SortedSetDeserializer
       //    } else if (tpe == typeOf[TreeSet[_]]) {
       //      return TreeSetDeserializer
     } else if (typeSymbol == typeOf[BitSet].typeSymbol) {
-      return BitSetDeserializer
+      return new BitSetDeserializer(deserializerFactory, tpe)
     }
 
     // map
     if (typeSymbol == typeOf[Map[_, _]].typeSymbol) {
-      return MapDeserializer
+      return new MapDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[HashMap[_, _]].typeSymbol) {
-      return HashMapDeserializer
+      return new HashMapDeserializer(deserializerFactory, tpe)
       //    } else if (tpe == typeOf[SortedMap[_,_]]) {
       //      return SortedMapDeserializer
       //    } else if (tpe == typeOf[TreeMap[_,_]]) {
       //      return TreeMapDeserializer
     } else if (typeSymbol == typeOf[ListMap[_, _]].typeSymbol) {
-      return ListMapDeserializer
+      return new ListMapDeserializer(deserializerFactory, tpe)
     }
 
 
@@ -120,7 +124,7 @@ class DeserializerFactoryImpl {
 
 
     if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
-      return SingletonObjectDeserializer
+      return new SingletonObjectDeserializer(tpe)
     }
 
 
@@ -129,7 +133,7 @@ class DeserializerFactoryImpl {
     if (additionalDeserializerOption.isDefined) {
       additionalDeserializerOption.get
     } else {
-      BeanDeserializer
+      new BeanDeserializer(deserializerFactory, tpe)
     }
   }
 

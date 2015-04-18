@@ -39,7 +39,7 @@ import MPJsons._
   def deserialize[T](json: String, tpe: Type): T = {
     val jsonIterator = new StringIterator(json)
     try {
-      deserializerFactory.getDeserializer(tpe).deserialize(jsonIterator, tpe)
+      deserializerFactory.getDeserializer(tpe).deserialize(jsonIterator)
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(

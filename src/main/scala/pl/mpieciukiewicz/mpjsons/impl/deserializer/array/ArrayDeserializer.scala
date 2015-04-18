@@ -1,6 +1,7 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array
 
-import pl.mpieciukiewicz.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
+import pl.mpieciukiewicz.mpjsons.impl.util.{TypesUtil, ObjectConstructionUtil}
+import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
@@ -9,17 +10,21 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-object ArrayDeserializer extends AbstractJsonArrayDeserializer[Array[_]] {
+class ArrayDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type)
+  extends AbstractJsonArrayDeserializer[E, Array[E]](deserializerFactory, tpe) {
 
-  override protected def getSubElementsType[S](tpe: Type) = TypesUtil.getArraySubElementsType(tpe)
+  override def deserialize(jsonIterator: StringIterator): Array[E] = {
+    toArray(deserializeArray(jsonIterator, tpe))
+  }
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): Array[_] = {
+
+  private def toArray(buffer: ArrayBuffer[E]): Array[E] = {
 
     if (buffer.isEmpty) {
-      ObjectConstructionUtil.createArrayInstance[Any](TypesUtil.getClassFromType[Any](elementsType), 0).asInstanceOf[Array[_]]
+      ObjectConstructionUtil.createArrayInstance[E](TypesUtil.getClassFromType[E](elementsType), 0)
     } else {
       val arrayt: Any = ObjectConstructionUtil.createArrayInstance[Any](TypesUtil.getClassFromType[Any](elementsType), buffer.size)
-      val array = arrayt.asInstanceOf[Array[_]]
+      val array = arrayt.asInstanceOf[Array[E]]
       var list = buffer.toList
       var p = 0
 
@@ -30,10 +35,6 @@ object ArrayDeserializer extends AbstractJsonArrayDeserializer[Array[_]] {
       }
       array
     }
-
-
   }
-
-
 }
 

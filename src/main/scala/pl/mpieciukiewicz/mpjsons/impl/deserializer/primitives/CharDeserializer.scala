@@ -1,19 +1,16 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.primitives
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.StringDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
-
-import scala.reflect.runtime.universe._
+import pl.mpieciukiewicz.mpjsons.impl.StringIterator
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.AbstractStringDeserializer
 
 /**
  * @author Marcin Pieciukiewicz
  */
-object CharDeserializer extends JsonTypeDeserializer[Char] {
+object CharDeserializer extends AbstractStringDeserializer[Char] {
 
-  def deserialize(jsonIterator: StringIterator, tpe: Type)(implicit deserializerFactory: DeserializerFactory): Char = {
+  override def deserialize(jsonIterator: StringIterator): Char = {
 
-    val deserializedString: String = StringDeserializer.deserialize(jsonIterator, tpe)
+    val deserializedString: String = readString(jsonIterator)
 
     if (deserializedString.length == 1) {
       deserializedString.charAt(0)

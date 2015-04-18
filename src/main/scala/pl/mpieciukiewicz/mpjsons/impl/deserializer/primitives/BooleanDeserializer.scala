@@ -9,9 +9,8 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 object BooleanDeserializer extends JsonTypeDeserializer[Boolean] {
-  def deserialize(jsonIterator: StringIterator, tpe: Type)
-                 (implicit deserializerFactory: DeserializerFactory): Boolean = {
 
+  override def deserialize(jsonIterator: StringIterator): Boolean = {
     val booleanString = new StringBuilder()
 
     jsonIterator.skipWhitespaceChars()

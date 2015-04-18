@@ -1,6 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl.util
 
-import java.lang.reflect.Field
+import java.lang.reflect.{Constructor, Field}
 
 /**
  * Object responsible for instatiation of objects. If class doesn't have default constructor it tries
@@ -26,10 +26,10 @@ object ObjectConstructionUtil {
    * @param clazz type of object o create
    * @return created object
    */
-  def createInstance(clazz: Class[_]): AnyRef = {
+  def createInstance[T](clazz: Class[T], constructor: Constructor[T]): T = {
     try {
       // try to create object using default constructor
-      clazz.getConstructor().newInstance().asInstanceOf[AnyRef]
+      constructor.newInstance()
     } catch {
       //otherwise create object without calling constructor
       case e: NoSuchMethodException => createInstanceWithoutCallingConstructor(clazz)
@@ -58,10 +58,10 @@ object ObjectConstructionUtil {
     }
   }
 
-  private def createInstanceWithoutCallingConstructor(clazz: Class[_]): AnyRef = {
+  private def createInstanceWithoutCallingConstructor[T](clazz: Class[T]): T = {
 
     try {
-      unsafeObject.allocateInstance(clazz)
+      unsafeObject.allocateInstance(clazz).asInstanceOf[T]
     } catch {
       case e: Exception => throw new IllegalStateException("Cannot create object without calling constructor\n" +
         "That's probably because JRE is not sun/oracle implementation", e)

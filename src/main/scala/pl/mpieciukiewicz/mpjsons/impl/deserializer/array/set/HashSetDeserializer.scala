@@ -1,16 +1,20 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set
 
+import pl.mpieciukiewicz.mpjsons.impl.{StringIterator, DeserializerFactory}
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
 
 import scala.collection.immutable.HashSet
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-object HashSetDeserializer extends AbstractJsonArrayDeserializer[HashSet[_]] {
+class HashSetDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type)
+  extends AbstractJsonArrayDeserializer[E, HashSet[E]](deserializerFactory, tpe) {
 
-  override protected def toDesiredCollection(buffer: ArrayBuffer[_], elementsType: Type): HashSet[_] = HashSet(buffer.toArray: _*)
+  override def deserialize(jsonIterator: StringIterator): HashSet[E] = {
+    HashSet(deserializeArray(jsonIterator, tpe): _*)
+  }
+
 }

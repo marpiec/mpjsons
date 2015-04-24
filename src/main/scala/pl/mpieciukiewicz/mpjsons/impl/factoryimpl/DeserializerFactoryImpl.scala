@@ -1,18 +1,16 @@
 package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
 
-import pl.mpieciukiewicz.mpjsons.impl.serializer.BeanSerializer
+import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
+import pl.mpieciukiewicz.mpjsons.impl.deserializer._
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.array._
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq._
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set._
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.map.{HashMapDeserializer, ListMapDeserializer, MapDeserializer}
+import pl.mpieciukiewicz.mpjsons.impl.deserializer.primitives._
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 
-import collection.mutable.ListBuffer
-
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.primitives._
-import pl.mpieciukiewicz.mpjsons.impl.deserializer._
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.array._
 import scala.collection.immutable._
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set._
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.seq._
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.map.{ListMapDeserializer, MapDeserializer, HashMapDeserializer}
+import scala.collection.mutable.ListBuffer
 
 
 /**
@@ -77,7 +75,7 @@ class DeserializerFactoryImpl {
     }
 
     // set
-    if (clazz == classOf[Set[_]]) {
+    if (clazz.getCanonicalName == "scala.collection.Set") {
       return SetDeserializer
     } else if (clazz == classOf[HashSet[_]]) {
       return HashSetDeserializer

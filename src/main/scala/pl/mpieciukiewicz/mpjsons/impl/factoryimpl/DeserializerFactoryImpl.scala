@@ -75,7 +75,8 @@ class DeserializerFactoryImpl {
     }
 
     // set
-    if (clazz.getCanonicalName == "scala.collection.Set") {
+    if (clazz.getCanonicalName == "scala.collection.Set" ||
+      clazz.getCanonicalName == "scala.collection.immutable.Set") {
       return SetDeserializer
     } else if (clazz == classOf[HashSet[_]]) {
       return HashSetDeserializer

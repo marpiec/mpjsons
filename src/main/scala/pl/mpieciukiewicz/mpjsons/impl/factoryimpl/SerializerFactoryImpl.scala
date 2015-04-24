@@ -71,6 +71,8 @@ class SerializerFactoryImpl {
         return new IterableSerializer(serializerFactory, tpe)
       } else if (tpe.baseClasses.contains(typeOf[Map[_, _]].typeSymbol)) {
         return new MapSerializer(serializerFactory, tpe)
+      } else if (typeOf[BitSet].typeSymbol == typeSymbol) {
+          return new BitSetSerializer(serializerFactory, tpe)
       } else if (tpe.baseClasses.contains(typeOf[Iterable[_]].typeSymbol)) {
         return new IterableSerializer(serializerFactory, tpe)
       }

@@ -134,7 +134,7 @@ class BeanSerializationSpec extends FlatSpec {
 
   "Serializer" must "handle simple serialization" in {
     val serialized = mpjsons.serialize(sdo)
-    serialized mustEqual properJsonNonWhitespaces
+    sdo mustEqual  mpjsons.deserialize[InnerObject](serialized)
   }
 
   "Serializer" must "handle deserialization with field names in quotes" in {

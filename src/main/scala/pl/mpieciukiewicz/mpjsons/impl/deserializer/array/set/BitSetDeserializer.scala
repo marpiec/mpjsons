@@ -1,5 +1,6 @@
 package pl.mpieciukiewicz.mpjsons.impl.deserializer.array.set
 
+import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.array.AbstractJsonArrayDeserializer
 import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
 
@@ -12,15 +13,31 @@ import scala.reflect.runtime.universe._
  */
 
 class BitSetDeserializer(deserializerFactory: DeserializerFactory, tpe: Type)
-  extends AbstractJsonArrayDeserializer[Int, BitSet](deserializerFactory, tpe) {
+  extends JsonTypeDeserializer[BitSet] {
+
+  val deserializer = deserializerFactory.getDeserializer[Int](typeOf[Int])
+
 
   override def deserialize(jsonIterator: StringIterator): BitSet = {
-    val buffer = deserializeArray(jsonIterator, tpe)
-    val intBuffer = ArrayBuffer[Int]()
-    for (elem <- buffer) {
-      intBuffer += elem.asInstanceOf[Int]
+
+    jsonIterator.consumeArrayStart()
+
+    val buffer = ArrayBuffer[Int]()
+
+    jsonIterator.skipWhitespaceChars()
+    while (jsonIterator.currentChar != ']') {
+
+      val value = deserializer.deserialize(jsonIterator)
+      buffer += value
+
+      jsonIterator.skipWhitespaceChars()
+      if (jsonIterator.currentChar == ',') {
+        jsonIterator.nextChar()
+      }
     }
-    BitSet(intBuffer.toArray: _*)
+
+    jsonIterator.nextChar()
+    BitSet(buffer.toArray: _*)
   }
 
 }

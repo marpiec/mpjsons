@@ -36,14 +36,14 @@ class MapsSpec extends FlatSpec {
 
     val serialized = mpjsons.serialize(smo)
 
-    serialized mustBe
-      """{"emptyMap":[],
-        |"simpleMap":[["a","Ala"],["k","Kot"]],
-        |"primitiveMap":[[1,1224],[5,5324]],
-        |"objectMap":[[{"intValue":1,"stringValue":"one"},
-        |{"intValue":100,"stringValue":"one hundred"}],
-        |[{"intValue":5,"stringValue":"five"},
-        |{"intValue":500,"stringValue":"five hundred"}]]}""".stripMargin.lines.mkString("")
+
+    var smoDeserialized:SimpleMapsObject = mpjsons.deserialize[SimpleMapsObject](serialized)
+
+    smoDeserialized must not be (null)
+
+    smoDeserialized.simpleMap mustEqual smo.simpleMap
+    smoDeserialized.primitiveMap mustEqual smo.primitiveMap
+    smoDeserialized.objectMap.size mustEqual smo.objectMap.size
 
 
     val serializedWithWhitespacesQuotes =
@@ -55,7 +55,7 @@ class MapsSpec extends FlatSpec {
         |      [ {"intValue":5,"stringValue":"five"},
         |      {"intValue":500,"stringValue":"five hundred"} ] ] } """.stripMargin.lines.mkString("")
 
-    val smoDeserialized:SimpleMapsObject = mpjsons.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
+    smoDeserialized = mpjsons.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
 
     smoDeserialized must not be (null)
 

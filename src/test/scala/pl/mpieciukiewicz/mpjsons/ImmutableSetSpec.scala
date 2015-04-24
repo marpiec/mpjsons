@@ -12,8 +12,6 @@ import scala.collection.immutable._
 class ImmutableSetType {
   var set: Set[String] = _
   var hashSet: HashSet[String] = _
-  var sortedSet: SortedSet[String] = _
-  var treeSet: TreeSet[String] = _
   var bitSet: BitSet = _
   var listSet: ListSet[String] = _
 }
@@ -28,8 +26,6 @@ class ImmutableSetSpec extends FlatSpec {
     val testObject = new ImmutableSetType
     testObject.set = Set("Abc", "Bcd", "Eca")
     testObject.hashSet = HashSet("Zxy", "Xyz", "ZyX")
-//    testObject.sortedSet = SortedSet("MNP", "mn", "pmn", "aaa")
-//    testObject.treeSet = TreeSet("C", "D", "A")
     testObject.bitSet = BitSet(12, 15, 3, 7)
     testObject.listSet = ListSet("AAA", "CCC", "BBB")
 

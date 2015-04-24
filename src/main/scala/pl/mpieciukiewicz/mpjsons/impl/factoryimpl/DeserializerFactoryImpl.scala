@@ -85,10 +85,12 @@ class DeserializerFactoryImpl {
       return new HashSetDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[ListSet[_]].typeSymbol) {
       return new ListSetDeserializer(deserializerFactory, tpe)
-      //    } else if (tpe == typeOf[SortedSet[_]]) {
-      //      return SortedSetDeserializer
-      //    } else if (tpe == typeOf[TreeSet[_]]) {
-      //      return TreeSetDeserializer
+    } else if (typeSymbol == typeOf[SortedSet[_]].typeSymbol) {// Unsupported because of missing ordering type class
+     // return SortedSetDeserializer
+      throw new IllegalStateException("SortedSet is unsupported, because of missing ordering type class")
+    } else if (typeSymbol == typeOf[TreeSet[_]].typeSymbol) {
+     // return TreeSetDeserializer
+      throw new IllegalStateException("TreeSet is unsupported, because of missing ordering type class")
     } else if (typeSymbol == typeOf[BitSet].typeSymbol) {
       return new BitSetDeserializer(deserializerFactory, tpe)
     }
@@ -98,10 +100,12 @@ class DeserializerFactoryImpl {
       return new MapDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[HashMap[_, _]].typeSymbol) {
       return new HashMapDeserializer(deserializerFactory, tpe)
-      //    } else if (tpe == typeOf[SortedMap[_,_]]) {
-      //      return SortedMapDeserializer
-      //    } else if (tpe == typeOf[TreeMap[_,_]]) {
-      //      return TreeMapDeserializer
+    } else if (tpe == typeOf[SortedMap[_,_]].typeSymbol) {
+      throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class")
+      //return SortedMapDeserializer
+    } else if (tpe == typeOf[TreeMap[_,_]].typeSymbol) {
+      throw new IllegalStateException("TreeMap is unsupported, because of missing ordering type class")
+      //return TreeMapDeserializer
     } else if (typeSymbol == typeOf[ListMap[_, _]].typeSymbol) {
       return new ListMapDeserializer(deserializerFactory, tpe)
     }

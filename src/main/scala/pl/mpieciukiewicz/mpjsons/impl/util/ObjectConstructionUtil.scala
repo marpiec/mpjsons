@@ -27,12 +27,16 @@ object ObjectConstructionUtil {
    * @return created object
    */
   def createInstance[T](clazz: Class[T], constructor: Constructor[T]): T = {
-    try {
-      // try to create object using default constructor
-      constructor.newInstance()
-    } catch {
-      //otherwise create object without calling constructor
-      case e: NoSuchMethodException => createInstanceWithoutCallingConstructor(clazz)
+    if(constructor == null) {
+      createInstanceWithoutCallingConstructor(clazz)
+    } else {
+      try {
+        // try to create object using default constructor
+        constructor.newInstance()
+      } catch {
+        //otherwise create object without calling constructor
+        case e: NoSuchMethodException => createInstanceWithoutCallingConstructor(clazz)
+      }
     }
   }
 

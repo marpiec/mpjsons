@@ -26,7 +26,7 @@ private[reflection] object ReflectionUtilNoCache {
       member.info)
 
 
-    }.toArray
+    }.filterNot(_.field == null).toArray
 
 //
 //    if (clazz.equals(classOf[Object])) {

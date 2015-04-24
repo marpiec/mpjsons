@@ -134,7 +134,19 @@ class BeanSerializationSpec extends FlatSpec {
 
   "Serializer" must "handle simple serialization" in {
     val serialized = mpjsons.serialize(sdo)
-    sdo mustEqual  mpjsons.deserialize[InnerObject](serialized)
+    val deserialized = mpjsons.deserialize[SimpleDataObjectA](serialized)
+    deserialized.charValue mustEqual sdo.charValue
+    deserialized.longValue mustEqual sdo.longValue
+    deserialized.intValue mustEqual sdo.intValue
+    deserialized.stringValue mustEqual sdo.stringValue
+    deserialized.booleanValue mustEqual sdo.booleanValue
+    deserialized.innerObject.intValue mustEqual sdo.innerObject.intValue
+    deserialized.innerObject.stringValue mustEqual sdo.innerObject.stringValue
+    deserialized.arrayObject mustEqual sdo.arrayObject
+    deserialized.arrayPrimitive mustEqual sdo.arrayPrimitive
+    deserialized.listObject mustEqual sdo.listObject
+    deserialized.listPrimitive mustEqual sdo.listPrimitive
+
   }
 
   "Serializer" must "handle deserialization with field names in quotes" in {

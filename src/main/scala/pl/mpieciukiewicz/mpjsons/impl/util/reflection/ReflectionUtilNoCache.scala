@@ -18,7 +18,7 @@ private[reflection] object ReflectionUtilNoCache {
    * @return array containing all defined fields in class
    */
   def getAllAccessibleFields(tpe: Type): Array[FieldWithTypeInfo] = {
-    val members = tpe.members.filterNot(_.isMethod).filterNot(_.isSynthetic).filterNot(_.asTerm.isParamAccessor)
+    val members = tpe.members.filterNot(_.isMethod).filterNot(_.isSynthetic)
 
     members.map { member =>
       FieldWithTypeInfo(

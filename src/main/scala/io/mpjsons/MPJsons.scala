@@ -5,10 +5,7 @@ import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFacto
 
 import scala.reflect.runtime.universe._
 
-object MPJsons {
-  implicit val deserializerFactory = new DeserializerFactory
-  implicit val serializerFactory = new SerializerFactory
-}
+
 
 private object ErrorMessageFormatter {
 
@@ -29,15 +26,38 @@ private object ErrorMessageFormatter {
   }
 }
 
+/**
+ * Serializer for a single type.
+ */
 class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], tpe: Type){
+
+  /**
+   * Takes an object and returns a String containing JSON representation of that object.
+   */
   def serialize(obj: T): String = {
+    serializeToStringBuilder(obj).toString()
+  }
+
+  /**
+   * Takes an object and a StringBuilder and puts JSON representation of that object into the Builder.
+   * Useful when StringBuilder can be used without converting it to a String
+   * which requires copying of underlying char array.
+   */
+  def serializeToStringBuilder(obj: T): StringBuilder = {
     val json = new StringBuilder()
     innerSerializer.serialize(obj, json)
-    json.toString()
+    json
   }
 }
 
+/**
+ * Deserializer for a single type.
+ */
 class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[T], tpe: Type){
+
+  /**
+   * Takes a String containing JSON representation of objects and returns an instance of given object.
+   */
   def deserialize(json: String): T = {
     val jsonIterator = new StringIterator(json)
     try {
@@ -48,6 +68,12 @@ class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[
     }
   }
 
+}
+
+
+object MPJsons {
+  implicit val deserializerFactory = new DeserializerFactory
+  implicit val serializerFactory = new SerializerFactory
 }
 
 /**
@@ -77,14 +103,15 @@ import MPJsons._
   }
 
   /**
-   * Creates object from gives json String and type of class.
-   * @param json String containing json that represents object of given clazz
-   * @return created object
+   * Creates object from gives json String, based on a declared type.
    */
   def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
     deserialize(json, extractType(tag))
   }
 
+  /**
+   * Creates object from gives json String, based on a passed type.
+   */
   def deserialize[T](json: String, tpe: Type): T = {
     val jsonIterator = new StringIterator(json)
     try {
@@ -95,51 +122,85 @@ import MPJsons._
     }
   }
 
+  /**
+   * Creates object from gives json String, based on a passed type name (class name).
+   */
   def deserialize[T](json: String, typeName: String): T = {
     deserialize(json, extractTypeFromName(typeName))
   }
 
-  def getStaticDeserializer[T](implicit tag: TypeTag[T]): StaticDeserializer[T] = {
-    getStaticDeserializer(tag.tpe)
-  }
 
-  def getStaticDeserializer[T](tpe: Type): StaticDeserializer[T] = {
-    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe), tpe)
-  }
-
-  def getStaticDeserializer[T](typeName: String): StaticDeserializer[T] = {
-    getStaticDeserializer(extractTypeFromName(typeName))
+  /**
+   * Creates a specialized deserializer for a declared type.
+   */
+  def buildStaticDeserializer[T](implicit tag: TypeTag[T]): StaticDeserializer[T] = {
+    buildStaticDeserializer(tag.tpe)
   }
 
   /**
-   * Creates json String that represents given object.
+   * Creates a specialized deserializer for a passed type.
+   */
+  def buildStaticDeserializer[T](tpe: Type): StaticDeserializer[T] = {
+    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe), tpe)
+  }
+
+  /**
+   * Creates a specialized deserializer for a passed type name (class name).
+   */
+  def buildStaticDeserializer[T](typeName: String): StaticDeserializer[T] = {
+    buildStaticDeserializer(extractTypeFromName(typeName))
+  }
+
+  /**
+   * Creates a String containing JSON representation of given object.
    * @param obj object to serialize
-   * @return json String
+   * @return JSON representation of given object
    */
   def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
    serialize(obj, extractType(tag))
   }
-  
+
+  /**
+   * Creates a String containing JSON representation of given object based on the given type
+   * @param obj object to serialize
+   * @param tpe type of object to serialize
+   * @return JSON representation of given object
+   */
   def serialize[T](obj: T, tpe: Type): String = {
     val json = new StringBuilder()
     serializerFactory.getSerializer(tpe).serialize(obj, json)
     json.toString()
   }
 
+  /**
+   * Creates a String containing JSON representation of given object based on the given type name (class name)
+   * @param obj object to serialize
+   * @param typeName type name (class name) of object to serialize
+   * @return JSON representation of given object
+   */
   def serialize[T](obj: T, typeName: String): String = {
     serialize(obj, extractTypeFromName(typeName))
   }
 
-  def getStaticSerializer[T](implicit tag: TypeTag[T]): StaticSerializer[T] = {
-    getStaticSerializer(tag.tpe)
+  /**
+   * Creates a specialized serializer for a passed type name (class name).
+   */
+  def buildStaticSerializer[T](implicit tag: TypeTag[T]): StaticSerializer[T] = {
+    buildStaticSerializer(tag.tpe)
   }
 
-  def getStaticSerializer[T](tpe: Type): StaticSerializer[T] = {
+  /**
+   * Creates a specialized serializer for a passed type name (class name).
+   */
+  def buildStaticSerializer[T](tpe: Type): StaticSerializer[T] = {
     new StaticSerializer[T](serializerFactory.getSerializer[T](tpe), tpe)
   }
 
-  def getStaticSerializer[T](typeName: String): StaticSerializer[T] = {
-    getStaticSerializer(extractTypeFromName(typeName))
+  /**
+   * Creates a specialized serializer for a passed type name (class name).
+   */
+  def buildStaticSerializer[T](typeName: String): StaticSerializer[T] = {
+    buildStaticSerializer(extractTypeFromName(typeName))
   }
 
 

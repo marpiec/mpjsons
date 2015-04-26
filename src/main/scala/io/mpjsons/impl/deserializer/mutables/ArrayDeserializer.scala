@@ -1,4 +1,4 @@
-package io.mpjsons.impl.deserializer.mutable
+package io.mpjsons.impl.deserializer.mutables
 
 import io.mpjsons.impl.deserializer.jsontypes.AbstractJsonArrayDeserializer
 import io.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}

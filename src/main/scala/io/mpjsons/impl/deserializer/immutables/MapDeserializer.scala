@@ -1,4 +1,4 @@
-package io.mpjsons.impl.deserializer.immutable
+package io.mpjsons.impl.deserializer.immutables
 
 import io.mpjsons.impl.deserializer.jsontypes.AbstractJsonMapDeserializer
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}

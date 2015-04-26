@@ -42,8 +42,20 @@ import MPJsons._
       deserializerFactory.getDeserializer(tpe).deserialize(jsonIterator)
     } catch {
       case e: RuntimeException =>
+        val trimmingSize = 40
+        val consumed = jsonIterator.debugGetConsumedString
+        val remaining = jsonIterator.debugGetRemainingString
+        val consumedTrimmed = consumed.substring(Math.max(0, consumed.length - trimmingSize), consumed.length)
+        val remainingTrimmed = remaining.substring(0, Math.min(consumed.length, trimmingSize))
+        val consumedPlaceholder = " " * consumedTrimmed.length
         throw new JsonInnerException(
-          s"Problem deserializing: $json ${jsonIterator.debugShowConsumedString}", e)
+        s"""
+           |Problem deserializing: $json
+           |Problem: ${e.getMessage}
+           |In this place:
+           |...$consumedTrimmed$remainingTrimmed...
+           |   $consumedPlaceholder^
+         """.stripMargin, e)
     }
   }
 

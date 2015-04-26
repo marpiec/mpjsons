@@ -58,7 +58,7 @@ class StringIterator(private val stringValue: String) {
   def consumeObjectStart(): Unit = {
     skipWhitespaceChars()
     if (currentChar != '{') {
-      throw new IllegalArgumentException("Object should start with '{' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugShowLeftString)
+      throw new IllegalArgumentException("Object should start with '{' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
     }
     nextChar()
   }
@@ -66,7 +66,7 @@ class StringIterator(private val stringValue: String) {
   def consumeObjectEnd(): Unit = {
     skipWhitespaceChars()
     if (currentChar != '}') {
-      throw new IllegalArgumentException("Object should end with '{' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugShowLeftString)
+      throw new IllegalArgumentException("Object should end with '{' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
     }
     nextChar()
   }
@@ -74,7 +74,7 @@ class StringIterator(private val stringValue: String) {
   def consumeFieldValueSeparator(): Unit = {
     skipWhitespaceChars()
     if (currentChar != ':') {
-      throw new IllegalArgumentException("Field name and value should be separated by ':' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugShowLeftString)
+      throw new IllegalArgumentException("Field name and value should be separated by ':' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
     }
     nextChar()
   }
@@ -82,7 +82,7 @@ class StringIterator(private val stringValue: String) {
   def consumeArrayStart(): Unit = {
     skipWhitespaceChars()
     if (currentChar != '[') {
-      throw new IllegalArgumentException("Array should start with '[' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugShowLeftString)
+      throw new IllegalArgumentException("Array should start with '[' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
     }
     nextChar()
   }
@@ -90,7 +90,7 @@ class StringIterator(private val stringValue: String) {
   def consumeArrayEnd(): Unit = {
     skipWhitespaceChars()
     if (currentChar != ']') {
-      throw new IllegalArgumentException("Array should end with ']' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugShowLeftString)
+      throw new IllegalArgumentException("Array should end with ']' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
     }
     nextChar()
   }
@@ -98,16 +98,16 @@ class StringIterator(private val stringValue: String) {
   def consumeArrayValuesSeparator(): Unit = {
     skipWhitespaceChars()
     if (currentChar != ',') {
-      throw new IllegalArgumentException("Array values should be separated by ',' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugShowLeftString)
+      throw new IllegalArgumentException("Array values should be separated by ',' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
     }
     nextChar()
   }
 
-  def debugShowLeftString: String = {
+  def debugGetRemainingString: String = {
     stringValue.substring(nextIndex - 1)
   }
 
-  def debugShowConsumedString: String = {
+  def debugGetConsumedString: String = {
     stringValue.substring(0, nextIndex - 1)
   }
 

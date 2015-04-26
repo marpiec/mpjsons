@@ -9,7 +9,7 @@ import pl.mpieciukiewicz.mpjsons.impl.deserializer.map.{HashMapDeserializer, Lis
 import pl.mpieciukiewicz.mpjsons.impl.deserializer.primitives._
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 
-import scala.collection.immutable._
+import scala.collection._
 import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe._
 
@@ -59,54 +59,54 @@ class DeserializerFactoryImpl {
       return new Tuple2Deserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[Option[_]].typeSymbol) {
       return new OptionDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[Map[_, _]].typeSymbol) {
+    } else if (typeSymbol == typeOf[Map[_, _]].typeSymbol || typeSymbol == typeOf[immutable.Map[_, _]].typeSymbol) {
       return new MapDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[Either[_, _]].typeSymbol) {
       return new EitherDeserializer(deserializerFactory, tpe)
     }
 
     // seq
-    if (typeSymbol == typeOf[List[_]].typeSymbol) {
+    if (typeSymbol == typeOf[List[_]].typeSymbol || typeSymbol == typeOf[immutable.List[_]].typeSymbol) {
       return new ListDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[Vector[_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[Vector[_]].typeSymbol || typeSymbol == typeOf[immutable.Vector[_]].typeSymbol) {
       return new VectorDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[Seq[_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[Seq[_]].typeSymbol || typeSymbol == typeOf[immutable.Seq[_]].typeSymbol) {
       return new SeqDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[Stream[_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[Stream[_]].typeSymbol || typeSymbol == typeOf[immutable.Stream[_]].typeSymbol) {
       return new StreamDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[Queue[_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.Queue[_]].typeSymbol) {
       return new QueueDeserializer(deserializerFactory, tpe)
     }
 
     // set
-    if (typeSymbol == typeOf[Set[_]].typeSymbol) {
+    if (typeSymbol == typeOf[Set[_]].typeSymbol || typeSymbol == typeOf[immutable.Set[_]].typeSymbol) {
       return new SetDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[HashSet[_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.HashSet[_]].typeSymbol) {
       return new HashSetDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[ListSet[_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.ListSet[_]].typeSymbol) {
       return new ListSetDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[SortedSet[_]].typeSymbol) {// Unsupported because of missing ordering type class
+    } else if (typeSymbol == typeOf[immutable.SortedSet[_]].typeSymbol) {// Unsupported because of missing ordering type class
      // return SortedSetDeserializer
       throw new IllegalStateException("SortedSet is unsupported, because of missing ordering type class")
-    } else if (typeSymbol == typeOf[TreeSet[_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.TreeSet[_]].typeSymbol) {
      // return TreeSetDeserializer
       throw new IllegalStateException("TreeSet is unsupported, because of missing ordering type class")
-    } else if (typeSymbol == typeOf[BitSet].typeSymbol) {
+    } else if (typeSymbol == typeOf[BitSet].typeSymbol || typeSymbol == typeOf[immutable.BitSet].typeSymbol) {
       return new BitSetDeserializer(deserializerFactory, tpe)
     }
 
     // map
     if (typeSymbol == typeOf[Map[_, _]].typeSymbol) {
       return new MapDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[HashMap[_, _]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.HashMap[_, _]].typeSymbol) {
       return new HashMapDeserializer(deserializerFactory, tpe)
-    } else if (typeSymbol == typeOf[SortedMap[_,_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.SortedMap[_,_]].typeSymbol) {
       throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class")
       //return SortedMapDeserializer
-    } else if (typeSymbol == typeOf[TreeMap[_,_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.TreeMap[_,_]].typeSymbol) {
       throw new IllegalStateException("TreeMap is unsupported, because of missing ordering type class")
       //return TreeMapDeserializer
-    } else if (typeSymbol == typeOf[ListMap[_, _]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.ListMap[_, _]].typeSymbol) {
       return new ListMapDeserializer(deserializerFactory, tpe)
     }
 

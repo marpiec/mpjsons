@@ -133,8 +133,8 @@ import MPJsons._
   /**
    * Creates a specialized deserializer for a declared type.
    */
-  def buildStaticDeserializer[T](implicit tag: TypeTag[T]): StaticDeserializer[T] = {
-    buildStaticDeserializer(tag.tpe)
+  def buildStaticDeserializer[T : TypeTag]: StaticDeserializer[T] = {
+    buildStaticDeserializer(typeTag[T].tpe)
   }
 
   /**
@@ -208,7 +208,8 @@ import MPJsons._
    * Method to register custom json converter to support custom types of data.
    * @param converter converter that will be used to serialize and deserialize given type
    */
-  def registerConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
+  def registerConverter[T : TypeTag](converter: JsonTypeConverter[T]) {
+    val tag = typeTag[T]
     serializerFactory.registerSerializer[T](extractType(tag), converter)
     deserializerFactory.registerDeserializer(extractType(tag), converter)
   }

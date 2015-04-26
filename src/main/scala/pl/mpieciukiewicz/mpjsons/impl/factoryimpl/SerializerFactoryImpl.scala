@@ -1,8 +1,8 @@
-package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
+package io.mpjsons.impl.factoryimpl
 
-import pl.mpieciukiewicz.mpjsons.{MPJsons, JsonTypeSerializer}
-import pl.mpieciukiewicz.mpjsons.impl.serializer._
-import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
+import io.mpjsons.{MPJsons, JsonTypeSerializer}
+import io.mpjsons.impl.serializer._
+import io.mpjsons.impl.util.reflection.ReflectionUtil
 
 import scala.collection.immutable._
 import scala.collection.mutable

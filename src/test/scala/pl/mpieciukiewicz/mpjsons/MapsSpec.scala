@@ -1,4 +1,4 @@
-package pl.mpieciukiewicz.mpjsons
+package io.mpjsons
 
 /**
  * @author Marcin Pieciukiewicz

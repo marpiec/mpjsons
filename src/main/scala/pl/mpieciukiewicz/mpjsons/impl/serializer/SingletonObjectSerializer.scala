@@ -1,7 +1,7 @@
-package pl.mpieciukiewicz.mpjsons.impl.serializer
+package io.mpjsons.impl.serializer
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeSerializer
-import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import io.mpjsons.JsonTypeSerializer
+import io.mpjsons.impl.SerializerFactory
 
 class SingletonObjectSerializer() extends JsonTypeSerializer[AnyRef] {
 

@@ -1,7 +1,7 @@
-package pl.mpieciukiewicz.mpjsons.impl.deserializer.immutable
+package io.mpjsons.impl.deserializer.immutable
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
+import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.immutable.BitSet
 import scala.collection.mutable.ArrayBuffer

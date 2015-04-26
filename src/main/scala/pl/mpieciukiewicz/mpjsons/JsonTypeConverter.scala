@@ -1,4 +1,4 @@
-package pl.mpieciukiewicz.mpjsons
+package io.mpjsons
 
 /**
  * Class combining JsonTypeDeserializer and JsonTypeSerializer functionality.

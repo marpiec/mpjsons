@@ -1,11 +1,11 @@
-package pl.mpieciukiewicz.mpjsons
+package io.mpjsons
 
 import org.scalatest.{MustMatchers, FlatSpec}
 
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.BeanDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.serializer.BeanSerializer
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
+import io.mpjsons.impl.deserializer.BeanDeserializer
+import io.mpjsons.impl.serializer.BeanSerializer
+import io.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
 
 import scala.reflect.runtime.universe._
 

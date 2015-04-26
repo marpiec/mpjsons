@@ -1,6 +1,6 @@
-package pl.mpieciukiewicz.mpjsons.impl
+package io.mpjsons.impl
 
-import pl.mpieciukiewicz.mpjsons.impl.factoryimpl.{DeserializerFactoryImpl, DeserializerFactoryMemoizer}
+import io.mpjsons.impl.factoryimpl.{DeserializerFactoryImpl, DeserializerFactoryMemoizer}
 
 /**
  * @author Marcin Pieciukiewicz

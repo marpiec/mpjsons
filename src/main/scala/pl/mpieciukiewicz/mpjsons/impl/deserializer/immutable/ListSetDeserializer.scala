@@ -1,7 +1,7 @@
-package pl.mpieciukiewicz.mpjsons.impl.deserializer.immutable
+package io.mpjsons.impl.deserializer.immutable
 
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.jsontypes.AbstractJsonArrayDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
+import io.mpjsons.impl.deserializer.jsontypes.AbstractJsonArrayDeserializer
+import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.immutable.ListSet
 import scala.reflect.runtime.universe._

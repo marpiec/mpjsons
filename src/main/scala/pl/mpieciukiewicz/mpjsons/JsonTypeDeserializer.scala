@@ -1,6 +1,6 @@
-package pl.mpieciukiewicz.mpjsons
+package io.mpjsons
 
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
+import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.reflect.runtime.universe._
 

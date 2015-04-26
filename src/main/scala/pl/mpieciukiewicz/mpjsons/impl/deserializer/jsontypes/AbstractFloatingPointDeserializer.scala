@@ -1,7 +1,7 @@
-package pl.mpieciukiewicz.mpjsons.impl.deserializer.jsontypes
+package io.mpjsons.impl.deserializer.jsontypes
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.StringIterator
+import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.StringIterator
 
 /**
  * @author Marcin Pieciukiewicz

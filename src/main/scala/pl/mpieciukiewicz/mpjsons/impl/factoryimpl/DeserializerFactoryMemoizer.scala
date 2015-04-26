@@ -1,7 +1,7 @@
-package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
+package io.mpjsons.impl.factoryimpl
 
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
+import io.mpjsons.JsonTypeDeserializer
 
 import scala.reflect.runtime.universe._
 

@@ -1,9 +1,9 @@
-package pl.mpieciukiewicz.mpjsons.impl.util.reflection
+package io.mpjsons.impl.util.reflection
 
 import java.lang.reflect.Field
 
-import pl.mpieciukiewicz.mpjsons.impl.JsonInnerException
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.JsonInnerException
+import io.mpjsons.impl.util.TypesUtil
 
 import scala.reflect.runtime.universe._
 

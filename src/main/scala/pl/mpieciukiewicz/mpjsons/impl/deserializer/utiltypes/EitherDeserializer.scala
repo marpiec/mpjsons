@@ -1,9 +1,9 @@
-package pl.mpieciukiewicz.mpjsons.impl.deserializer.utiltypes
+package io.mpjsons.impl.deserializer.utiltypes
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.IdentifierDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, JsonInnerException, StringIterator}
+import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.deserializer.IdentifierDeserializer
+import io.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, StringIterator}
 
 import scala.reflect.runtime.universe._
 /**

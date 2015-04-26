@@ -1,6 +1,6 @@
-package pl.mpieciukiewicz.mpjsons.impl.deserializer
+package io.mpjsons.impl.deserializer
 
-import pl.mpieciukiewicz.mpjsons.impl.StringIterator
+import io.mpjsons.impl.StringIterator
 
 /**
  * @author Marcin Pieciukiewicz

@@ -1,11 +1,11 @@
-package pl.mpieciukiewicz.mpjsons.impl.deserializer
+package io.mpjsons.impl.deserializer
 
 import java.lang.reflect.Field
 
-import pl.mpieciukiewicz.mpjsons.{JsonTypeSerializer, JsonTypeDeserializer}
-import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
-import pl.mpieciukiewicz.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
-import pl.mpieciukiewicz.mpjsons.impl.{JsonInnerException, DeserializerFactory, StringIterator}
+import io.mpjsons.{JsonTypeSerializer, JsonTypeDeserializer}
+import io.mpjsons.impl.util.reflection.ReflectionUtil
+import io.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
+import io.mpjsons.impl.{JsonInnerException, DeserializerFactory, StringIterator}
 
 import scala.reflect.runtime.universe._
 

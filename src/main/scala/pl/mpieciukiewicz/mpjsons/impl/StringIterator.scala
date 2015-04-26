@@ -1,4 +1,4 @@
-package pl.mpieciukiewicz.mpjsons.impl
+package io.mpjsons.impl
 
 /**
  * Special container for String that allows easy iteration through String characters.

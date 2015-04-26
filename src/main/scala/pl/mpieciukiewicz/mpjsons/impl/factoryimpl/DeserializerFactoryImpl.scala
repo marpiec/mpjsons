@@ -1,14 +1,14 @@
-package pl.mpieciukiewicz.mpjsons.impl.factoryimpl
+package io.mpjsons.impl.factoryimpl
 
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.{BeanDeserializer, SingletonObjectDeserializer}
-import pl.mpieciukiewicz.mpjsons.impl.deserializer
+import io.mpjsons.impl.deserializer.{BeanDeserializer, SingletonObjectDeserializer}
+import io.mpjsons.impl.deserializer
 
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.mutable.ArrayDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.utiltypes.{Tuple2Deserializer, EitherDeserializer}
-import pl.mpieciukiewicz.mpjsons.{MPJsons, JsonTypeDeserializer}
-import pl.mpieciukiewicz.mpjsons.impl.deserializer
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.values._
-import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
+import io.mpjsons.impl.deserializer.mutable.ArrayDeserializer
+import io.mpjsons.impl.deserializer.utiltypes.{Tuple2Deserializer, EitherDeserializer}
+import io.mpjsons.{MPJsons, JsonTypeDeserializer}
+import io.mpjsons.impl.deserializer
+import io.mpjsons.impl.deserializer.values._
+import io.mpjsons.impl.util.reflection.ReflectionUtil
 
 import scala.collection._
 import scala.collection.mutable.ListBuffer

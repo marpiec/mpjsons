@@ -1,8 +1,8 @@
-package pl.mpieciukiewicz.mpjsons.impl.util.reflection
+package io.mpjsons.impl.util.reflection
 
 import java.lang.reflect.{AccessibleObject, Field}
 
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.util.TypesUtil
 
 import scala.reflect.runtime.universe._
 

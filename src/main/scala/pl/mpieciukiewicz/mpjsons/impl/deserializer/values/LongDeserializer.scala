@@ -1,8 +1,8 @@
-package pl.mpieciukiewicz.mpjsons.impl.deserializer.values
+package io.mpjsons.impl.deserializer.values
 
-import pl.mpieciukiewicz.mpjsons.impl.StringIterator
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.jsontypes.AbstractIntegerDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.deserializer.values.IntDeserializer._
+import io.mpjsons.impl.StringIterator
+import io.mpjsons.impl.deserializer.jsontypes.AbstractIntegerDeserializer
+import io.mpjsons.impl.deserializer.values.IntDeserializer._
 
 /**
  * @author Marcin Pieciukiewicz

@@ -1,6 +1,6 @@
-package pl.mpieciukiewicz.mpjsons
+package io.mpjsons
 
-import pl.mpieciukiewicz.mpjsons.impl.SerializerFactory
+import io.mpjsons.impl.SerializerFactory
 
 /**
  * Class that supports serialization object to json String.

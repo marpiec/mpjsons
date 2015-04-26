@@ -1,8 +1,8 @@
-package pl.mpieciukiewicz.mpjsons.impl.deserializer.jsontypes
+package io.mpjsons.impl.deserializer.jsontypes
 
-import pl.mpieciukiewicz.mpjsons.JsonTypeDeserializer
-import pl.mpieciukiewicz.mpjsons.impl.util.TypesUtil
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
+import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._

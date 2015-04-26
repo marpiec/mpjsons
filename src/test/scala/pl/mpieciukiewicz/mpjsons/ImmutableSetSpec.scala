@@ -1,4 +1,4 @@
-package pl.mpieciukiewicz.mpjsons
+package io.mpjsons
 
 import org.scalatest.FlatSpec
 import org.scalatest.MustMatchers._

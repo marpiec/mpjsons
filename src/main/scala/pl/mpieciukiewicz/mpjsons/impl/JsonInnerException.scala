@@ -1,4 +1,4 @@
-package pl.mpieciukiewicz.mpjsons.impl
+package io.mpjsons.impl
 
 /**
  * Exception used internally inside this library.

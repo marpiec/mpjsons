@@ -1,4 +1,4 @@
-package pl.mpieciukiewicz.mpjsons
+package io.mpjsons
 
 import org.scalatest.{GivenWhenThen, MustMatchers, FlatSpec}
 import scala.reflect.runtime.universe._

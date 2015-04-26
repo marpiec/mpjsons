@@ -1,4 +1,4 @@
-package pl.mpieciukiewicz.mpjsons.impl.util
+package io.mpjsons.impl.util
 
 import java.lang.reflect.{Constructor, Field}
 

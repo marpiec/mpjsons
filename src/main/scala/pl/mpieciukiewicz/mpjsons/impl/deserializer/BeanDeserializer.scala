@@ -5,7 +5,7 @@ import java.lang.reflect.Field
 import pl.mpieciukiewicz.mpjsons.{JsonTypeSerializer, JsonTypeDeserializer}
 import pl.mpieciukiewicz.mpjsons.impl.util.reflection.ReflectionUtil
 import pl.mpieciukiewicz.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
-import pl.mpieciukiewicz.mpjsons.impl.{DeserializerFactory, StringIterator}
+import pl.mpieciukiewicz.mpjsons.impl.{JsonInnerException, DeserializerFactory, StringIterator}
 
 import scala.reflect.runtime.universe._
 
@@ -35,7 +35,7 @@ class BeanDeserializer[T](private val deserializerFactory: DeserializerFactory,
 
       jsonIterator.consumeFieldValueSeparator()
 
-      val (field, deserializer) = fieldsByName(identifier)
+      val (field, deserializer) = fieldsByName.getOrElse(identifier, throw new IllegalArgumentException(s"No field $identifier in type $tpe"))
       val value = deserializer.deserialize(jsonIterator)
 
       field.set(instance, value)

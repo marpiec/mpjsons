@@ -100,10 +100,10 @@ class DeserializerFactoryImpl {
       return new MapDeserializer(deserializerFactory, tpe)
     } else if (typeSymbol == typeOf[HashMap[_, _]].typeSymbol) {
       return new HashMapDeserializer(deserializerFactory, tpe)
-    } else if (tpe == typeOf[SortedMap[_,_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[SortedMap[_,_]].typeSymbol) {
       throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class")
       //return SortedMapDeserializer
-    } else if (tpe == typeOf[TreeMap[_,_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[TreeMap[_,_]].typeSymbol) {
       throw new IllegalStateException("TreeMap is unsupported, because of missing ordering type class")
       //return TreeMapDeserializer
     } else if (typeSymbol == typeOf[ListMap[_, _]].typeSymbol) {

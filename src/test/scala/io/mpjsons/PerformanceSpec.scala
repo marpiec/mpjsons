@@ -50,7 +50,7 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
     implicit val tt = typeTag[PerformanceSpec.SimpleDataObject]
 
-    val deserializer = mpjsons.getStaticDeserializer[PerformanceSpec.SimpleDataObject]
+    val deserializer = mpjsons.buildStaticDeserializer[PerformanceSpec.SimpleDataObject]
 
     for(i <- 0 to 1000) {
       sdo.intValue += 1

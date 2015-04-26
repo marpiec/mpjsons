@@ -31,19 +31,19 @@ class SerializerFactoryImpl {
     val serializerFactory = MPJsons.serializerFactory
 
     // Primitives, by toString (except Char)
-    if (typeOf[Long] == tpe || typeOf[java.lang.Long] == tpe) {
+    if (typeOf[Long].typeSymbol == typeSymbol) {
       return new SimpleToStringSerializer()
-    } else if (typeOf[Int] == tpe || typeOf[java.lang.Integer] == tpe) {
+    } else if (typeOf[Int].typeSymbol == typeSymbol) {
       return new SimpleToStringSerializer()
-    } else if (typeOf[Short] == tpe || typeOf[java.lang.Short] == tpe) {
+    } else if (typeOf[Short].typeSymbol == typeSymbol) {
       return new SimpleToStringSerializer()
-    } else if (typeOf[Byte] == tpe || typeOf[java.lang.Byte] == tpe) {
+    } else if (typeOf[Byte].typeSymbol == typeSymbol) {
       return new SimpleToStringSerializer()
-    } else if (typeOf[Boolean] == tpe || typeOf[java.lang.Boolean] == tpe) {
+    } else if (typeOf[Boolean].typeSymbol == typeSymbol) {
       return new SimpleToStringSerializer()
-    } else if (typeOf[Double] == tpe || typeOf[java.lang.Double] == tpe) {
+    } else if (typeOf[Double].typeSymbol == typeSymbol) {
       return new SimpleToStringSerializer()
-    } else if (typeOf[Float] == tpe || typeOf[java.lang.Float] == tpe) {
+    } else if (typeOf[Float].typeSymbol == typeSymbol) {
       return new SimpleToStringSerializer()
     }
 

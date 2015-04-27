@@ -86,6 +86,8 @@ import MPJsons._
   private var extractTypeCache = Map[TypeTag[_], Type]()
   private var extractTypeFromNameCache = Map[String, Type]()
 
+  private val nothingTypeTag = typeTag[Nothing]
+
   private def extractType[T](tag: TypeTag[T]): Type = {
     extractTypeCache.getOrElse(tag, {
       val tpe = tag.tpe
@@ -106,7 +108,11 @@ import MPJsons._
    * Creates object from gives json String, based on a declared type.
    */
   def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
-    deserialize(json, extractType(tag))
+    if(tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for object deserialization was not specified, or was Nothing. Please specify object type.")
+    } else {
+      deserialize(json, extractType(tag))
+    }
   }
 
   /**
@@ -133,8 +139,12 @@ import MPJsons._
   /**
    * Creates a specialized deserializer for a declared type.
    */
-  def buildStaticDeserializer[T : TypeTag]: StaticDeserializer[T] = {
-    buildStaticDeserializer(typeTag[T].tpe)
+  def buildStaticDeserializer[T](implicit tag: TypeTag[T]): StaticDeserializer[T] = {
+    if(tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for object deserialization was not specified, or was Nothing. Please specify object type.")
+    } else {
+      buildStaticDeserializer(typeTag[T].tpe)
+    }
   }
 
   /**
@@ -157,7 +167,11 @@ import MPJsons._
    * @return JSON representation of given object
    */
   def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
-   serialize(obj, extractType(tag))
+    if(tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for object serialization was not specified, or was Nothing. Please specify object type.")
+    } else {
+      serialize(obj, extractType(tag))
+    }
   }
 
   /**
@@ -186,7 +200,11 @@ import MPJsons._
    * Creates a specialized serializer for a passed type name (class name).
    */
   def buildStaticSerializer[T](implicit tag: TypeTag[T]): StaticSerializer[T] = {
-    buildStaticSerializer(tag.tpe)
+    if(tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for object serialization was not specified, or was Nothing. Please specify object type.")
+    } else {
+      buildStaticSerializer(tag.tpe)
+    }
   }
 
   /**
@@ -208,19 +226,26 @@ import MPJsons._
    * Method to register custom json converter to support custom types of data.
    * @param converter converter that will be used to serialize and deserialize given type
    */
-  def registerConverter[T : TypeTag](converter: JsonTypeConverter[T]) {
-    val tag = typeTag[T]
-    serializerFactory.registerSerializer[T](extractType(tag), converter)
-    deserializerFactory.registerDeserializer(extractType(tag), converter)
+  def registerConverter[T : TypeTag](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
+    if(tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
+    } else {
+      serializerFactory.registerSerializer[T](extractType(tag), converter)
+      deserializerFactory.registerDeserializer(extractType(tag), converter)
+    }
   }
 
   /**
    * Method to register custom json converter to support custom types of data _and_all_types_that_are_extending_it_.
    * @param converter converter that will be used to serialize and deserialize given type and its descendant
    */
-  def registerSuperclassConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
-    serializerFactory.registerSuperclassSerializer(extractType(tag), converter)
-    deserializerFactory.registerSuperclassDeserializer(extractType(tag), converter)
+  def registerSuperclassConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]): Unit = {
+    if(tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
+    } else {
+      serializerFactory.registerSuperclassSerializer(extractType(tag), converter)
+      deserializerFactory.registerSuperclassDeserializer(extractType(tag), converter)
+    }
   }
 
 }

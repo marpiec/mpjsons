@@ -71,17 +71,14 @@ class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[
 }
 
 
-object MPJsons {
-  implicit val deserializerFactory = new DeserializerFactory
-  implicit val serializerFactory = new SerializerFactory
-}
-
 /**
  * Main class of json serialization library.
  * @author Marcin Pieciukiewicz
  */
 class MPJsons {
-import MPJsons._
+
+  private val deserializerFactory = new DeserializerFactory
+  private val serializerFactory = new SerializerFactory
 
   private var extractTypeCache = Map[TypeTag[_], Type]()
   private var extractTypeFromNameCache = Map[String, Type]()
@@ -226,12 +223,13 @@ import MPJsons._
    * Method to register custom json converter to support custom types of data.
    * @param converter converter that will be used to serialize and deserialize given type
    */
-  def registerConverter[T : TypeTag](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]) {
+  def registerConverter[T : TypeTag](serializer: SerializerFactory => JsonTypeSerializer[T],
+                                      deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]) {
     if(tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
     } else {
-      serializerFactory.registerSerializer[T](extractType(tag), converter)
-      deserializerFactory.registerDeserializer(extractType(tag), converter)
+      serializerFactory.registerSerializer[T](extractType(tag), serializer)
+      deserializerFactory.registerDeserializer[T](extractType(tag), deserializer)
     }
   }
 
@@ -239,12 +237,13 @@ import MPJsons._
    * Method to register custom json converter to support custom types of data _and_all_types_that_are_extending_it_.
    * @param converter converter that will be used to serialize and deserialize given type and its descendant
    */
-  def registerSuperclassConverter[T](converter: JsonTypeConverter[T])(implicit tag: TypeTag[T]): Unit = {
+  def registerSuperclassConverter[T](serializer: SerializerFactory => JsonTypeSerializer[T],
+                                     deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]): Unit = {
     if(tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
     } else {
-      serializerFactory.registerSuperclassSerializer(extractType(tag), converter)
-      deserializerFactory.registerSuperclassDeserializer(extractType(tag), converter)
+      serializerFactory.registerSuperclassSerializer[T](extractType(tag), serializer)
+      deserializerFactory.registerSuperclassDeserializer[T](extractType(tag), deserializer)
     }
   }
 

@@ -1,12 +1,10 @@
 package io.mpjsons
 
-import io.mpjsons.impl.SerializerFactory
-
 /**
  * Class that supports serialization object to json String.
  * @author Marcin Pieciukiewicz
  */
-abstract class JsonTypeSerializer[T] {
+trait JsonTypeSerializer[T] {
   /**
    * Creates json String that represents given object.
    * @param obj object to serialize

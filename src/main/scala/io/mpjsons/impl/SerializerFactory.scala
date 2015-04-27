@@ -1,9 +1,9 @@
 package io.mpjsons.impl
 
-import io.mpjsons.impl.factoryimpl.{SerializerFactoryImpl, SerializerFactoryMemoizer}
+import io.mpjsons.impl.factoryimpl.SerializerFactoryMemoizer
 
 /**
  * @author Marcin Pieciukiewicz
  */
 
-class SerializerFactory extends SerializerFactoryMemoizer(new SerializerFactoryImpl)
+class SerializerFactory extends SerializerFactoryMemoizer

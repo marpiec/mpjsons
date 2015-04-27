@@ -1,6 +1,7 @@
 package io.mpjsons.impl.factoryimpl
 
-import io.mpjsons.{MPJsons, JsonTypeSerializer}
+import io.mpjsons.JsonTypeSerializer
+import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
@@ -14,21 +15,20 @@ import scala.reflect.runtime.universe._
 
 class SerializerFactoryImpl {
 
-  private var additionalSerializers = Map[Type, JsonTypeSerializer[_]]()
-  private var additionalSuperclassSerializers = Map[Symbol, JsonTypeSerializer[_]]()
+  private var additionalSerializers = Map[Type, SerializerFactory => JsonTypeSerializer[_]]()
+  private var additionalSuperclassSerializers = Map[Symbol, SerializerFactory => JsonTypeSerializer[_]]()
 
-  def registerSerializer(tpe: Type, serializer: JsonTypeSerializer[_]) {
+  def registerSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]) {
     additionalSerializers += tpe -> serializer
   }
 
-  def registerSuperclassSerializer(tpe: Type, serializer: JsonTypeSerializer[_]) {
+  def registerSuperclassSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]) {
     additionalSuperclassSerializers += tpe.typeSymbol -> serializer
   }
 
-  def getSerializer(tpe: Type): JsonTypeSerializer[_] = {
+  protected def getSerializerNoCache(tpe: Type): JsonTypeSerializer[_] = {
 
     val typeSymbol = tpe.typeSymbol
-    val serializerFactory = MPJsons.serializerFactory
 
     // Primitives, by toString (except Char)
     if (typeOf[Long].typeSymbol == typeSymbol) {
@@ -58,7 +58,7 @@ class SerializerFactoryImpl {
 
     // Arrays
     if (tpe.isInstanceOf[TypeRefApi] && tpe.asInstanceOf[TypeRefApi].sym == definitions.ArrayClass) {
-      return new ArraySerializer(serializerFactory, tpe)
+      return new ArraySerializer(this.asInstanceOf[SerializerFactory], tpe)
     }
 
     // We don't want to support user's custom collections implicitly,
@@ -66,46 +66,46 @@ class SerializerFactoryImpl {
     if (typeSymbol.fullName.startsWith("scala.")) {
       //Every immutable collection
       if (typeOf[Seq[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(serializerFactory, tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
       } else if (typeOf[Set[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(serializerFactory, tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
       } else if (tpe.baseClasses.contains(typeOf[Map[_, _]].typeSymbol)) {
-        return new MapSerializer(serializerFactory, tpe)
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe)
       } else if (typeOf[BitSet].typeSymbol == typeSymbol) {
-          return new BitSetSerializer(serializerFactory, tpe)
+          return new BitSetSerializer(this.asInstanceOf[SerializerFactory], tpe)
       } else if (tpe.baseClasses.contains(typeOf[Iterable[_]].typeSymbol)) {
-        return new IterableSerializer(serializerFactory, tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
       }
 
       //Every mutable collection
       if (typeOf[mutable.Seq[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(serializerFactory, tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
       } else if (typeOf[mutable.Set[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(serializerFactory, tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
       } else if (typeOf[mutable.Map[_, _]].typeSymbol == typeSymbol) {
-        return new MapSerializer(serializerFactory, tpe)
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe)
       } else if (typeOf[mutable.Iterable[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(serializerFactory, tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
       }
 
       if(tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
-        return new EitherSerializer(serializerFactory, tpe)
+        return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe)
       }
 
       // Every Tuple, Option
       if (tpe.baseClasses.contains(typeOf[Product].typeSymbol)) {
-        return new ProductSerializer(serializerFactory, tpe)
+        return new ProductSerializer(this.asInstanceOf[SerializerFactory], tpe)
       }
 
     }
 
 
     additionalSuperclassSerializers.get(typeSymbol) match {
-      case Some(serializer) => return serializer
+      case Some(serializer) => return serializer(this.asInstanceOf[SerializerFactory])
       case None =>
         for ((tpeType, serializer) <- additionalSuperclassSerializers) {
           if (tpe.baseClasses.contains(tpeType)) {
-            return serializer
+            return serializer(this.asInstanceOf[SerializerFactory])
           }
         }
     }
@@ -118,9 +118,9 @@ class SerializerFactoryImpl {
     val additionalSerializerOption = additionalSerializers.get(tpe)
 
     if (additionalSerializerOption.isDefined) {
-      additionalSerializerOption.get
+      additionalSerializerOption.get(this.asInstanceOf[SerializerFactory])
     } else {
-      new BeanSerializer(serializerFactory, tpe)
+      new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe)
     }
 
     //TODO Range, NumericRange

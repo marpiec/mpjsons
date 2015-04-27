@@ -2,6 +2,8 @@ package io.mpjsons.impl.util
 
 import java.lang.reflect.{Constructor, Field}
 
+import io.mpjsons.impl.JsonInnerException
+
 /**
  * Object responsible for instatiation of objects. If class doesn't have default constructor it tries
  * to use Unsafe class from Sun's JRE.
@@ -36,6 +38,7 @@ object ObjectConstructionUtil {
       } catch {
         //otherwise create object without calling constructor
         case e: NoSuchMethodException => createInstanceWithoutCallingConstructor(clazz)
+        case e: InstantiationException => throw new JsonInnerException("Cannot instantiate class of type " + clazz + ", maybe it is abstract?", e)
       }
     }
   }

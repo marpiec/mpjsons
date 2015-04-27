@@ -1,14 +1,12 @@
 package io.mpjsons.impl.factoryimpl
 
+import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.DeserializerFactory
 import io.mpjsons.impl.deserializer.immutables._
-import io.mpjsons.impl.deserializer.{BeanDeserializer, SingletonObjectDeserializer}
-import io.mpjsons.impl.deserializer
-
 import io.mpjsons.impl.deserializer.mutables.ArrayDeserializer
-import io.mpjsons.impl.deserializer.utiltypes.{Tuple2Deserializer, EitherDeserializer}
-import io.mpjsons.{MPJsons, JsonTypeDeserializer}
-import io.mpjsons.impl.deserializer
+import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple2Deserializer}
 import io.mpjsons.impl.deserializer.values._
+import io.mpjsons.impl.deserializer.{BeanDeserializer, SingletonObjectDeserializer}
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
 import scala.collection._
@@ -21,21 +19,20 @@ import scala.reflect.runtime.universe._
 
 class DeserializerFactoryImpl {
 
-  private var additionalDeserializers = Map[Type, JsonTypeDeserializer[_ <: Any]]()
-  private var additionalSuperclassDeserializers = Map[Symbol, JsonTypeDeserializer[_ <: Any]]()
+  private var additionalDeserializers = Map[Type, DeserializerFactory => JsonTypeDeserializer[_]]()
+  private var additionalSuperclassDeserializers = Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]]()
 
-  def registerDeserializer(tpe: Type, deserializer: JsonTypeDeserializer[_ <: Any]) {
+  def registerDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]) {
     additionalDeserializers += tpe -> deserializer
   }
 
-  def registerSuperclassDeserializer(tpe: Type, deserializer: JsonTypeDeserializer[_ <: Any]) {
+  def registerSuperclassDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]) {
     additionalSuperclassDeserializers += tpe.typeSymbol -> deserializer
   }
 
-  def getDeserializer(tpe: Type): JsonTypeDeserializer[_ <: Any] = {
+  protected def getDeserializerNoCache(tpe: Type): JsonTypeDeserializer[_ <: Any] = {
 
     val typeSymbol = tpe.typeSymbol
-    val deserializerFactory = MPJsons.deserializerFactory
 
     if (typeSymbol == typeOf[Long].typeSymbol) {
       return LongDeserializer
@@ -56,37 +53,37 @@ class DeserializerFactoryImpl {
     } else if (typeSymbol == typeOf[Char].typeSymbol) {
       return CharDeserializer
     } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
-      return new ArrayDeserializer(deserializerFactory, tpe)
+      return new ArrayDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[(_, _)].typeSymbol) {
-      return new Tuple2Deserializer(deserializerFactory, tpe)
+      return new Tuple2Deserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[Option[_]].typeSymbol) {
-      return new OptionDeserializer(deserializerFactory, tpe)
+      return new OptionDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[Map[_, _]].typeSymbol || typeSymbol == typeOf[immutable.Map[_, _]].typeSymbol) {
-      return new MapDeserializer(deserializerFactory, tpe)
+      return new MapDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[Either[_, _]].typeSymbol) {
-      return new EitherDeserializer(deserializerFactory, tpe)
+      return new EitherDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     }
 
     // seq
     if (typeSymbol == typeOf[List[_]].typeSymbol || typeSymbol == typeOf[immutable.List[_]].typeSymbol) {
-      return new ListDeserializer(deserializerFactory, tpe)
+      return new ListDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[Vector[_]].typeSymbol || typeSymbol == typeOf[immutable.Vector[_]].typeSymbol) {
-      return new VectorDeserializer(deserializerFactory, tpe)
+      return new VectorDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[Seq[_]].typeSymbol || typeSymbol == typeOf[immutable.Seq[_]].typeSymbol) {
-      return new SeqDeserializer(deserializerFactory, tpe)
+      return new SeqDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[Stream[_]].typeSymbol || typeSymbol == typeOf[immutable.Stream[_]].typeSymbol) {
-      return new StreamDeserializer(deserializerFactory, tpe)
+      return new StreamDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[immutable.Queue[_]].typeSymbol) {
-      return new QueueDeserializer(deserializerFactory, tpe)
+      return new QueueDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     }
 
     // set
     if (typeSymbol == typeOf[Set[_]].typeSymbol || typeSymbol == typeOf[immutable.Set[_]].typeSymbol) {
-      return new SetDeserializer(deserializerFactory, tpe)
+      return new SetDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[immutable.HashSet[_]].typeSymbol) {
-      return new HashSetDeserializer(deserializerFactory, tpe)
+      return new HashSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[immutable.ListSet[_]].typeSymbol) {
-      return new ListSetDeserializer(deserializerFactory, tpe)
+      return new ListSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[immutable.SortedSet[_]].typeSymbol) {// Unsupported because of missing ordering type class
      // return SortedSetDeserializer
       throw new IllegalStateException("SortedSet is unsupported, because of missing ordering type class")
@@ -94,14 +91,14 @@ class DeserializerFactoryImpl {
      // return TreeSetDeserializer
       throw new IllegalStateException("TreeSet is unsupported, because of missing ordering type class")
     } else if (typeSymbol == typeOf[BitSet].typeSymbol || typeSymbol == typeOf[immutable.BitSet].typeSymbol) {
-      return new BitSetDeserializer(deserializerFactory, tpe)
+      return new BitSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     }
 
     // map
     if (typeSymbol == typeOf[Map[_, _]].typeSymbol) {
-      return new MapDeserializer(deserializerFactory, tpe)
+      return new MapDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[immutable.HashMap[_, _]].typeSymbol) {
-      return new HashMapDeserializer(deserializerFactory, tpe)
+      return new HashMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     } else if (typeSymbol == typeOf[immutable.SortedMap[_,_]].typeSymbol) {
       throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class")
       //return SortedMapDeserializer
@@ -109,17 +106,17 @@ class DeserializerFactoryImpl {
       throw new IllegalStateException("TreeMap is unsupported, because of missing ordering type class")
       //return TreeMapDeserializer
     } else if (typeSymbol == typeOf[immutable.ListMap[_, _]].typeSymbol) {
-      return new ListMapDeserializer(deserializerFactory, tpe)
+      return new ListMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     }
 
 
 
     additionalSuperclassDeserializers.get(typeSymbol) match {
-      case Some(deserializer) => return deserializer
+      case Some(deserializer) => return deserializer(this.asInstanceOf[DeserializerFactory])
       case None =>
         for ((tpeType, deserializer) <- additionalSuperclassDeserializers) {
           if (tpe.baseClasses.contains(tpeType)) {
-            return deserializer
+            return deserializer(this.asInstanceOf[DeserializerFactory])
           }
         }
     }
@@ -137,9 +134,9 @@ class DeserializerFactoryImpl {
     val additionalDeserializerOption = additionalDeserializers.get(tpe)
 
     if (additionalDeserializerOption.isDefined) {
-      additionalDeserializerOption.get
+      additionalDeserializerOption.get(this.asInstanceOf[DeserializerFactory])
     } else {
-      new BeanDeserializer(deserializerFactory, tpe)
+      new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     }
   }
 

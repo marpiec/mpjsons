@@ -17,7 +17,7 @@ private object ErrorMessageFormatter {
     val consumedTrimmed = consumed.substring(Math.max(0, consumed.length - trimmingSize), consumed.length)
     val remainingTrimmed = remaining.substring(0, Math.min(remaining.length, trimmingSize))
     val consumedPlaceholder = " " * consumedTrimmed.length
-    """
+    s"""
       |Problem deserializing: $json
       |Problem: ${e.getMessage}
       |In this place:

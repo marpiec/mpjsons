@@ -1,8 +1,8 @@
 package pl.mpieciukiewicz.mpjsons.impl.util
 
 import java.lang.reflect.{Field, ParameterizedType}
-import pl.mpieciukiewicz.mpjsons.annotation.SecondSubType
-import pl.mpieciukiewicz.mpjsons.annotation.{SecondSubType, FirstSubType}
+
+import pl.mpieciukiewicz.mpjsons.annotation.{FirstSubType, SecondSubType}
 
 /**
  * Utility object to support manipulation of Types acquired by reflections.
@@ -21,7 +21,12 @@ object TypesUtil {
 
 
   private def getSubElementsTypeForAnnotation(field: Field, subTypeAnnotation: Class[_ <: java.lang.annotation.Annotation], typeIndex: Int): Class[_] = {
-    var elementsType = field.getGenericType.asInstanceOf[ParameterizedType].getActualTypeArguments()(typeIndex).asInstanceOf[Class[_]]
+    val argument = field.getGenericType.asInstanceOf[ParameterizedType].getActualTypeArguments()(typeIndex)
+    var elementsType = if(argument.isInstanceOf[ParameterizedType]) {
+      argument.asInstanceOf[ParameterizedType].getRawType.asInstanceOf[Class[_]]
+    } else {
+      argument.asInstanceOf[Class[_]]
+    }
 
     if (elementsType.equals(classOf[Object])) {
       val subtype = field.getAnnotation(subTypeAnnotation)

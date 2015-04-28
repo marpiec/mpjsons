@@ -70,7 +70,7 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
 
     Then("We have acceptable performance")
 
-    (end - start) must be < 100L
+    (end - start) must be < 600L
 
   }
 }

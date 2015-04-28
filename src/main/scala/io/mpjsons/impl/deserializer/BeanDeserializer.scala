@@ -2,10 +2,10 @@ package io.mpjsons.impl.deserializer
 
 import java.lang.reflect.Field
 
-import io.mpjsons.{JsonTypeSerializer, JsonTypeDeserializer}
+import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 import io.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
-import io.mpjsons.impl.{JsonInnerException, DeserializerFactory, StringIterator}
+import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.reflect.runtime.universe._
 
@@ -18,8 +18,9 @@ class BeanDeserializer[T](private val deserializerFactory: DeserializerFactory,
 
   val clazz = TypesUtil.getClassFromType[T](tpe)
   val constructor = try{clazz.getConstructor()} catch {case e: NoSuchMethodException => null}
-  val fields = ReflectionUtil.getAllAccessibleFields(tpe)
-  val fieldsByName: Map[String,(Field, JsonTypeDeserializer[AnyRef])] = fields.map {field =>
+  lazy val fields = ReflectionUtil.getAllAccessibleFields(tpe)
+  /** Lazy val to prevent StackOverflow while construction recursive type deserializer */
+  lazy val fieldsByName: Map[String,(Field, JsonTypeDeserializer[AnyRef])] = fields.map {field =>
     field.field.getName -> (field.field, deserializerFactory.getDeserializer(field.tpe).asInstanceOf[JsonTypeDeserializer[AnyRef]])}.toMap
 
 

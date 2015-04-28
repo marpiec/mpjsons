@@ -12,8 +12,10 @@ import scala.reflect.runtime.universe._
 
 class BeanSerializer(serializerFactory: SerializerFactory, tpe: Type) extends JsonTypeSerializer[AnyRef] {
 
+
   val fields = ReflectionUtil.getAllAccessibleFields(tpe)
-  val fieldsWithSerializers = fields.map {field =>
+  /** Lazy val to prevent StackOverflow while construction recursive type serializer */
+  lazy val fieldsWithSerializers = fields.map {field =>
     (field.field, field.field.getName, serializerFactory.getSerializer(field.tpe)
     .asInstanceOf[JsonTypeSerializer[AnyRef]])}
 

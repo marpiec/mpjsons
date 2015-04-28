@@ -52,9 +52,9 @@ class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: D
   }
 
   def extractTypeName(jsonIterator: StringIterator): String = {
-    val deserializer = deserializerFactory.getDeserializer(typeOf[String])
+    val deserializer = deserializerFactory.getDeserializer[String](typeOf[String])
     jsonIterator.skipWhitespaceChars()
-    deserializer.deserialize(jsonIterator).asInstanceOf[String]
+    deserializer.deserialize(jsonIterator)
   }
 
 }

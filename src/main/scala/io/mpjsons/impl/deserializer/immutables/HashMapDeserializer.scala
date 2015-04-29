@@ -5,11 +5,11 @@ import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.immutable.{Map, HashMap}
 import scala.reflect.runtime.universe._
-
+import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
-class HashMapDeserializer[K, V](private val deserializerFactory: DeserializerFactory, private val tpe: Type, context: Map[Symbol, Type])
+class HashMapDeserializer[K, V](private val deserializerFactory: DeserializerFactory, private val tpe: Type, context: Context)
   extends AbstractJsonMapDeserializer[K, V, HashMap[K, V]](deserializerFactory, tpe, context) {
 
   /**

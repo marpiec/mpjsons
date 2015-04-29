@@ -6,12 +6,12 @@ import io.mpjsons.impl.util.TypesUtil
 
 import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-
+import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
 
-class MapSerializer[K,V](serializerFactory: SerializerFactory, tpe: Type, context: Map[Symbol, Type])
+class MapSerializer[K,V](serializerFactory: SerializerFactory, tpe: Type, context: Context)
   extends JsonTypeSerializer[scala.collection.Map[K, V]] {
 
   private val subtypes = TypesUtil.getDoubleSubElementsType(tpe)

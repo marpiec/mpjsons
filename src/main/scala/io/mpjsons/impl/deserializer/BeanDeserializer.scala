@@ -4,9 +4,9 @@ import java.lang.reflect.Field
 
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.util.reflection.ReflectionUtil
-import io.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
+import io.mpjsons.impl.util.{Context, ObjectConstructionUtil, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
-
+import io.mpjsons.impl.util.Context
 import scala.reflect.runtime.universe._
 
 /**
@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
  */
 
 class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
-                                private val tpe: Type, private val context: Map[Symbol, Type]) extends JsonTypeDeserializer[T] {
+                                private val tpe: Type, private val context: Context) extends JsonTypeDeserializer[T] {
 
 
 
@@ -30,7 +30,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   override def deserialize(jsonIterator: StringIterator): T = {
 
     jsonIterator.consumeObjectStart()
-    val instance = ObjectConstructionUtil.createInstance[T](clazz, constructor)
+    val instance = ObjectConstructionUtil.createInstance[T](clazz, constructor, context)
 
     while (jsonIterator.currentChar != '}') {
 
@@ -38,7 +38,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
       jsonIterator.consumeFieldValueSeparator()
 
-      val (field, deserializer) = fieldsByName.getOrElse(identifier, throw new IllegalArgumentException(s"No field $identifier in type $tpe"))
+      val (field, deserializer) = fieldsByName.getOrElse(identifier, throw new IllegalArgumentException(s"No field $identifier in type $tpe. Types: ${context.typesStackMessage}"))
       val value = deserializer.deserialize(jsonIterator)
 
       field.set(instance, value)

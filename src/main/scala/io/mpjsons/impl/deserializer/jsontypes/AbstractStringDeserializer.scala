@@ -14,7 +14,7 @@ abstract class AbstractStringDeserializer[T] extends JsonTypeDeserializer[T] {
     jsonIterator.skipWhitespaceChars()
 
     if (jsonIterator.currentChar != '"') {
-      throw new IllegalArgumentException("String value shuld start with '\"', but was [" + jsonIterator.currentChar + "]")
+      throw new IllegalArgumentException("String value should start with '\"', but was [" + jsonIterator.currentChar + "]")
     }
 
     val stringValue = new StringBuilder()

@@ -5,12 +5,12 @@ import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
 import scala.reflect.runtime.universe._
-
+import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
 
-class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Map[Symbol, Type]) extends JsonTypeSerializer[AnyRef] {
+class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context) extends JsonTypeSerializer[AnyRef] {
 
   private val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type serializer */

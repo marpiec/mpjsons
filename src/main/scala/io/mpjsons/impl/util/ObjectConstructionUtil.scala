@@ -28,7 +28,7 @@ object ObjectConstructionUtil {
    * @param clazz type of object o create
    * @return created object
    */
-  def createInstance[T](clazz: Class[T], constructor: Constructor[T]): T = {
+  def createInstance[T](clazz: Class[T], constructor: Constructor[T], context: Context): T = {
     if(constructor == null) {
       createInstanceWithoutCallingConstructor(clazz)
     } else {
@@ -38,7 +38,7 @@ object ObjectConstructionUtil {
       } catch {
         //otherwise create object without calling constructor
         case e: NoSuchMethodException => createInstanceWithoutCallingConstructor(clazz)
-        case e: InstantiationException => throw new JsonInnerException("Cannot instantiate class of type " + clazz + ", maybe it is abstract?", e)
+        case e: InstantiationException => throw new JsonInnerException("Cannot instantiate class of type " + clazz + ", maybe it is abstract? Types" + context.typesStackMessage, e)
       }
     }
   }

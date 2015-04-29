@@ -8,12 +8,12 @@ import io.mpjsons.impl.util.TypesUtil
 import scala.collection.BitSet
 import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-
+import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
 
-class BitSetSerializer(serializerFactory: SerializerFactory, tpe: Type, context: Map[Symbol, Type]) extends JsonTypeSerializer[BitSet] {
+class BitSetSerializer(serializerFactory: SerializerFactory, tpe: Type, context: Context) extends JsonTypeSerializer[BitSet] {
 
   val subTypeSerializer = serializerFactory.getSerializer[Int](typeOf[Int], context)
 

@@ -6,8 +6,8 @@ import io.mpjsons.impl.util.TypesUtil
 
 import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-
-class EitherSerializer[L,R](serializerFactory: SerializerFactory, tpe: Type, context: Map[Symbol, Type]) extends JsonTypeSerializer[Either[L,R]] {
+import io.mpjsons.impl.util.Context
+class EitherSerializer[L,R](serializerFactory: SerializerFactory, tpe: Type, context: Context) extends JsonTypeSerializer[Either[L,R]] {
 
   private val subtypes = TypesUtil.getDoubleSubElementsType(tpe)
   val leftSerializer = serializerFactory.getSerializer(subtypes._1, context).asInstanceOf[JsonTypeSerializer[L]]

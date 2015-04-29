@@ -2,7 +2,7 @@ package io.mpjsons
 
 import io.mpjsons.impl.deserializer.BeanDeserializer
 import io.mpjsons.impl.serializer.BeanSerializer
-import io.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
 import org.scalatest.{FlatSpec, MustMatchers}
 
@@ -16,7 +16,7 @@ class TypedSerializer[T <: AnyRef](packageName: String, serializerFactory: Seria
                                   (implicit tag: TypeTag[T])
                                  extends JsonTypeSerializer[T] {
 
-  val innerElementSerializer = new BeanSerializer(serializerFactory, tag.tpe, Map())
+  val innerElementSerializer = new BeanSerializer(serializerFactory, tag.tpe, Context(List(), Map()))
 
   override def serialize(obj: T, jsonBuilder: StringBuilder): Unit = {
     val simpleName: String = obj.getClass.getSimpleName
@@ -43,7 +43,7 @@ class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: D
     jsonIterator.nextChar()
 
     jsonIterator.skipWhitespaceChars()
-    val value = new BeanDeserializer[T](deserializerFactory, elementType, Map()).deserialize(jsonIterator).asInstanceOf[T]
+    val value = new BeanDeserializer[T](deserializerFactory, elementType, Context(List(), Map())).deserialize(jsonIterator).asInstanceOf[T]
 
     jsonIterator.skipWhitespaceChars()
     jsonIterator.nextChar()
@@ -52,7 +52,7 @@ class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: D
   }
 
   def extractTypeName(jsonIterator: StringIterator): String = {
-    val deserializer = deserializerFactory.getDeserializer[String](typeOf[String], Map())
+    val deserializer = deserializerFactory.getDeserializer[String](typeOf[String], Context(List(), Map()))
     jsonIterator.skipWhitespaceChars()
     deserializer.deserialize(jsonIterator)
   }

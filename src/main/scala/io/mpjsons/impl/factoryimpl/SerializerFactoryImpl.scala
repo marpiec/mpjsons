@@ -8,7 +8,7 @@ import io.mpjsons.impl.util.reflection.ReflectionUtil
 import scala.collection.immutable._
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
-
+import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
@@ -26,7 +26,7 @@ class SerializerFactoryImpl {
     additionalSuperclassSerializers += tpe.typeSymbol -> serializer
   }
 
-  protected def getSerializerNoCache(tpe: Type, context: Map[Symbol, Type]): JsonTypeSerializer[_] = {
+  protected def getSerializerNoCache(tpe: Type, context: Context): JsonTypeSerializer[_] = {
 
     val typeSymbol = tpe.typeSymbol
 
@@ -120,11 +120,11 @@ class SerializerFactoryImpl {
     if (additionalSerializerOption.isDefined) {
       additionalSerializerOption.get(this.asInstanceOf[SerializerFactory])
     } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Serialization of 'Nothing' type is not supported, be sure to define types everywhere.")
+      throw new IllegalArgumentException("Serialization of 'Nothing' type is not supported, be sure to define types everywhere. Types" + context.typesStackMessage)
     } else if(typeOf[Any].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Serialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely.")
+      throw new IllegalArgumentException("Serialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types" + context.typesStackMessage)
     } else if(typeOf[AnyRef].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Serialization of 'AnyRef' type is not supported, be sure to define type more precisely.")
+      throw new IllegalArgumentException("Serialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types" + context.typesStackMessage)
     } else {
       new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
     }

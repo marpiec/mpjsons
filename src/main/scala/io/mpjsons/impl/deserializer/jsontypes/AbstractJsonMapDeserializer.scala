@@ -7,13 +7,13 @@ import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 import scala.collection.immutable.Map
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
-
+import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
 
 abstract class AbstractJsonMapDeserializer[K, V, M]
-(private val deserializerFactory: DeserializerFactory, private val tpe: Type, context: Map[Symbol, Type])
+(private val deserializerFactory: DeserializerFactory, private val tpe: Type, context: Context)
   extends JsonTypeDeserializer[M] {
 
   val (keyType, valueType): (Type, Type) = TypesUtil.getDoubleSubElementsType(tpe)

@@ -1,6 +1,7 @@
 package io.mpjsons.impl.deserializer.immutables
 
 import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.immutable.{Map, BitSet}
@@ -11,7 +12,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class BitSetDeserializer(deserializerFactory: DeserializerFactory, tpe: Type, context: Map[Symbol, Type])
+class BitSetDeserializer(deserializerFactory: DeserializerFactory, tpe: Type, context: Context)
   extends JsonTypeDeserializer[BitSet] {
 
   val deserializer = deserializerFactory.getDeserializer[Int](typeOf[Int], context)

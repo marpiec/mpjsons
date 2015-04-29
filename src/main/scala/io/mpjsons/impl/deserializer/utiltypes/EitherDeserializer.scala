@@ -7,11 +7,12 @@ import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, StringIterator}
 
 import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
+import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
 
-class EitherDeserializer[L,R](val deserializerFactory: DeserializerFactory, tpe: Type, context: Map[Symbol, Type])
+class EitherDeserializer[L,R](val deserializerFactory: DeserializerFactory, tpe: Type, context: Context)
   extends JsonTypeDeserializer[Either[L, R]] {
 
   val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
@@ -32,7 +33,7 @@ class EitherDeserializer[L,R](val deserializerFactory: DeserializerFactory, tpe:
     } else if(identifier == "right") {
       Right(rightDeserializer.deserialize(jsonIterator))
     } else {
-      throw new JsonInnerException("Incorrect identifier in Either " + identifier, null)
+      throw new JsonInnerException("Incorrect identifier in Either " + identifier + ".Types: " + context.typesStackMessage, null)
     }
 
     jsonIterator.skipWhitespaceChars()

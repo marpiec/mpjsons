@@ -5,12 +5,12 @@ import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-
+import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
 
-class ListDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type, context: Map[Symbol, Type])
+class ListDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type, context: Context)
   extends AbstractJsonArrayDeserializer[E, List[E]](deserializerFactory, tpe, context) {
 
   override def deserialize(jsonIterator: StringIterator): List[E] = {

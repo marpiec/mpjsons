@@ -1,7 +1,7 @@
 package io.mpjsons.impl.factoryimpl
 
 import io.mpjsons.JsonTypeSerializer
-import io.mpjsons.impl.SerializerFactory
+import io.mpjsons.impl.{JsonInnerException, SerializerFactory}
 import io.mpjsons.impl.serializer._
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
@@ -119,6 +119,8 @@ class SerializerFactoryImpl {
 
     if (additionalSerializerOption.isDefined) {
       additionalSerializerOption.get(this.asInstanceOf[SerializerFactory])
+    } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
+      throw new IllegalArgumentException("Serialization of 'Nothing' type is not supported, be sure to define types everywhere.")
     } else {
       new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe)
     }

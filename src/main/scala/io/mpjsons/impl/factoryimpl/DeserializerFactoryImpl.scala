@@ -135,6 +135,8 @@ class DeserializerFactoryImpl {
 
     if (additionalDeserializerOption.isDefined) {
       additionalDeserializerOption.get(this.asInstanceOf[DeserializerFactory])
+    } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
+      throw new IllegalArgumentException("Deserialization of 'Nothing' type is not supported, be sure to define types everywhere.")
     } else {
       new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe)
     }

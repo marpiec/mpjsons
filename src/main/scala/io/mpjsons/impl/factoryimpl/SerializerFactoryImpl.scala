@@ -1,7 +1,7 @@
 package io.mpjsons.impl.factoryimpl
 
 import io.mpjsons.JsonTypeSerializer
-import io.mpjsons.impl.{JsonInnerException, SerializerFactory}
+import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 

@@ -21,8 +21,10 @@ class SerializerFactoryMemoizer extends SerializerFactoryImpl {
       orgtpe
     }
 
+    val newContext = context ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap
+
     getSerializerCache.getOrElse(tpe, {
-      val serializer: JsonTypeSerializer[_] = super.getSerializerNoCache(tpe, context)
+      val serializer: JsonTypeSerializer[_] = super.getSerializerNoCache(tpe, newContext)
       getSerializerCache += tpe -> serializer
       serializer
     }).asInstanceOf[JsonTypeSerializer[T]]

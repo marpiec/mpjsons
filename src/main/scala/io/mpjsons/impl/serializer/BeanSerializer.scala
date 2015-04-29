@@ -15,7 +15,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
   private val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type serializer */
   private lazy val fieldsWithSerializers = fields.map {field =>
-    (field.field, field.field.getName, serializerFactory.getSerializer(field.tpe, context ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap)
+    (field.field, field.field.getName, serializerFactory.getSerializer(field.tpe, context)
     .asInstanceOf[JsonTypeSerializer[AnyRef]])}
 
 

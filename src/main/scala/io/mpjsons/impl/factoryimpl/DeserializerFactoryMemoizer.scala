@@ -22,8 +22,10 @@ class DeserializerFactoryMemoizer extends DeserializerFactoryImpl {
       orgtpe
     }
 
+    val newContext = context ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap
+
     getDeserializerCache.getOrElse(tpe, {
-      val deserializer = super.getDeserializerNoCache(tpe, context)
+      val deserializer = super.getDeserializerNoCache(tpe, newContext)
       getDeserializerCache += tpe -> deserializer
       deserializer
     }).asInstanceOf[JsonTypeDeserializer[T]]

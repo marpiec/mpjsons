@@ -23,7 +23,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   lazy val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type deserializer */
   lazy val fieldsByName: Map[String,(Field, JsonTypeDeserializer[AnyRef])] = fields.map {field =>
-    field.field.getName -> (field.field, deserializerFactory.getDeserializer(field.tpe, context ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap).asInstanceOf[JsonTypeDeserializer[AnyRef]])}.toMap
+    field.field.getName -> (field.field, deserializerFactory.getDeserializer(field.tpe, context).asInstanceOf[JsonTypeDeserializer[AnyRef]])}.toMap
 
 
 

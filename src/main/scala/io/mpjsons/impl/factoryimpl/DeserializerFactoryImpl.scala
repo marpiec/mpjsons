@@ -138,6 +138,10 @@ class DeserializerFactoryImpl {
       additionalDeserializerOption.get(this.asInstanceOf[DeserializerFactory])
     } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'Nothing' type is not supported, be sure to define types everywhere.")
+    } else if(typeOf[Any].typeSymbol == typeSymbol) {
+      throw new IllegalArgumentException("Deserialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely.")
+    } else if(typeOf[AnyRef].typeSymbol == typeSymbol) {
+      throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely.")
     } else {
       new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }

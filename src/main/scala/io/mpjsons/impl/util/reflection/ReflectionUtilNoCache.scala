@@ -23,7 +23,7 @@ private[reflection] object ReflectionUtilNoCache {
     members.map { member =>
       FieldWithTypeInfo(
       ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), member.name.toString.trim),
-      member.info)
+      member.typeSignature)
 
 
     }.filterNot(_.field == null).toArray

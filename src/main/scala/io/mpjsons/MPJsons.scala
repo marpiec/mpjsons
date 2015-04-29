@@ -118,7 +118,7 @@ class MPJsons {
   def deserialize[T](json: String, tpe: Type): T = {
     val jsonIterator = new StringIterator(json)
     try {
-      deserializerFactory.getDeserializer(tpe).deserialize(jsonIterator)
+      deserializerFactory.getDeserializer(tpe, Map()).deserialize(jsonIterator)
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e), e)
@@ -148,7 +148,7 @@ class MPJsons {
    * Creates a specialized deserializer for a passed type.
    */
   def buildStaticDeserializer[T](tpe: Type): StaticDeserializer[T] = {
-    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe), tpe)
+    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe, Map()), tpe)
   }
 
   /**
@@ -179,7 +179,7 @@ class MPJsons {
    */
   def serialize[T](obj: T, tpe: Type): String = {
     val json = new StringBuilder()
-    serializerFactory.getSerializer(tpe).serialize(obj, json)
+    serializerFactory.getSerializer(tpe, Map()).serialize(obj, json)
     json.toString()
   }
 
@@ -208,7 +208,7 @@ class MPJsons {
    * Creates a specialized serializer for a passed type name (class name).
    */
   def buildStaticSerializer[T](tpe: Type): StaticSerializer[T] = {
-    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe), tpe)
+    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Map()), tpe)
   }
 
   /**

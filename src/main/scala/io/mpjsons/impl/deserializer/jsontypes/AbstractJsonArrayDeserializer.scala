@@ -4,6 +4,7 @@ import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.util.TypesUtil
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
+import scala.collection.immutable.Map
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
@@ -12,11 +13,11 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 abstract class AbstractJsonArrayDeserializer[T, C]
-(private val deserializerFactory: DeserializerFactory, private val tpe: Type)
+(private val deserializerFactory: DeserializerFactory, private val tpe: Type, context: Map[Symbol, Type])
     extends JsonTypeDeserializer[C] {
 
   val elementsType: Type = getSubElementsType(tpe)
-  val deserializer = deserializerFactory.getDeserializer[T](elementsType)
+  val deserializer = deserializerFactory.getDeserializer[T](elementsType, context)
 
   protected def deserializeArray(jsonIterator: StringIterator, tpe: Type): ArrayBuffer[T] = {
 

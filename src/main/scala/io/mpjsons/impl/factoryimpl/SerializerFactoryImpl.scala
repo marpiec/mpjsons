@@ -26,7 +26,7 @@ class SerializerFactoryImpl {
     additionalSuperclassSerializers += tpe.typeSymbol -> serializer
   }
 
-  protected def getSerializerNoCache(tpe: Type): JsonTypeSerializer[_] = {
+  protected def getSerializerNoCache(tpe: Type, context: Map[Symbol, Type]): JsonTypeSerializer[_] = {
 
     val typeSymbol = tpe.typeSymbol
 
@@ -58,7 +58,7 @@ class SerializerFactoryImpl {
 
     // Arrays
     if (tpe.isInstanceOf[TypeRefApi] && tpe.asInstanceOf[TypeRefApi].sym == definitions.ArrayClass) {
-      return new ArraySerializer(this.asInstanceOf[SerializerFactory], tpe)
+      return new ArraySerializer(this.asInstanceOf[SerializerFactory], tpe, context)
     }
 
     // We don't want to support user's custom collections implicitly,
@@ -66,35 +66,35 @@ class SerializerFactoryImpl {
     if (typeSymbol.fullName.startsWith("scala.")) {
       //Every immutable collection
       if (typeOf[Seq[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (typeOf[Set[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[Map[_, _]].typeSymbol)) {
-        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (typeOf[BitSet].typeSymbol == typeSymbol) {
-          return new BitSetSerializer(this.asInstanceOf[SerializerFactory], tpe)
+          return new BitSetSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[Iterable[_]].typeSymbol)) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
       //Every mutable collection
       if (typeOf[mutable.Seq[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (typeOf[mutable.Set[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (typeOf[mutable.Map[_, _]].typeSymbol == typeSymbol) {
-        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (typeOf[mutable.Iterable[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
       if(tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
-        return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
       // Every Tuple, Option
       if (tpe.baseClasses.contains(typeOf[Product].typeSymbol)) {
-        return new ProductSerializer(this.asInstanceOf[SerializerFactory], tpe)
+        return new ProductSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
     }
@@ -122,7 +122,7 @@ class SerializerFactoryImpl {
     } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Serialization of 'Nothing' type is not supported, be sure to define types everywhere.")
     } else {
-      new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe)
+      new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
     }
 
     //TODO Range, NumericRange

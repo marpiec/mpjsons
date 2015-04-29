@@ -87,10 +87,10 @@ class DeserializerFactoryImpl {
       return new ListSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[immutable.SortedSet[_]].typeSymbol) {// Unsupported because of missing ordering type class
      // return SortedSetDeserializer
-      throw new IllegalStateException("SortedSet is unsupported, because of missing ordering type class. Types" + context.typesStackMessage)
+      throw new IllegalStateException("SortedSet is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
     } else if (typeSymbol == typeOf[immutable.TreeSet[_]].typeSymbol) {
      // return TreeSetDeserializer
-      throw new IllegalStateException("TreeSet is unsupported, because of missing ordering type class. Types" + context.typesStackMessage)
+      throw new IllegalStateException("TreeSet is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
     } else if (typeSymbol == typeOf[BitSet].typeSymbol || typeSymbol == typeOf[immutable.BitSet].typeSymbol) {
       return new BitSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
@@ -101,10 +101,10 @@ class DeserializerFactoryImpl {
     } else if (typeSymbol == typeOf[immutable.HashMap[_, _]].typeSymbol) {
       return new HashMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[immutable.SortedMap[_,_]].typeSymbol) {
-      throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class. Types" + context.typesStackMessage)
+      throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
       //return SortedMapDeserializer
     } else if (typeSymbol == typeOf[immutable.TreeMap[_,_]].typeSymbol) {
-      throw new IllegalStateException("TreeMap is unsupported, because of missing ordering type class. Types" + context.typesStackMessage)
+      throw new IllegalStateException("TreeMap is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
       //return TreeMapDeserializer
     } else if (typeSymbol == typeOf[immutable.ListMap[_, _]].typeSymbol) {
       return new ListMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
@@ -123,7 +123,7 @@ class DeserializerFactoryImpl {
     }
 
     if (typeSymbol == typeOf[ListBuffer[_]].typeSymbol) {
-      throw new IllegalArgumentException("ListBuffer is not supported, use immutable List instead. Types" + context.typesStackMessage)
+      throw new IllegalArgumentException("ListBuffer is not supported, use immutable List instead. Types: " + context.typesStackMessage)
     }
 
 
@@ -137,11 +137,11 @@ class DeserializerFactoryImpl {
     if (additionalDeserializerOption.isDefined) {
       additionalDeserializerOption.get(this.asInstanceOf[DeserializerFactory])
     } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Deserialization of 'Nothing' type is not supported, be sure to define types everywhere. Types" + context.typesStackMessage)
+      throw new IllegalArgumentException("Deserialization of 'Nothing' type is not supported, be sure to define types everywhere. Types: " + context.typesStackMessage)
     } else if(typeOf[Any].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Deserialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types" + context.typesStackMessage)
+      throw new IllegalArgumentException("Deserialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if(typeOf[AnyRef].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types" + context.typesStackMessage)
+      throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else {
       new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }

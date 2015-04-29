@@ -120,11 +120,11 @@ class SerializerFactoryImpl {
     if (additionalSerializerOption.isDefined) {
       additionalSerializerOption.get(this.asInstanceOf[SerializerFactory])
     } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Serialization of 'Nothing' type is not supported, be sure to define types everywhere. Types" + context.typesStackMessage)
+      throw new IllegalArgumentException("Serialization of 'Nothing' type is not supported, be sure to define types everywhere. Types: " + context.typesStackMessage)
     } else if(typeOf[Any].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Serialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types" + context.typesStackMessage)
+      throw new IllegalArgumentException("Serialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if(typeOf[AnyRef].typeSymbol == typeSymbol) {
-      throw new IllegalArgumentException("Serialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types" + context.typesStackMessage)
+      throw new IllegalArgumentException("Serialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else {
       new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
     }

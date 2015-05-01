@@ -221,7 +221,8 @@ class MPJsons {
 
   /**
    * Method to register custom json converter to support custom types of data.
-   * @param converter converter that will be used to serialize and deserialize given type
+   * @param serializer factory function used to create serializer of given type
+   * @param deserializer factory function used to create deserializer of given type
    */
   def registerConverter[T : TypeTag](serializer: SerializerFactory => JsonTypeSerializer[T],
                                       deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]) {
@@ -235,8 +236,9 @@ class MPJsons {
 
   /**
    * Method to register custom json converter to support custom types of data _and_all_types_that_are_extending_it_.
-   * @param converter converter that will be used to serialize and deserialize given type and its descendant
-   */
+   * @param serializer factory function used to create serializer of given super type
+   * @param deserializer factory function used to create deserializer of given super type
+   * */
   def registerSuperclassConverter[T](serializer: SerializerFactory => JsonTypeSerializer[T],
                                      deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]): Unit = {
     if(tag == nothingTypeTag) {

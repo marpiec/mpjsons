@@ -64,29 +64,32 @@ class SerializerFactoryImpl {
     // We don't want to support user's custom collections implicitly,
     // because there will be problem with deserialization, but we want to support standard subtypes
     if (typeSymbol.fullName.startsWith("scala.")) {
+
+
+      //Every mutable collection
+      if (tpe.baseClasses.contains(typeOf[mutable.Seq[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[mutable.Set[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[mutable.Map[_, _]].typeSymbol)) {
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[mutable.Iterable[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      }
+
       //Every immutable collection
-      if (tpe.baseClasses.contains(typeOf[Seq[_]].typeSymbol)) {
+      if (tpe.baseClasses.contains(typeOf[collection.Seq[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (typeOf[BitSet].typeSymbol == typeSymbol) {
         return new BitSetSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (tpe.baseClasses.contains(typeOf[Set[_]].typeSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[collection.Set[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (tpe.baseClasses.contains(typeOf[Map[_, _]].typeSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[collection.Map[_, _]].typeSymbol)) {
         return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[Iterable[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
-      //Every mutable collection
-      if (typeOf[mutable.Seq[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (typeOf[mutable.Set[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (typeOf[mutable.Map[_, _]].typeSymbol == typeSymbol) {
-        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (typeOf[mutable.Iterable[_]].typeSymbol == typeSymbol) {
-        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      }
 
       if(tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
         return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe, context)

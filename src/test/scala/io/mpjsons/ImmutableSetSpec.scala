@@ -10,7 +10,8 @@ import scala.collection.immutable._
  */
 
 class ImmutableSetType {
-  var set: Set[String] = _
+  var setA: Set[String] = _
+  var setB: scala.collection.Set[String] = _
   var hashSet: HashSet[String] = _
   var bitSet: BitSet = _
   var listSet: ListSet[String] = _
@@ -24,7 +25,8 @@ class ImmutableSetSpec extends FlatSpec {
   "Serializer" must "handle immutable sets" in {
 
     val testObject = new ImmutableSetType
-    testObject.set = Set("Abc", "Bcd", "Eca")
+    testObject.setA = Set("Abc", "Bcd", "Eca")
+    testObject.setB = Set("Abc", "Bcd", "Eca")
     testObject.hashSet = HashSet("Zxy", "Xyz", "ZyX")
     testObject.bitSet = BitSet(12, 15, 3, 7)
     testObject.listSet = ListSet("AAA", "CCC", "BBB")
@@ -36,7 +38,8 @@ class ImmutableSetSpec extends FlatSpec {
     objectDeserialized mustBe an [ImmutableSetType]
     val testObjectDeserialized = objectDeserialized.asInstanceOf[ImmutableSetType]
 
-    testObjectDeserialized.set mustEqual testObject.set
+    testObjectDeserialized.setA mustEqual testObject.setA
+    testObjectDeserialized.setB mustEqual testObject.setB
     testObjectDeserialized.hashSet mustEqual testObject.hashSet
 //    assertEquals(testObjectDeserialized.sortedSet mustEqual testObject.sortedSet
 //    assertEquals(testObjectDeserialized.treeSet mustEqual testObject.treeSet

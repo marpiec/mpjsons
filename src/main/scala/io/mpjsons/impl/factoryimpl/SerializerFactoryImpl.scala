@@ -65,14 +65,14 @@ class SerializerFactoryImpl {
     // because there will be problem with deserialization, but we want to support standard subtypes
     if (typeSymbol.fullName.startsWith("scala.")) {
       //Every immutable collection
-      if (typeOf[Seq[_]].typeSymbol == typeSymbol) {
+      if (tpe.baseClasses.contains(typeOf[Seq[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (typeOf[Set[_]].typeSymbol == typeSymbol) {
+      } else if (typeOf[BitSet].typeSymbol == typeSymbol) {
+        return new BitSetSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[Set[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[Map[_, _]].typeSymbol)) {
         return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (typeOf[BitSet].typeSymbol == typeSymbol) {
-          return new BitSetSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[Iterable[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }

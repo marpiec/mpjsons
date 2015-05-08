@@ -2,12 +2,10 @@ package io.mpjsons.impl.deserializer.utiltypes
 
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
-import io.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, StringIterator}
 
-import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-import io.mpjsons.impl.util.Context
 /**
  * @author Marcin Pieciukiewicz
  */
@@ -37,11 +35,8 @@ class EitherDeserializer[L,R](val deserializerFactory: DeserializerFactory, tpe:
     }
 
     jsonIterator.skipWhitespaceChars()
-    if (jsonIterator.currentChar == ',') {
-      jsonIterator.nextChar()
-    }
 
-    jsonIterator.nextCharOrNullIfLast
+    jsonIterator.consumeObjectEnd()
 
     deserialized
   }

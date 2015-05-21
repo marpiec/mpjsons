@@ -19,8 +19,6 @@ pomIncludeRepository := { _ => false }
 
 publishTo := Some("snapshots" at sys.props.getOrElse("snapshotsRepo", default = "http://someMockRepo.com"))
 
-publishLocal := {}
-
 libraryDependencies ++= Seq(
    "org.scala-lang" % "scala-reflect" % "2.11.5",
   "org.slf4j" % "slf4j-api" % "1.7.7",

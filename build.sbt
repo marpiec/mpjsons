@@ -4,7 +4,7 @@ name := "mpjsons"
 
 organization := "io.mpjsons"
 
-version := "0.6.7-SNAPSHOT"
+version := "0.6.7"
 
 scalaVersion := "2.11.5"
 
@@ -16,8 +16,7 @@ publishMavenStyle := true
 publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
-
-publishTo := Some("snapshots" at sys.props.getOrElse("snapshotsRepo", default = "http://someMockRepo.com"))
+//publishTo := Some("snapshots" at sys.props.getOrElse("snapshotsRepo", default = "http://someMockRepo.com"))
 
 libraryDependencies ++= Seq(
    "org.scala-lang" % "scala-reflect" % "2.11.5",

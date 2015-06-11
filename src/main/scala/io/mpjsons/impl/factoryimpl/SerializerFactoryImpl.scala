@@ -95,6 +95,10 @@ class SerializerFactoryImpl {
         return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
+      if (tpe.baseClasses.contains(typeOf[Option[_]].typeSymbol)) {
+        return new OptionSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      }
+
       // Every Tuple, Option
       if (tpe.baseClasses.contains(typeOf[Product].typeSymbol)) {
         return new ProductSerializer(this.asInstanceOf[SerializerFactory], tpe, context)

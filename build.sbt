@@ -17,9 +17,9 @@ publishArtifact in Test := false
 
 pomIncludeRepository := { _ => false }
 
-publishTo := Some("snapshots" at sys.props.getOrElse("snapshotsRepo", default = "http://someMockRepo.com"))
-
 publishLocal := {}
+
+licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 
 libraryDependencies ++= Seq(
    "org.scala-lang" % "scala-reflect" % "2.11.5",

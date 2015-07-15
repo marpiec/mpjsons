@@ -250,6 +250,10 @@ class MPJsons {
   }
 
 
+  /**
+   * Method that allows to specify which type will have added type information to serialized json,
+   * and which can be deserialized based on this specified type.
+   */
   def markTypedClass[T <: AnyRef]()(implicit tag: TypeTag[T]) = {
     if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")

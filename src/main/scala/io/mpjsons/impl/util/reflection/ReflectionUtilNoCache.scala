@@ -14,7 +14,7 @@ private[reflection] object ReflectionUtilNoCache {
 
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
-   * @param clazz class from which the fields should be retrieved
+   * @param tpe type from which the fields should be retrieved
    * @return array containing all defined fields in class
    */
   def getAllAccessibleFields(tpe: Type): Array[FieldWithTypeInfo] = {
@@ -28,14 +28,6 @@ private[reflection] object ReflectionUtilNoCache {
 
     }.filterNot(_.field == null).toArray
 
-    //
-    //    if (clazz.equals(classOf[Object])) {
-    //      Array()
-    //    } else if (clazz.getSuperclass.equals(classOf[Object])) {
-    //      declaredFields
-    //    } else {
-    //      Array.concat(declaredFields, getAllAccessibleFields(clazz.getSuperclass))
-    //    }
   }
 
   /**

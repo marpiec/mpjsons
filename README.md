@@ -43,4 +43,4 @@ All the magic happens in those two simple commands `mpjsons.serialize[User](john
  - Support for generic types, e.g. `List[User]`, `Map[String, List[User]]`
  - Custom serializers support for user's specific types, etc. for Date serializations
  - Specific error messages, e.g. in case of json not matching given data type
- - Adding type information to JSON if there is no other type information available, e.g. to support collection of subtypes, e.g. {"User":{"name":"John Doe"}} instead of default {"name":"John Doe"}
+ - Adding type information to JSON if there is no other type information available, e.g. to support collection of subtypes, e.g. `{"User":{"name":"John Doe"}}` instead of default `{"name":"John Doe"}`

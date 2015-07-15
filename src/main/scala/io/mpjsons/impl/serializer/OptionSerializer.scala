@@ -2,7 +2,7 @@ package io.mpjsons.impl.serializer
 
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
-import io.mpjsons.impl.util.{TypesUtil, Context}
+import io.mpjsons.impl.util.{Context, TypesUtil}
 
 import scala.reflect.runtime.universe._
 

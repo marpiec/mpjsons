@@ -1,6 +1,6 @@
 package io.mpjsons.impl.util.reflection
 
-import java.lang.reflect.{AccessibleObject, Field}
+import java.lang.reflect.Field
 
 import io.mpjsons.impl.util.TypesUtil
 
@@ -22,20 +22,20 @@ private[reflection] object ReflectionUtilNoCache {
 
     members.map { member =>
       FieldWithTypeInfo(
-      ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), member.name.toString.trim),
-      member.typeSignature)
+        ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), member.name.toString.trim),
+        member.typeSignature)
 
 
     }.filterNot(_.field == null).toArray
 
-//
-//    if (clazz.equals(classOf[Object])) {
-//      Array()
-//    } else if (clazz.getSuperclass.equals(classOf[Object])) {
-//      declaredFields
-//    } else {
-//      Array.concat(declaredFields, getAllAccessibleFields(clazz.getSuperclass))
-//    }
+    //
+    //    if (clazz.equals(classOf[Object])) {
+    //      Array()
+    //    } else if (clazz.getSuperclass.equals(classOf[Object])) {
+    //      declaredFields
+    //    } else {
+    //      Array.concat(declaredFields, getAllAccessibleFields(clazz.getSuperclass))
+    //    }
   }
 
   /**

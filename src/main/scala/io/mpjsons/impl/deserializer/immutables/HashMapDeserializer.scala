@@ -1,11 +1,12 @@
 package io.mpjsons.impl.deserializer.immutables
 
 import io.mpjsons.impl.deserializer.jsontypes.AbstractJsonMapDeserializer
+import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
-import scala.collection.immutable.{Map, HashMap}
+import scala.collection.immutable.HashMap
 import scala.reflect.runtime.universe._
-import io.mpjsons.impl.util.Context
+
 /**
  * @author Marcin Pieciukiewicz
  */

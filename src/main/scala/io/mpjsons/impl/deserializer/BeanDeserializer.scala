@@ -14,17 +14,20 @@ import scala.reflect.runtime.universe._
  */
 
 class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
-                                private val tpe: Type, private val context: Context) extends JsonTypeDeserializer[T] {
-
+                          private val tpe: Type, private val context: Context) extends JsonTypeDeserializer[T] {
 
 
   val clazz = TypesUtil.getClassFromType[T](tpe)
-  val constructor = try{clazz.getConstructor()} catch {case e: NoSuchMethodException => null}
+  val constructor = try {
+    clazz.getConstructor()
+  } catch {
+    case e: NoSuchMethodException => null
+  }
   lazy val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type deserializer */
-  lazy val fieldsByName: Map[String,(Field, JsonTypeDeserializer[AnyRef])] = fields.map {field =>
-    field.field.getName -> (field.field, deserializerFactory.getDeserializer(field.tpe, context).asInstanceOf[JsonTypeDeserializer[AnyRef]])}.toMap
-
+  lazy val fieldsByName: Map[String, (Field, JsonTypeDeserializer[AnyRef])] = fields.map { field =>
+    field.field.getName ->(field.field, deserializerFactory.getDeserializer(field.tpe, context).asInstanceOf[JsonTypeDeserializer[AnyRef]])
+  }.toMap
 
 
   override def deserialize(jsonIterator: StringIterator): T = {

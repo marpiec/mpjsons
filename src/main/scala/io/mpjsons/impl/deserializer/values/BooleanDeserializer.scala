@@ -1,9 +1,7 @@
 package io.mpjsons.impl.deserializer.values
 
 import io.mpjsons.JsonTypeDeserializer
-import io.mpjsons.impl.{DeserializerFactory, StringIterator}
-
-import scala.reflect.runtime.universe._
+import io.mpjsons.impl.StringIterator
 
 /**
  * @author Marcin Pieciukiewicz

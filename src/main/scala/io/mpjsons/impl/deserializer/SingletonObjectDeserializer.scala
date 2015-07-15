@@ -1,8 +1,8 @@
 package io.mpjsons.impl.deserializer
 
 import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.StringIterator
 import io.mpjsons.impl.util.{ObjectConstructionUtil, TypesUtil}
-import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.reflect.runtime.universe._
 

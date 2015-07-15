@@ -1,10 +1,10 @@
 package io.mpjsons.impl.special
 
 import io.mpjsons.impl.deserializer.BeanDeserializer
-import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer}
-import io.mpjsons.impl.{StringIterator, DeserializerFactory, SerializerFactory}
 import io.mpjsons.impl.serializer.BeanSerializer
 import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
+import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer}
 
 import scala.reflect.runtime.universe._
 
@@ -70,6 +70,7 @@ object TypedConverter {
     }
 
   }
+
 }
 
 

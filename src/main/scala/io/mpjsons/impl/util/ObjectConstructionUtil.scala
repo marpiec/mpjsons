@@ -29,7 +29,7 @@ object ObjectConstructionUtil {
    * @return created object
    */
   def createInstance[T](clazz: Class[T], constructor: Constructor[T], context: Context): T = {
-    if(constructor == null) {
+    if (constructor == null) {
       createInstanceWithoutCallingConstructor(clazz)
     } else {
       try {

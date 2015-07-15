@@ -1,10 +1,11 @@
 package io.mpjsons.impl.factoryimpl
 
 import io.mpjsons.JsonTypeSerializer
+import io.mpjsons.impl.util.Context
 
 import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-import io.mpjsons.impl.util.Context
+
 /**
  * @author Marcin Pieciukiewicz
  */
@@ -15,7 +16,7 @@ class SerializerFactoryMemoizer extends SerializerFactoryImpl {
 
   def getSerializer[T](orgtpe: Type, context: Context): JsonTypeSerializer[T] = {
 
-    val tpe = if(orgtpe.typeSymbol.isParameter) {
+    val tpe = if (orgtpe.typeSymbol.isParameter) {
       context.typeParams(orgtpe.typeSymbol)
     } else {
       orgtpe

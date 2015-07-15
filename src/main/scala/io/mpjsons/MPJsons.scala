@@ -1,8 +1,10 @@
 package io.mpjsons
 
+import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerializer}
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
 
+import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
 
@@ -244,6 +246,20 @@ class MPJsons {
     } else {
       serializerFactory.registerSuperclassSerializer[T](extractType(tag), serializer)
       deserializerFactory.registerSuperclassDeserializer[T](extractType(tag), deserializer)
+    }
+  }
+
+
+  def markTypedClass[T <: AnyRef]()(implicit tag: TypeTag[T]) = {
+    if(tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
+    } else {
+      val tpe = extractType(tag)
+      val typeName: String = tpe.baseClasses.head.fullName
+      val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
+      registerSuperclassConverter[T](
+        sf => new TypedSerializer[T](packageName, sf),
+        df => new TypedDeserializer[T](packageName, df))
     }
   }
 

@@ -17,7 +17,7 @@ class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe:
 
     obj match {
       case Some(value) =>
-        jsonBuilder.append("value:")
+        jsonBuilder.append("\"value\":")
         subTypeSerializer.serialize(value, jsonBuilder)
       case None => ()
     }

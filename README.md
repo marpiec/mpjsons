@@ -1,4 +1,4 @@
-*mpjsons* is a fast and very easy to use *object* to *json* conversion library.
+*mpjsons* is a fast and very easy to use *object* to *json* conversion library for Scala.
 
 It's main focus is to deliver simplest possible API, that will allow developers to serialize their objects to json without need to write custom serializers and deserialize json to final object represetation with the same principle.
 

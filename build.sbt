@@ -4,9 +4,9 @@ name := "mpjsons"
 
 organization := "io.mpjsons"
 
-version := "0.6.10"
+version := "0.6.11"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.7"
 
 scalacOptions ++= Seq(
   "-feature")

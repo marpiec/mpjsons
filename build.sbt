@@ -22,6 +22,6 @@ publishLocal := {}
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 
 libraryDependencies ++= Seq(
-   "org.scala-lang" % "scala-reflect" % scalaVersion,
+   "org.scala-lang" % "scala-reflect" % "2.11.7",
   "org.slf4j" % "slf4j-api" % "1.7.7",
   "org.scalatest" %% "scalatest" % "2.2.4" % Test)

@@ -1,8 +1,6 @@
 package io.mpjsons
 
-import io.mpjsons.impl.{DeserializerFactory, StringIterator}
-
-import scala.reflect.runtime.universe._
+import io.mpjsons.impl.StringIterator
 
 /**
  * Class that supports deserialization of json String to object.

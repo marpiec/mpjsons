@@ -4,7 +4,7 @@ import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
-import scala.collection.immutable.{Map, BitSet}
+import scala.collection.immutable.BitSet
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 

@@ -23,5 +23,4 @@ abstract class AbstractIntegerDeserializer[T] extends JsonTypeDeserializer[T] {
   }
 
 
-
 }

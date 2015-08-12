@@ -2,22 +2,20 @@ package io.mpjsons.impl.serializer
 
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
-import io.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.util.{Context, TypesUtil}
 
-import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-import io.mpjsons.impl.util.Context
+
 /**
  * @author Marcin Pieciukiewicz
  */
 
-class MapSerializer[K,V](serializerFactory: SerializerFactory, tpe: Type, context: Context)
+class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, context: Context)
   extends JsonTypeSerializer[scala.collection.Map[K, V]] {
 
   private val subtypes = TypesUtil.getDoubleSubElementsType(tpe)
   val keySerializer = serializerFactory.getSerializer(subtypes._1, context).asInstanceOf[JsonTypeSerializer[K]]
   val valueSerializer = serializerFactory.getSerializer(subtypes._2, context).asInstanceOf[JsonTypeSerializer[V]]
-
 
 
   override def serialize(map: scala.collection.Map[K, V], jsonBuilder: StringBuilder) = {

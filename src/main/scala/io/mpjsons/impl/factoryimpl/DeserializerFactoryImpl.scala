@@ -7,13 +7,14 @@ import io.mpjsons.impl.deserializer.mutables.ArrayDeserializer
 import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple2Deserializer}
 import io.mpjsons.impl.deserializer.values._
 import io.mpjsons.impl.deserializer.{BeanDeserializer, SingletonObjectDeserializer}
+import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
 import scala.collection._
 import scala.collection.immutable.Map
 import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe._
-import io.mpjsons.impl.util.Context
+
 /**
  * @author Marcin Pieciukiewicz
  */
@@ -85,11 +86,12 @@ class DeserializerFactoryImpl {
       return new HashSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[immutable.ListSet[_]].typeSymbol) {
       return new ListSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == typeOf[immutable.SortedSet[_]].typeSymbol) {// Unsupported because of missing ordering type class
-     // return SortedSetDeserializer
+    } else if (typeSymbol == typeOf[immutable.SortedSet[_]].typeSymbol) {
+      // Unsupported because of missing ordering type class
+      // return SortedSetDeserializer
       throw new IllegalStateException("SortedSet is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
     } else if (typeSymbol == typeOf[immutable.TreeSet[_]].typeSymbol) {
-     // return TreeSetDeserializer
+      // return TreeSetDeserializer
       throw new IllegalStateException("TreeSet is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
     } else if (typeSymbol == typeOf[BitSet].typeSymbol || typeSymbol == typeOf[immutable.BitSet].typeSymbol) {
       return new BitSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
@@ -100,10 +102,10 @@ class DeserializerFactoryImpl {
       return new MapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[immutable.HashMap[_, _]].typeSymbol) {
       return new HashMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == typeOf[immutable.SortedMap[_,_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.SortedMap[_, _]].typeSymbol) {
       throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
       //return SortedMapDeserializer
-    } else if (typeSymbol == typeOf[immutable.TreeMap[_,_]].typeSymbol) {
+    } else if (typeSymbol == typeOf[immutable.TreeMap[_, _]].typeSymbol) {
       throw new IllegalStateException("TreeMap is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
       //return TreeMapDeserializer
     } else if (typeSymbol == typeOf[immutable.ListMap[_, _]].typeSymbol) {
@@ -136,11 +138,11 @@ class DeserializerFactoryImpl {
 
     if (additionalDeserializerOption.isDefined) {
       additionalDeserializerOption.get(this.asInstanceOf[DeserializerFactory])
-    } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
+    } else if (typeOf[Nothing].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'Nothing' type is not supported, be sure to define types everywhere. Types: " + context.typesStackMessage)
-    } else if(typeOf[Any].typeSymbol == typeSymbol) {
+    } else if (typeOf[Any].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
-    } else if(typeOf[AnyRef].typeSymbol == typeSymbol) {
+    } else if (typeOf[AnyRef].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else {
       new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)

@@ -4,9 +4,7 @@ import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerialize
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
 
-import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
-
 
 
 private object ErrorMessageFormatter {
@@ -20,18 +18,18 @@ private object ErrorMessageFormatter {
     val remainingTrimmed = remaining.substring(0, Math.min(remaining.length, trimmingSize))
     val consumedPlaceholder = " " * consumedTrimmed.length
     s"""
-      |Problem deserializing: $json
-      |Problem: ${e.getMessage}
-      |In this place:
-      |...$consumedTrimmed$remainingTrimmed...
-      | $consumedPlaceholder^""".stripMargin
+       |Problem deserializing: $json
+        |Problem: ${e.getMessage}
+        |In this place:
+        |...$consumedTrimmed$remainingTrimmed...
+                                               | $consumedPlaceholder^""".stripMargin
   }
 }
 
 /**
  * Serializer for a single type.
  */
-class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], tpe: Type){
+class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], tpe: Type) {
 
   /**
    * Takes an object and returns a String containing JSON representation of that object.
@@ -55,7 +53,7 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], tp
 /**
  * Deserializer for a single type.
  */
-class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[T], tpe: Type){
+class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[T], tpe: Type) {
 
   /**
    * Takes a String containing JSON representation of objects and returns an instance of given object.
@@ -107,7 +105,7 @@ class MPJsons {
    * Creates object from gives json String, based on a declared type.
    */
   def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
-    if(tag == nothingTypeTag) {
+    if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for object deserialization was not specified, or was Nothing. Please specify object type.")
     } else {
       deserialize(json, extractType(tag))
@@ -139,7 +137,7 @@ class MPJsons {
    * Creates a specialized deserializer for a declared type.
    */
   def buildStaticDeserializer[T](implicit tag: TypeTag[T]): StaticDeserializer[T] = {
-    if(tag == nothingTypeTag) {
+    if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for object deserialization was not specified, or was Nothing. Please specify object type.")
     } else {
       buildStaticDeserializer(typeTag[T].tpe)
@@ -166,7 +164,7 @@ class MPJsons {
    * @return JSON representation of given object
    */
   def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
-    if(tag == nothingTypeTag) {
+    if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for object serialization was not specified, or was Nothing. Please specify object type.")
     } else {
       serialize(obj, extractType(tag))
@@ -199,7 +197,7 @@ class MPJsons {
    * Creates a specialized serializer for a passed type name (class name).
    */
   def buildStaticSerializer[T](implicit tag: TypeTag[T]): StaticSerializer[T] = {
-    if(tag == nothingTypeTag) {
+    if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for object serialization was not specified, or was Nothing. Please specify object type.")
     } else {
       buildStaticSerializer(tag.tpe)
@@ -223,11 +221,12 @@ class MPJsons {
 
   /**
    * Method to register custom json converter to support custom types of data.
-   * @param converter converter that will be used to serialize and deserialize given type
+   * @param serializer serializer that will be used to serialize given type
+   * @param deserializer deserializer that will be used to serialize given type
    */
-  def registerConverter[T : TypeTag](serializer: SerializerFactory => JsonTypeSerializer[T],
-                                      deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]) {
-    if(tag == nothingTypeTag) {
+  def registerConverter[T: TypeTag](serializer: SerializerFactory => JsonTypeSerializer[T],
+                                    deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]) {
+    if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
     } else {
       serializerFactory.registerSerializer[T](extractType(tag), serializer)
@@ -237,11 +236,12 @@ class MPJsons {
 
   /**
    * Method to register custom json converter to support custom types of data _and_all_types_that_are_extending_it_.
-   * @param converter converter that will be used to serialize and deserialize given type and its descendant
+   * @param serializer serializer that will be used to serialize and deserialize given type and its descendant
+   * @param deserializer deserializer that will be used to serialize and deserialize given type and its descendant
    */
   def registerSuperclassConverter[T](serializer: SerializerFactory => JsonTypeSerializer[T],
                                      deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]): Unit = {
-    if(tag == nothingTypeTag) {
+    if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
     } else {
       serializerFactory.registerSuperclassSerializer[T](extractType(tag), serializer)
@@ -250,8 +250,12 @@ class MPJsons {
   }
 
 
+  /**
+   * Method that allows to specify which type will have added type information to serialized json,
+   * and which can be deserialized based on this specified type.
+   */
   def markTypedClass[T <: AnyRef]()(implicit tag: TypeTag[T]) = {
-    if(tag == nothingTypeTag) {
+    if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {
       val tpe = extractType(tag)

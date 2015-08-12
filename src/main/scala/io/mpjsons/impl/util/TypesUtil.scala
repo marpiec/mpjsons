@@ -1,7 +1,5 @@
 package io.mpjsons.impl.util
 
-import java.lang.reflect.Field
-
 import scala.reflect.runtime.universe._
 
 /**

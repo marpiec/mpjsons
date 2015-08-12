@@ -1,12 +1,11 @@
 package io.mpjsons.impl.deserializer.utiltypes
 
 import io.mpjsons.JsonTypeDeserializer
-import io.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
-import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-import io.mpjsons.impl.util.Context
+
 /**
  * @author Marcin Pieciukiewicz
  */

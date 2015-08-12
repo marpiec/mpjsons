@@ -2,11 +2,10 @@ package io.mpjsons.impl.serializer.common
 
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
-import io.mpjsons.impl.util.TypesUtil
+import io.mpjsons.impl.util.{Context, TypesUtil}
 
-import scala.collection.immutable.Map
 import scala.reflect.runtime.universe._
-import io.mpjsons.impl.util.Context
+
 /**
  * @author Marcin Pieciukiewicz
  */

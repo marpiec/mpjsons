@@ -3,12 +3,13 @@ package io.mpjsons.impl.factoryimpl
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
+import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
 import scala.collection.immutable._
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
-import io.mpjsons.impl.util.Context
+
 /**
  * @author Marcin Pieciukiewicz
  */
@@ -91,7 +92,7 @@ class SerializerFactoryImpl {
       }
 
 
-      if(tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
+      if (tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
         return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
@@ -126,11 +127,11 @@ class SerializerFactoryImpl {
 
     if (additionalSerializerOption.isDefined) {
       additionalSerializerOption.get(this.asInstanceOf[SerializerFactory])
-    } else if(typeOf[Nothing].typeSymbol == typeSymbol) {
+    } else if (typeOf[Nothing].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Serialization of 'Nothing' type is not supported, be sure to define types everywhere. Types: " + context.typesStackMessage)
-    } else if(typeOf[Any].typeSymbol == typeSymbol) {
+    } else if (typeOf[Any].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Serialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
-    } else if(typeOf[AnyRef].typeSymbol == typeSymbol) {
+    } else if (typeOf[AnyRef].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Serialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else {
       new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context)

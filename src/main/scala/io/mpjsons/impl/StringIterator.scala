@@ -48,7 +48,7 @@ class StringIterator(private val stringValue: String) {
   }
 
   def isCurrentCharAFloatingPointPart: Boolean = {
-    currentChar >= '0' && currentChar <= '9' || currentChar == '-' || currentChar == '.'
+    currentChar >= '0' && currentChar <= '9' || currentChar == '-' || currentChar == '+' || currentChar == '.' || currentChar == 'e' || currentChar == 'E'
   }
 
   def checkFutureChar: Char = stringValue.charAt(nextIndex)

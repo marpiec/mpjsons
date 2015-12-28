@@ -11,18 +11,19 @@ private object ErrorMessageFormatter {
 
   final val trimmingSize = 40
 
-  def formatDeserializationError(json: String, jsonIterator: StringIterator, e: RuntimeException): String = {
+  def formatDeserializationError(json: String, jsonIterator: StringIterator, e: RuntimeException, tpe: Type): String = {
     val consumed = jsonIterator.debugGetConsumedString
     val remaining = jsonIterator.debugGetRemainingString
     val consumedTrimmed = consumed.substring(Math.max(0, consumed.length - trimmingSize), consumed.length)
     val remainingTrimmed = remaining.substring(0, Math.min(remaining.length, trimmingSize))
     val consumedPlaceholder = " " * consumedTrimmed.length
     s"""
-       |Problem deserializing: $json
+        |Problem deserializing: $tpe
+        |Json: $json
         |Problem: ${e.getMessage}
         |In this place:
         |...$consumedTrimmed$remainingTrimmed...
-                                               | $consumedPlaceholder^""".stripMargin
+        | $consumedPlaceholder^""".stripMargin
   }
 }
 
@@ -64,7 +65,7 @@ class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[
       innerDeserializer.deserialize(jsonIterator)
     } catch {
       case e: RuntimeException =>
-        throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e), e)
+        throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e, tpe), e)
     }
   }
 
@@ -121,7 +122,7 @@ class MPJsons {
       deserializerFactory.getDeserializer(tpe, Context(List(), Map())).deserialize(jsonIterator)
     } catch {
       case e: RuntimeException =>
-        throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e), e)
+        throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e, tpe), e)
     }
   }
 

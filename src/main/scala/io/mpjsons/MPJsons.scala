@@ -18,7 +18,7 @@ private object ErrorMessageFormatter {
     val remainingTrimmed = remaining.substring(0, Math.min(remaining.length, trimmingSize))
     val consumedPlaceholder = " " * consumedTrimmed.length
     s"""|Problem deserializing: $tpe
-        |Problem: ${e.getMessage}
+        |Problem: ${e.toString}
         |In this place:
         |...$consumedTrimmed$remainingTrimmed...
         | $consumedPlaceholder^

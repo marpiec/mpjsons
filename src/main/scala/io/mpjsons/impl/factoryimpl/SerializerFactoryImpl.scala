@@ -91,6 +91,17 @@ class SerializerFactoryImpl {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
+      // Other
+      if (tpe.baseClasses.contains(typeOf[scala.collection.Seq[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[scala.collection.Set[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[scala.collection.Map[_, _]].typeSymbol)) {
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[scala.collection.Iterable[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      }
+
 
       if (tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
         return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe, context)

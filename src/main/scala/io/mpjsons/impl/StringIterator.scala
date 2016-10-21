@@ -19,8 +19,10 @@ class StringIterator(private val stringValue: String) {
   def nextChar(): Unit = {
     currentChar = if (nextIndex < stringLength) {
       stringValue.charAt(nextIndex)
-    } else {
+    } else if (nextIndex == stringLength) {
       '\u0000'
+    } else {
+      throw new IllegalArgumentException("Unexpected end of Json")
     }
     nextIndex = nextIndex + 1
   }

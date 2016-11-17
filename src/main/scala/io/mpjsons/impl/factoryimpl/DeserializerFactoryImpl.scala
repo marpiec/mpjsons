@@ -21,11 +21,11 @@ import scala.reflect.runtime.universe._
 
 class DeserializerFactoryImpl {
 
-  private var additionalDeserializers = Map[Type, DeserializerFactory => JsonTypeDeserializer[_]]()
+  private var additionalDeserializers = Map[String, DeserializerFactory => JsonTypeDeserializer[_]]()
   private var additionalSuperclassDeserializers = Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]]()
 
   def registerDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]) {
-    additionalDeserializers += tpe -> deserializer
+    additionalDeserializers += tpe.toString -> deserializer
   }
 
   def registerSuperclassDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]) {
@@ -134,7 +134,7 @@ class DeserializerFactoryImpl {
     }
 
 
-    val additionalDeserializerOption = additionalDeserializers.get(tpe)
+    val additionalDeserializerOption = additionalDeserializers.get(tpe.toString)
 
     if (additionalDeserializerOption.isDefined) {
       additionalDeserializerOption.get(this.asInstanceOf[DeserializerFactory])

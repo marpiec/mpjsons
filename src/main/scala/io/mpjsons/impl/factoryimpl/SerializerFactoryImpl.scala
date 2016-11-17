@@ -16,11 +16,11 @@ import scala.reflect.runtime.universe._
 
 class SerializerFactoryImpl {
 
-  private var additionalSerializers = Map[Type, SerializerFactory => JsonTypeSerializer[_]]()
+  private var additionalSerializers = Map[String, SerializerFactory => JsonTypeSerializer[_]]()
   private var additionalSuperclassSerializers = Map[Symbol, SerializerFactory => JsonTypeSerializer[_]]()
 
   def registerSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]) {
-    additionalSerializers += tpe -> serializer
+    additionalSerializers += tpe.toString -> serializer
   }
 
   def registerSuperclassSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]) {
@@ -134,7 +134,7 @@ class SerializerFactoryImpl {
       return new SingletonObjectSerializer()
     }
 
-    val additionalSerializerOption = additionalSerializers.get(tpe)
+    val additionalSerializerOption = additionalSerializers.get(tpe.toString)
 
     if (additionalSerializerOption.isDefined) {
       additionalSerializerOption.get(this.asInstanceOf[SerializerFactory])

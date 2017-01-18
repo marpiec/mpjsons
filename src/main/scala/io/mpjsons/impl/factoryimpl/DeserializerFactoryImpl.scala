@@ -6,7 +6,7 @@ import io.mpjsons.impl.deserializer.immutables._
 import io.mpjsons.impl.deserializer.mutables.ArrayDeserializer
 import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple2Deserializer}
 import io.mpjsons.impl.deserializer.values._
-import io.mpjsons.impl.deserializer.{BeanDeserializer, SingletonObjectDeserializer}
+import io.mpjsons.impl.deserializer.{BeanDeserializer, PostTransformDeserializer, SingletonObjectDeserializer}
 import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
@@ -23,6 +23,11 @@ class DeserializerFactoryImpl {
 
   private var additionalDeserializers = Map[String, DeserializerFactory => JsonTypeDeserializer[_]]()
   private var additionalSuperclassDeserializers = Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]]()
+  private var postTransform = Map[Type, _ => _]()
+
+  def registerPostTransform[T](tpe: Type, transform: T => T): Unit = {
+    postTransform += tpe -> transform
+  }
 
   def registerDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]) {
     additionalDeserializers += tpe.toString -> deserializer
@@ -33,6 +38,14 @@ class DeserializerFactoryImpl {
   }
 
   protected def getDeserializerNoCache(tpe: Type, context: Context): JsonTypeDeserializer[_ <: Any] = {
+    val deserializer: JsonTypeDeserializer[_ <: Any] = getPureDeserializerNoCache(tpe, context)
+    postTransform.get(tpe) match {
+      case Some(transform) => new PostTransformDeserializer[Any](deserializer, transform.asInstanceOf[(Any) => Any])
+      case None => deserializer
+    }
+  }
+
+  private def getPureDeserializerNoCache(tpe: Type, context: Context): JsonTypeDeserializer[_ <: Any] = {
 
     val typeSymbol = tpe.typeSymbol
 

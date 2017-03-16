@@ -117,11 +117,18 @@ class MPJsons {
    */
   def deserialize[T](json: String, tpe: Type): T = {
     val jsonIterator = new StringIterator(json)
+    deserialize(jsonIterator, tpe)
+  }
+
+  /**
+    * Creates object from gives json String, based on a passed type.
+    */
+  def deserialize[T](jsonIterator: StringIterator, tpe: Type): T = {
     try {
       deserializerFactory.getDeserializer(tpe, Context(List(), Map())).deserialize(jsonIterator)
     } catch {
       case e: RuntimeException =>
-        throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e, tpe), e)
+        throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(jsonIterator.stringValue, jsonIterator, e, tpe), e)
     }
   }
 

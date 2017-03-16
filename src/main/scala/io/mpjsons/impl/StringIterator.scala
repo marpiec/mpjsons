@@ -4,7 +4,7 @@ package io.mpjsons.impl
  * Special container for String that allows easy iteration through String characters.
  * @author Marcin Pieciukiewicz
  */
-class StringIterator(private val stringValue: String) {
+class StringIterator(val stringValue: String) {
 
   val stringLength = stringValue.length
   var nextIndex = 1

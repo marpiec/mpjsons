@@ -75,7 +75,7 @@ class CustomConverterSupportSpec extends FlatSpec with MustMatchers {
 
   "Serializer" must "be extendable with custom converters (super type converter)" in {
     val mpjsons = new MPJsons
-    mpjsons.registerSuperclassConverter(sf => new TypedSerializer[SomeSpecialType](classOf[SomeSpecialType].getPackage.getName, sf),
+    mpjsons.registerConverter(sf => new TypedSerializer[SomeSpecialType](classOf[SomeSpecialType].getPackage.getName, sf),
                                         df => new TypedDeserializer[SomeSpecialType](classOf[SomeSpecialType].getPackage.getName, df))
     val serialized = mpjsons.serialize(SomeSpecialType("Marcin"))
     serialized mustNot be ("""{"name":"Marcin"}""")

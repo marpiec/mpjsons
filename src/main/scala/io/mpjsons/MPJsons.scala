@@ -268,7 +268,7 @@ class MPJsons {
       val tpe = extractType(tag)
       val typeName: String = tpe.baseClasses.head.fullName
       val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
-      registerSuperclassConverter[T](
+      registerConverter[T](
         sf => new TypedSerializer[T](packageName, sf),
         df => new TypedDeserializer[T](packageName, df))
     }

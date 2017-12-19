@@ -16,7 +16,7 @@ class TypedConverterSpec extends FlatSpec with MustMatchers {
     val mpjsons = new MPJsons
     mpjsons.markTypedClass[CustomDescription]
 
-    val serialized: String = mpjsons.serialize(List(TextDescription("Hello"), NumericDescription(14)))
+    val serialized: String = mpjsons.serialize(List[CustomDescription](TextDescription("Hello"), NumericDescription(14)))
 
     serialized mustBe """[{"TextDescription":{"text":"Hello"}},{"NumericDescription":{"number":14}}]"""
   }

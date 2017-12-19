@@ -4,7 +4,7 @@ import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
-import scala.collection.mutable
+import scala.collection.immutable.ListMap
 import scala.reflect.runtime.universe._
 
 /**
@@ -20,11 +20,11 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
   val valueDeserializer = deserializerFactory.getDeserializer[V](valueType, context)
 
 
-  protected def readBuffer(jsonIterator: StringIterator): mutable.ListMap[K, V] = {
+  protected def readBuffer(jsonIterator: StringIterator): List[(K, V)] = {
 
     jsonIterator.consumeArrayStart()
 
-    var map = mutable.ListMap[K, V]()
+    var map = List[(K, V)]()
 
     jsonIterator.skipWhitespaceChars()
 
@@ -39,7 +39,7 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
 
       val value = valueDeserializer.deserialize(jsonIterator)
 
-      map += key -> value
+      map ::= (key -> value)
 
 
       jsonIterator.consumeArrayEnd() // ]

@@ -275,6 +275,26 @@ class MPJsons {
   }
 
   /**
+    * Method that allows to specify which type will have added type information to serialized json,
+    * and which can be deserialized based on this specified type.
+    * This will make any subclass of given class typed.
+    * Basically should not be used, it's here for backward compatibility.
+    */
+  def markTypedSuperClass[T <: AnyRef]()(implicit tag: TypeTag[T]): Unit = {
+    if (tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
+    } else {
+      val tpe = extractType(tag)
+      val typeName: String = tpe.baseClasses.head.fullName
+      val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
+      registerSuperclassConverter[T](
+        sf => new TypedSerializer[T](packageName, sf),
+        df => new TypedDeserializer[T](packageName, df))
+    }
+  }
+
+
+  /**
     * Method that allows object to be transformed after deserialization, e.g. to get rid of nulls for missing JSON properties.
     */
   def postDeserializationTransform[T](transform: (T) => T)(implicit tag: TypeTag[T]): Unit = {

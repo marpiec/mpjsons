@@ -7,6 +7,6 @@ import io.mpjsons.impl.deserializer.jsontypes.AbstractIntegerDeserializer
  * @author Marcin Pieciukiewicz
  */
 
-object FloatDeserializer extends AbstractIntegerDeserializer[Float] {
+object FloatDeserializer extends AbstractFloatingPointDeserializer[Float] {
   override def deserialize(jsonIterator: StringIterator) = readNumberString(jsonIterator).toFloat
 }

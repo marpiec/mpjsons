@@ -30,7 +30,9 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
     for (field <- fieldsWithSerializers) {
 
       val value = field._1.get(obj)
-      if (value != null) {
+      if (value == null) {
+        throw new IllegalArgumentException("Null value is not allowed for field " + field._2)
+      } else {
 
         if (isNotFirstField) {
           jsonBuilder.append(',')

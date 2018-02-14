@@ -3,6 +3,9 @@ package io.mpjsons
 
 import org.scalatest.FlatSpec
 import org.scalatest.MustMatchers._
+import org.scalatest.exceptions.TestFailedException
+
+import scala.annotation.meta.{field, param}
 
 /**
  * @author Marcin Pieciukiewicz
@@ -34,6 +37,8 @@ class SimpleDataObjectB {
   var tuplePrimitive: (Int, Long) = _
 }
 
+case class SimpleObjectWithNulls(@(nullable @field) a: String, b: String)
+
 class BeanSerializationSpec extends FlatSpec {
 
   val mpjsons = new MPJsons
@@ -56,6 +61,9 @@ class BeanSerializationSpec extends FlatSpec {
   sdo.listPrimitive = List[Int](15, 30, 1)
   
   sdo.emptyArray = Array[Long]()
+
+  val withNullsCorrect = SimpleObjectWithNulls(null, "ok")
+  val withNullsIncorrect = SimpleObjectWithNulls("fail", null)
 
   val properJsonSometimesIdentifiersWithoutQuotes = " { " +
     "charValue  : \"M\"  " +
@@ -188,6 +196,19 @@ class BeanSerializationSpec extends FlatSpec {
     val (p1: Int, p2: Long) = sdoFromJson.asInstanceOf[SimpleDataObjectB].tuplePrimitive
     p1 mustBe 3
     p2 mustBe 15
+  }
+
+  "Serializer" must "not allow null values by default" in {
+    try {
+      val serialized = mpjsons.serialize(withNullsIncorrect)
+      throw new TestFailedException("IllegalArgumentException should be thrown", 1)
+    } catch {
+      case e: IllegalArgumentException => () // ok
+    }
+  }
+
+  "Serializer" must "allow null values im annotated" in {
+    val serialized = mpjsons.serialize(withNullsCorrect)
   }
 
 }

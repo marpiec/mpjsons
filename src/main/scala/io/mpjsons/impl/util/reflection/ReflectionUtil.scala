@@ -7,7 +7,8 @@ import io.mpjsons.impl.util.TypesUtil
 
 import scala.reflect.runtime.universe._
 
-case class FieldWithTypeInfo(field: Field, tpe: Type)
+
+case class FieldWithTypeInfo(field: Field, tpe: Type, nullable: Boolean)
 
 /**
  * ReflectionUtilNoCache wrapper that caches results of function calls.
@@ -32,27 +33,4 @@ object ReflectionUtil {
     })
   }
 
-  /**
-   * Returns Field from given class, by given filed name. It supports type inheritance.
-   * @param tpe class from which the field should be retrieved
-   * @param fieldName field name
-   * @return retrieved Field or null if field does not exists.
-   */
-
-  def getAccessibleField(tpe: Type, fieldName: String): FieldWithTypeInfo = {
-
-    getAccessibleFieldCache.getOrElse((tpe, fieldName), {
-      val member = tpe.members.filterNot(_.isMethod).find(_.name.toString.trim == fieldName)
-      //tag.tpe.members.filter(member => !member.isMethod && member.name == TermName(fieldName))
-      if (member.isEmpty) {
-        throw new JsonInnerException("No member with name " + fieldName, null)
-      } else {
-        val info = member.get.info
-        val field: Field = ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), fieldName)
-        val fieldWithTypeInfo = FieldWithTypeInfo(field, info)
-        getAccessibleFieldCache += (tpe, fieldName) -> fieldWithTypeInfo
-        fieldWithTypeInfo
-      }
-    })
-  }
 }

@@ -1,5 +1,7 @@
 package io.mpjsons.impl.serializer
 
+import java.lang.reflect.Field
+
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.util.Context
@@ -11,17 +13,22 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
+case class FieldInfo[T](field: Field, name: String, jsonTypeSerializer: JsonTypeSerializer[T], nullable: Boolean)
+
 class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context) extends JsonTypeSerializer[AnyRef] {
 
   private val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type serializer */
   private lazy val fieldsWithSerializers = fields.map { field =>
-    (field.field, field.field.getName, serializerFactory.getSerializer(field.tpe, context)
-      .asInstanceOf[JsonTypeSerializer[AnyRef]])
+    FieldInfo(field.field, field.field.getName, serializerFactory.getSerializer(field.tpe, context)
+      .asInstanceOf[JsonTypeSerializer[AnyRef]], field.nullable)
   }
 
 
   override def serialize(obj: AnyRef, jsonBuilder: StringBuilder) = {
+
+    val ttpe = tpe
+    val tfields = fields
 
     jsonBuilder.append('{')
 
@@ -29,9 +36,11 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
 
     for (field <- fieldsWithSerializers) {
 
-      val value = field._1.get(obj)
+      val value = field.field.get(obj)
       if (value == null) {
-        throw new IllegalArgumentException("Null value is not allowed for field " + field._2)
+        if (!field.nullable) {
+          throw new IllegalArgumentException("Null value is not allowed for field " + field.name)
+        }
       } else {
 
         if (isNotFirstField) {
@@ -40,8 +49,8 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
           isNotFirstField = true
         }
 
-        jsonBuilder.append('"').append(field._2).append('"').append(':')
-        field._3.serialize(value, jsonBuilder)
+        jsonBuilder.append('"').append(field.name).append('"').append(':')
+        field.jsonTypeSerializer.serialize(value, jsonBuilder)
       }
     }
 

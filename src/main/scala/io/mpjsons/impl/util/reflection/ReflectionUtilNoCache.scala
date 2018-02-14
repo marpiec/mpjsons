@@ -23,9 +23,7 @@ private[reflection] object ReflectionUtilNoCache {
     members.map { member =>
       FieldWithTypeInfo(
         ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), member.name.toString.trim),
-        member.typeSignature)
-
-
+        member.typeSignature, member.annotations.exists(_.toString.toLowerCase().contains("nullable")))
     }.filterNot(_.field == null).toArray
 
   }

@@ -4,6 +4,7 @@ import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerialize
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
 
+import scala.annotation.StaticAnnotation
 import scala.reflect.runtime.universe._
 
 
@@ -70,6 +71,10 @@ class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[
 
 }
 
+/**
+  * Allows field in bean to be ommited if it's value is null
+  */
+final class nullable extends StaticAnnotation
 
 /**
  * Main class of json serialization library.

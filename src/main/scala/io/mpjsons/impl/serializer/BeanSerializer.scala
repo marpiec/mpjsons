@@ -27,8 +27,6 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
 
   override def serialize(obj: AnyRef, jsonBuilder: StringBuilder) = {
 
-    val ttpe = tpe
-    val tfields = fields
 
     jsonBuilder.append('{')
 
@@ -39,7 +37,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
       val value = field.field.get(obj)
       if (value == null) {
         if (!field.nullable) {
-          throw new IllegalArgumentException("Null value is not allowed for field " + field.name)
+          throw new IllegalArgumentException("Null value is not allowed for field " + field.name +" in type " + tpe.typeSymbol.fullName)
         }
       } else {
 

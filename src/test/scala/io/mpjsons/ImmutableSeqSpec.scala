@@ -11,6 +11,7 @@ import scala.collection.immutable._
 
 class ImmutableSeqType {
   var vector: Vector[String] = _
+  var iterable: Vector[String] = _
 //  var numericRange: NumericRange[String] = _
 //  var range: Range = _
   var list: List[String] = _
@@ -27,6 +28,7 @@ class ImmutableSeqSpec extends FlatSpec {
 
     val testObject = new ImmutableSeqType
     testObject.vector = Vector("Abc", "Bcd", "Eca")
+    testObject.iterable = Vector("abc", "bcd", "eca")
     testObject.list = List("Zxy", "Xyz", "ZyX")
     testObject.stream = Stream("kkk","qwe", "dfs")
     testObject.queue = Queue("AAA", "CCC", "BBB")
@@ -39,6 +41,7 @@ class ImmutableSeqSpec extends FlatSpec {
     val testObjectDeserialized = objectDeserialized.asInstanceOf[ImmutableSeqType]
 
     testObjectDeserialized.vector mustEqual testObject.vector
+    testObjectDeserialized.iterable mustEqual testObject.iterable
     testObjectDeserialized.list mustEqual testObject.list
     testObjectDeserialized.stream mustEqual testObject.stream
     testObjectDeserialized.queue mustEqual testObject.queue

@@ -4,7 +4,7 @@ name := "mpjsons"
 
 organization := "io.mpjsons"
 
-version := "0.6.26"
+version := "0.6.27"
 
 scalaVersion := "2.11.7"
 
@@ -18,6 +18,8 @@ publishArtifact in Test := false
 pomIncludeRepository := { _ => false }
 
 publishLocal := {}
+
+publishTo := Some("snapshots" at sys.props.getOrElse("snapshotsRepo", default = "http://vps120320.ovh.net:9081/nexus/content/repositories/jtweston-releases/"))
 
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 

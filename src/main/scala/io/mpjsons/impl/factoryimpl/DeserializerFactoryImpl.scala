@@ -84,6 +84,8 @@ class DeserializerFactoryImpl {
       return new ListDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Vector[_]].typeSymbol || typeSymbol == typeOf[immutable.Vector[_]].typeSymbol) {
       return new VectorDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[Iterable[_]].typeSymbol || typeSymbol == typeOf[immutable.Iterable[_]].typeSymbol) {
+      return new IterableDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Seq[_]].typeSymbol || typeSymbol == typeOf[immutable.Seq[_]].typeSymbol) {
       return new SeqDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Stream[_]].typeSymbol || typeSymbol == typeOf[immutable.Stream[_]].typeSymbol) {

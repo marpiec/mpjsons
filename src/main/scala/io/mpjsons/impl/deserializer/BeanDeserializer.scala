@@ -3,6 +3,7 @@ package io.mpjsons.impl.deserializer
 import java.lang.reflect.Field
 
 import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.deserializer.jsontypes.{AbstractFloatingPointDeserializer, AbstractStringDeserializer}
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 import io.mpjsons.impl.util.{Context, ObjectConstructionUtil, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
@@ -41,20 +42,95 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
       jsonIterator.consumeFieldValueSeparator()
 
-      val (field, deserializer) = fieldsByName.getOrElse(identifier, throw new IllegalArgumentException(s"No field [$identifier] in type [$tpe]. Types: ${context.typesStackMessage}"))
-      val value = deserializer.deserialize(jsonIterator)
+      fieldsByName.get(identifier) match {
+        case Some((field, deserializer)) =>
+          val value = deserializer.deserialize(jsonIterator)
 
-      field.set(instance, value)
+          field.set(instance, value)
 
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
+          jsonIterator.skipWhitespaceChars()
+          if (jsonIterator.currentChar == ',') {
+            jsonIterator.nextChar()
+          }
+        case None if deserializerFactory.ignoreNonExistingFields =>
+          skipValue(jsonIterator)
+          jsonIterator.skipWhitespaceChars()
+          if (jsonIterator.currentChar == ',') {
+            jsonIterator.nextChar()
+          }
+        case None => throw new IllegalArgumentException(s"No field [$identifier] in type [$tpe]. Types: ${context.typesStackMessage}")
       }
     }
 
     jsonIterator.nextCharOrNullIfLast
 
     instance
+  }
+
+
+  private def skipValue(jsonIterator: StringIterator): Unit = {
+    jsonIterator.skipWhitespaceChars()
+    jsonIterator.currentChar match {
+      case '{' => skipObject(jsonIterator)
+      case '[' => skipArray(jsonIterator)
+      case '"' => skipString(jsonIterator)
+      case '-' | '0' | '1' | '2'| '3'| '4'| '5'| '6'| '7'| '8'| '9' => skipNumber(jsonIterator)
+      case 'f' | 't' | 'n'  => skipBooleanOrNull(jsonIterator)
+      case c => throw new IllegalArgumentException(s"Invalid start of value: [$c]")
+    }
+  }
+
+
+
+  def skipObject(jsonIterator: StringIterator): Unit = {
+    jsonIterator.consumeObjectStart()
+    while (jsonIterator.currentChar != '}') {
+      IdentifierDeserializer.deserialize(jsonIterator)
+      jsonIterator.consumeFieldValueSeparator()
+      skipValue(jsonIterator)
+      jsonIterator.skipWhitespaceChars()
+      if (jsonIterator.currentChar == ',') {
+        jsonIterator.nextChar()
+      }
+    }
+    jsonIterator.nextCharOrNullIfLast
+  }
+
+  def skipArray(jsonIterator: StringIterator): Unit = {
+    jsonIterator.consumeArrayStart()
+    jsonIterator.skipWhitespaceChars()
+    while (jsonIterator.currentChar != ']') {
+      skipValue(jsonIterator)
+      jsonIterator.skipWhitespaceChars()
+      if (jsonIterator.currentChar == ',') {
+        jsonIterator.nextChar()
+      }
+    }
+    jsonIterator.nextChar()
+  }
+
+  def skipString(jsonIterator: StringIterator): Unit = {
+    AbstractStringDeserializer.readString(jsonIterator)
+  }
+
+  def skipNumber(jsonIterator: StringIterator): Unit = {
+    AbstractFloatingPointDeserializer.readNumberString(jsonIterator)
+  }
+
+  def skipBooleanOrNull(jsonIterator: StringIterator): Unit = {
+    val booleanString = new StringBuilder()
+
+    jsonIterator.skipWhitespaceChars()
+
+    while (jsonIterator.isCurrentCharASmallLetter) {
+      booleanString.append(jsonIterator.currentChar)
+      jsonIterator.nextChar()
+    }
+
+    booleanString.toString() match {
+      case "true" | "false" | "null" => ()
+      case _ => throw new IllegalArgumentException(s"Invalid boolean value: $booleanString")
+    }
   }
 
 }

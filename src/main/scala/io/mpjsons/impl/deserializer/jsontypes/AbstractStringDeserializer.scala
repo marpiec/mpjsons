@@ -7,9 +7,8 @@ import io.mpjsons.impl.StringIterator
  * @author Marcin Pieciukiewicz
  */
 
-abstract class AbstractStringDeserializer[T] extends JsonTypeDeserializer[T] {
-
-  protected def readString(jsonIterator: StringIterator): String = {
+object AbstractStringDeserializer {
+  def readString(jsonIterator: StringIterator): StringBuilder = {
 
     jsonIterator.skipWhitespaceChars()
 
@@ -49,6 +48,13 @@ abstract class AbstractStringDeserializer[T] extends JsonTypeDeserializer[T] {
 
     jsonIterator.nextChar() //to pass closing ", it is " for sure because of previous while
 
-    stringValue.toString()
+    stringValue
+  }
+}
+
+abstract class AbstractStringDeserializer[T] extends JsonTypeDeserializer[T] {
+
+  protected def readString(jsonIterator: StringIterator): String = {
+    AbstractStringDeserializer.readString(jsonIterator).toString()
   }
 }

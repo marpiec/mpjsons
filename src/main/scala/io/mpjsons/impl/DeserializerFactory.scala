@@ -6,4 +6,4 @@ import io.mpjsons.impl.factoryimpl.DeserializerFactoryMemoizer
  * @author Marcin Pieciukiewicz
  */
 
-class DeserializerFactory extends DeserializerFactoryMemoizer
+class DeserializerFactory(val ignoreNonExistingFields: Boolean) extends DeserializerFactoryMemoizer(ignoreNonExistingFields)

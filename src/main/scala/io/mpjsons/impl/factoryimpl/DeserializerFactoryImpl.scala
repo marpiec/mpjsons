@@ -19,7 +19,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class DeserializerFactoryImpl {
+class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
 
   private var additionalDeserializers = Map[String, DeserializerFactory => JsonTypeDeserializer[_]]()
   private var additionalSuperclassDeserializers = Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]]()

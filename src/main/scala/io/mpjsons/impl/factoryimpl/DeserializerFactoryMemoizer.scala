@@ -11,7 +11,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class DeserializerFactoryMemoizer extends DeserializerFactoryImpl {
+class DeserializerFactoryMemoizer(ignoreNonExistingFields: Boolean) extends DeserializerFactoryImpl(ignoreNonExistingFields) {
 
   private var getDeserializerCache: Map[Type, JsonTypeDeserializer[_ <: Any]] = Map()
 

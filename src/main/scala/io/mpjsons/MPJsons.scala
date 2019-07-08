@@ -80,9 +80,9 @@ final class nullable extends StaticAnnotation
  * Main class of json serialization library.
  * @author Marcin Pieciukiewicz
  */
-class MPJsons {
+class MPJsons(ignoreNonExistingFields: Boolean = false) {
 
-  private val deserializerFactory = new DeserializerFactory
+  private val deserializerFactory = new DeserializerFactory(ignoreNonExistingFields)
   private val serializerFactory = new SerializerFactory
 
   private var extractTypeCache = Map[TypeTag[_], Type]()

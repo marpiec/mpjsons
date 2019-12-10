@@ -16,8 +16,8 @@ import scala.reflect.runtime.universe._
 
 class SerializerFactoryImpl {
 
-  private var additionalSerializers = Map[String, SerializerFactory => JsonTypeSerializer[_]]()
-  private var additionalSuperclassSerializers = Map[Symbol, SerializerFactory => JsonTypeSerializer[_]]()
+  private var additionalSerializers: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
+  private var additionalSuperclassSerializers: Map[Symbol, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
 
   def registerSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]) {
     additionalSerializers += tpe.toString -> serializer
@@ -27,7 +27,7 @@ class SerializerFactoryImpl {
     additionalSuperclassSerializers += tpe.typeSymbol -> serializer
   }
 
-  protected def getSerializerNoCache(tpe: Type, context: Context): JsonTypeSerializer[_] = {
+  protected def getSerializerNoCache(tpe: Type, context: Context, allowSuperType: Boolean): JsonTypeSerializer[_] = {
 
     val typeSymbol = tpe.typeSymbol
 
@@ -119,14 +119,16 @@ class SerializerFactoryImpl {
     }
 
 
-    additionalSuperclassSerializers.get(typeSymbol) match {
-      case Some(serializer) => return serializer(this.asInstanceOf[SerializerFactory])
-      case None =>
-        for ((tpeType, serializer) <- additionalSuperclassSerializers) {
-          if (tpe.baseClasses.contains(tpeType)) {
-            return serializer(this.asInstanceOf[SerializerFactory])
+    if(allowSuperType) {
+      additionalSuperclassSerializers.get(typeSymbol) match {
+        case Some(serializer) => return serializer(this.asInstanceOf[SerializerFactory])
+        case None =>
+          for ((tpeType, serializer) <- additionalSuperclassSerializers) {
+            if (tpe.baseClasses.contains(tpeType)) {
+              return serializer(this.asInstanceOf[SerializerFactory])
+            }
           }
-        }
+      }
     }
 
 

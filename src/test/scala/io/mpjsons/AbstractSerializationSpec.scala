@@ -19,6 +19,8 @@ class AbstractSerializationSpec extends FlatSpec {
 
   val mpjsons = new MPJsons
 
+  mpjsons.markTypedClass[CommonType]
+
   "Serializer" must "add type information while serializing trait" in {
 
     val a = A("Hello")

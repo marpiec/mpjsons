@@ -11,7 +11,7 @@ class InfiniteDepthSpec extends FlatSpec {
 
 
   "Serializer" must "handle possibly infinite depth of object" in {
-    val testObject = RecursiveType(List(RecursiveType(List(RecursiveType(List()))), RecursiveType(List())))
+    val testObject = RecursiveType(List(RecursiveType(List(RecursiveType(List.empty))), RecursiveType(List.empty)))
 
     val json = mpjsons.serialize(testObject)
 

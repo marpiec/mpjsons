@@ -12,7 +12,7 @@ case class NumericDescription(number: Int) extends CustomDescription
 
 class TypedConverterSpec extends FlatSpec with MustMatchers {
 
-  "Typed deserializer" must "generate correct JSON" in {
+  "Typed serializer" must "generate correct JSON" in {
     val mpjsons = new MPJsons
     mpjsons.markTypedClass[CustomDescription]
 

@@ -14,12 +14,12 @@ object TypedConverter {
   class TypedSerializer[T <: AnyRef](packageName: String, serializerFactory: SerializerFactory)
                                     (implicit tag: TypeTag[T]) extends JsonTypeSerializer[T] {
 
-    private var serializers = Map[String, BeanSerializer]()
+    private var serializers: Map[String, JsonTypeSerializer[AnyRef]] = Map.empty
 
     override def serialize(obj: T, jsonBuilder: StringBuilder): Unit = {
       val typeName = obj.getClass.getSimpleName
       val innerElementSerializer = serializers.getOrElse(typeName, {
-        val s = new BeanSerializer(serializerFactory, TypesUtil.getTypeFromClass(obj.getClass), Context(List(), Map()))
+        val s = serializerFactory.getSerializer(TypesUtil.getTypeFromClass(obj.getClass), Context(List.empty, Map.empty), allowSuperType = false).asInstanceOf[JsonTypeSerializer[AnyRef]]
         serializers += typeName -> s
         s
       })
@@ -36,7 +36,7 @@ object TypedConverter {
   class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: DeserializerFactory)
     extends JsonTypeDeserializer[T] {
 
-    private var deserializers = Map[String, BeanDeserializer[AnyRef]]()
+    private var deserializers: Map[String, JsonTypeDeserializer[AnyRef]] = Map.empty
 
     override def deserialize(jsonIterator: StringIterator): T = {
 
@@ -46,7 +46,7 @@ object TypedConverter {
 
       val innerElementDeserializer = deserializers.getOrElse(typeName, {
         val elementType = TypesUtil.getTypeFromClass(Class.forName(packageName + "." + typeName))
-        val d = new BeanDeserializer[AnyRef](deserializerFactory, elementType, Context(List(), Map()))
+        val d = deserializerFactory.getDeserializer(elementType, Context(List.empty, Map.empty), allowSuperType = false).asInstanceOf[JsonTypeDeserializer[AnyRef]]
         deserializers += typeName -> d
         d
       })
@@ -64,7 +64,7 @@ object TypedConverter {
     }
 
     def extractTypeName(jsonIterator: StringIterator): String = {
-      val deserializer = deserializerFactory.getDeserializer[String](typeOf[String], Context(List(), Map()))
+      val deserializer = deserializerFactory.getDeserializer[String](typeOf[String], Context(List.empty, Map.empty))
       jsonIterator.skipWhitespaceChars()
       deserializer.deserialize(jsonIterator)
     }

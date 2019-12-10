@@ -12,7 +12,7 @@ class MapElement(var intValue: Int, val stringValue: String)
 
 class SimpleMapsObject {
 
-  var emptyMap:Map[Int, Long] = Map()
+  var emptyMap:Map[Int, Long] = Map.empty
   var simpleMap:Map[String, String] = _
   var primitiveMap:Map[Int, Long] = _
   var objectMap:Map[MapElement, MapElement] = _

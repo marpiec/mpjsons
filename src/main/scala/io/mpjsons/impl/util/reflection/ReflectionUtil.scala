@@ -16,9 +16,9 @@ case class FieldWithTypeInfo(field: Field, tpe: Type, nullable: Boolean)
  */
 object ReflectionUtil {
 
-  private var getAllAccessibleFieldsCache: Map[Type, Array[FieldWithTypeInfo]] = Map()
+  private var getAllAccessibleFieldsCache: Map[Type, Array[FieldWithTypeInfo]] = Map.empty
 
-  private var getAccessibleFieldCache: Map[(Type, String), FieldWithTypeInfo] = Map()
+  private var getAccessibleFieldCache: Map[(Type, String), FieldWithTypeInfo] = Map.empty
 
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.

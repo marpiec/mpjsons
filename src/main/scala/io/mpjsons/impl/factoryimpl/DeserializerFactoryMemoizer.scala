@@ -13,9 +13,9 @@ import scala.reflect.runtime.universe._
 
 class DeserializerFactoryMemoizer(ignoreNonExistingFields: Boolean) extends DeserializerFactoryImpl(ignoreNonExistingFields) {
 
-  private var getDeserializerCache: Map[Type, JsonTypeDeserializer[_ <: Any]] = Map()
+  private var getDeserializerCache: Map[Type, JsonTypeDeserializer[_ <: Any]] = Map.empty
 
-  def getDeserializer[T](orgtpe: Type, context: Context): JsonTypeDeserializer[T] = {
+  def getDeserializer[T](orgtpe: Type, context: Context, allowSuperType: Boolean = true): JsonTypeDeserializer[T] = {
 
     val tpe = if (orgtpe.typeSymbol.isParameter) {
       context.typeParams(orgtpe.typeSymbol)
@@ -27,7 +27,7 @@ class DeserializerFactoryMemoizer(ignoreNonExistingFields: Boolean) extends Dese
       context.typeParams ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap)
 
     getDeserializerCache.getOrElse(tpe, {
-      val deserializer = super.getDeserializerNoCache(tpe, newContext)
+      val deserializer = super.getDeserializerNoCache(tpe, newContext, allowSuperType)
       getDeserializerCache += tpe -> deserializer
       deserializer
     }).asInstanceOf[JsonTypeDeserializer[T]]

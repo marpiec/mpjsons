@@ -21,9 +21,9 @@ import scala.reflect.runtime.universe._
 
 class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
 
-  private var additionalDeserializers = Map[String, DeserializerFactory => JsonTypeDeserializer[_]]()
-  private var additionalSuperclassDeserializers = Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]]()
-  private var postTransform = Map[Type, _ => _]()
+  private var additionalDeserializers: Map[String, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty
+  private var additionalSuperclassDeserializers: Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty
+  private var postTransform: Map[Type, _ => _] = Map.empty
 
   def registerPostTransform[T](tpe: Type, transform: T => T): Unit = {
     postTransform += tpe -> transform
@@ -37,15 +37,15 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
     additionalSuperclassDeserializers += tpe.typeSymbol -> deserializer
   }
 
-  protected def getDeserializerNoCache(tpe: Type, context: Context): JsonTypeDeserializer[_ <: Any] = {
-    val deserializer: JsonTypeDeserializer[_ <: Any] = getPureDeserializerNoCache(tpe, context)
+  protected def getDeserializerNoCache(tpe: Type, context: Context, allowSuperType: Boolean): JsonTypeDeserializer[_ <: Any] = {
+    val deserializer: JsonTypeDeserializer[_ <: Any] = getPureDeserializerNoCache(tpe, context, allowSuperType)
     postTransform.get(tpe) match {
       case Some(transform) => new PostTransformDeserializer[Any](deserializer, transform.asInstanceOf[(Any) => Any])
       case None => deserializer
     }
   }
 
-  private def getPureDeserializerNoCache(tpe: Type, context: Context): JsonTypeDeserializer[_ <: Any] = {
+  private def getPureDeserializerNoCache(tpe: Type, context: Context, allowSuperType: Boolean): JsonTypeDeserializer[_ <: Any] = {
 
     val typeSymbol = tpe.typeSymbol
 
@@ -129,14 +129,16 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
 
 
 
-    additionalSuperclassDeserializers.get(typeSymbol) match {
-      case Some(deserializer) => return deserializer(this.asInstanceOf[DeserializerFactory])
-      case None =>
-        for ((tpeType, deserializer) <- additionalSuperclassDeserializers) {
-          if (tpe.baseClasses.contains(tpeType)) {
-            return deserializer(this.asInstanceOf[DeserializerFactory])
+    if(allowSuperType) {
+      additionalSuperclassDeserializers.get(typeSymbol) match {
+        case Some(deserializer) => return deserializer(this.asInstanceOf[DeserializerFactory])
+        case None =>
+          for ((tpeType, deserializer) <- additionalSuperclassDeserializers) {
+            if (tpe.baseClasses.contains(tpeType)) {
+              return deserializer(this.asInstanceOf[DeserializerFactory])
+            }
           }
-        }
+      }
     }
 
     if (typeSymbol == typeOf[ListBuffer[_]].typeSymbol) {

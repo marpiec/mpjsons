@@ -30,10 +30,12 @@ class OptionSerializationSpec extends FlatSpec {
 
     val odo = new OptionalDataObject
     odo.intOption = None
+    odo.smallLongOption = None
     odo.longOption = None
     odo.doubleOption = None
     odo.booleanOption = None
     odo.stringOption = None
+    odo.sdo = None
 
     val simpleJson = mpjsons.serialize(odo)
 
@@ -44,10 +46,12 @@ class OptionSerializationSpec extends FlatSpec {
     val odoFromJson = dataObject.asInstanceOf[OptionalDataObject]
 
     odoFromJson.intOption mustBe 'empty
+    odoFromJson.smallLongOption mustBe 'empty
     odoFromJson.longOption mustBe 'empty
     odoFromJson.doubleOption mustBe 'empty
     odoFromJson.booleanOption mustBe 'empty
     odoFromJson.stringOption mustBe 'empty
+    odoFromJson.sdo mustBe 'empty
   }
 
 
@@ -65,6 +69,8 @@ class OptionSerializationSpec extends FlatSpec {
     val sdo = new SimpleDataObjectB
     sdo.longValue = 4
     sdo.stringValue = "testString"
+    sdo.tuple = ("A", "B")
+    sdo.tuplePrimitive = (1, 2L)
     odo.sdo = Option[SimpleDataObjectB](sdo)
 
     val simpleJson = mpjsons.serialize(odo)
@@ -90,6 +96,8 @@ class OptionSerializationSpec extends FlatSpec {
     optionalDataObject.stringOption.get mustBe odo.stringOption.get
     optionalDataObject.sdo.get.longValue mustBe odo.sdo.get.longValue
     optionalDataObject.sdo.get.stringValue mustBe odo.sdo.get.stringValue
+    optionalDataObject.sdo.get.tuple mustBe odo.sdo.get.tuple
+    optionalDataObject.sdo.get.tuplePrimitive mustBe odo.sdo.get.tuplePrimitive
 
   }
 

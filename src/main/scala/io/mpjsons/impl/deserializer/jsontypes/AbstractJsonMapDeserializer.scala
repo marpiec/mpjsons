@@ -24,7 +24,7 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
 
     jsonIterator.consumeArrayStart()
 
-    var map = List[(K, V)]()
+    var map: List[(K, V)] = List.empty
 
     jsonIterator.skipWhitespaceChars()
 

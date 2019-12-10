@@ -16,7 +16,7 @@ class TypedSerializer[T <: AnyRef](packageName: String, serializerFactory: Seria
                                   (implicit tag: TypeTag[T])
                                  extends JsonTypeSerializer[T] {
 
-  val innerElementSerializer = new BeanSerializer(serializerFactory, tag.tpe, Context(List(), Map()))
+  val innerElementSerializer = new BeanSerializer(serializerFactory, tag.tpe, Context(List.empty, Map.empty))
 
   override def serialize(obj: T, jsonBuilder: StringBuilder): Unit = {
     val simpleName: String = obj.getClass.getSimpleName
@@ -43,7 +43,7 @@ class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: D
     jsonIterator.nextChar()
 
     jsonIterator.skipWhitespaceChars()
-    val value = new BeanDeserializer[T](deserializerFactory, elementType, Context(List(), Map())).deserialize(jsonIterator).asInstanceOf[T]
+    val value = new BeanDeserializer[T](deserializerFactory, elementType, Context(List.empty, Map.empty)).deserialize(jsonIterator).asInstanceOf[T]
 
     jsonIterator.skipWhitespaceChars()
     jsonIterator.nextChar()
@@ -52,7 +52,7 @@ class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: D
   }
 
   def extractTypeName(jsonIterator: StringIterator): String = {
-    val deserializer = deserializerFactory.getDeserializer[String](typeOf[String], Context(List(), Map()))
+    val deserializer = deserializerFactory.getDeserializer[String](typeOf[String], Context(List.empty, Map.empty))
     jsonIterator.skipWhitespaceChars()
     deserializer.deserialize(jsonIterator)
   }

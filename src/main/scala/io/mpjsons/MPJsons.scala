@@ -130,7 +130,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
     */
   def deserialize[T](jsonIterator: StringIterator, tpe: Type): T = {
     try {
-      deserializerFactory.getDeserializer(tpe, Context(List(), Map())).deserialize(jsonIterator)
+      deserializerFactory.getDeserializer(tpe, Context(List.empty, Map.empty)).deserialize(jsonIterator)
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(jsonIterator.stringValue, jsonIterator, e, tpe), e)
@@ -160,7 +160,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * Creates a specialized deserializer for a passed type.
    */
   def buildStaticDeserializer[T](tpe: Type): StaticDeserializer[T] = {
-    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe, Context(List(), Map())), tpe)
+    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe, Context(List.empty, Map.empty)), tpe)
   }
 
   /**
@@ -191,7 +191,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    */
   def serialize[T](obj: T, tpe: Type): String = {
     val json = new StringBuilder()
-    serializerFactory.getSerializer(tpe, Context(List(), Map())).serialize(obj, json)
+    serializerFactory.getSerializer(tpe, Context(List.empty, Map.empty)).serialize(obj, json)
     json.toString()
   }
 
@@ -220,7 +220,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * Creates a specialized serializer for a passed type name (class name).
    */
   def buildStaticSerializer[T](tpe: Type): StaticSerializer[T] = {
-    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Context(List(), Map())), tpe)
+    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Context(List.empty, Map.empty)), tpe)
   }
 
   /**

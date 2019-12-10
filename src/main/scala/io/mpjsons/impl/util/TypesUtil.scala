@@ -8,10 +8,10 @@ import scala.reflect.runtime.universe._
  */
 object TypesUtil {
 
-  private var subElementsTypeCache = Map[Type, List[Type]]()
-  private var typeFromClassCache = Map[Class[_], Type]()
-  private var classFromTypeCache = Map[Type, Class[_]]()
-  private var arraySubElementsTypeCache = Map[Type, Type]()
+  private var subElementsTypeCache: Map[Type, List[Type]] = Map.empty
+  private var typeFromClassCache: Map[Class[_], Type] = Map.empty
+  private var classFromTypeCache: Map[Type, Class[_]] = Map.empty
+  private var arraySubElementsTypeCache: Map[Type, Type] = Map.empty
 
   def getSubElementsType(tpe: Type): Type = {
     getMultipleSubElementsType(tpe).head

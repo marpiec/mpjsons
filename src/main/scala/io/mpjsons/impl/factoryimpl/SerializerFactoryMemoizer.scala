@@ -12,9 +12,9 @@ import scala.reflect.runtime.universe._
 
 class SerializerFactoryMemoizer extends SerializerFactoryImpl {
 
-  private var getSerializerCache: Map[Type, JsonTypeSerializer[_]] = Map()
+  private var getSerializerCache: Map[Type, JsonTypeSerializer[_]] = Map.empty
 
-  def getSerializer[T](orgtpe: Type, context: Context): JsonTypeSerializer[T] = {
+  def getSerializer[T](orgtpe: Type, context: Context, allowSuperType: Boolean = true): JsonTypeSerializer[T] = {
 
     val tpe = if (orgtpe.typeSymbol.isParameter) {
       context.typeParams(orgtpe.typeSymbol)
@@ -26,7 +26,7 @@ class SerializerFactoryMemoizer extends SerializerFactoryImpl {
       context.typeParams ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap)
 
     getSerializerCache.getOrElse(tpe, {
-      val serializer: JsonTypeSerializer[_] = super.getSerializerNoCache(tpe, newContext)
+      val serializer: JsonTypeSerializer[_] = super.getSerializerNoCache(tpe, newContext, allowSuperType)
       getSerializerCache += tpe -> serializer
       serializer
     }).asInstanceOf[JsonTypeSerializer[T]]

@@ -45,6 +45,7 @@ class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
     sdo.listObject = List[String]("Hello", "json", "serializer")
     sdo.listPrimitive = List[Int](15, 30, 1)
 
+    sdo.emptyArray = Array()
 
     When("Trying to serialize and deserialize multiple times")
 

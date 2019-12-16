@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe._
 
 class DeserializerFactoryMemoizer(ignoreNonExistingFields: Boolean) extends DeserializerFactoryImpl(ignoreNonExistingFields) {
 
-  private var getDeserializerCache: Map[Type, JsonTypeDeserializer[_ <: Any]] = Map.empty
+  private var getDeserializerCache: Map[(Type, Boolean), JsonTypeDeserializer[_ <: Any]] = Map.empty
 
   def getDeserializer[T](orgtpe: Type, context: Context, allowSuperType: Boolean = true): JsonTypeDeserializer[T] = {
 
@@ -26,9 +26,9 @@ class DeserializerFactoryMemoizer(ignoreNonExistingFields: Boolean) extends Dese
     val newContext = Context(tpe :: context.typesStack,
       context.typeParams ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap)
 
-    getDeserializerCache.getOrElse(tpe, {
+    getDeserializerCache.getOrElse((tpe, allowSuperType), {
       val deserializer = super.getDeserializerNoCache(tpe, newContext, allowSuperType)
-      getDeserializerCache += tpe -> deserializer
+      getDeserializerCache += (tpe, allowSuperType) -> deserializer
       deserializer
     }).asInstanceOf[JsonTypeDeserializer[T]]
   }

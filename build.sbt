@@ -4,9 +4,9 @@ name := "mpjsons"
 
 organization := "io.mpjsons"
 
-version := "0.6.32"
+version := "0.6.33"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.12"
 
 scalacOptions ++= Seq(
   "-feature")
@@ -22,6 +22,6 @@ publishLocal := {}
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 
 libraryDependencies ++= Seq(
-   "org.scala-lang" % "scala-reflect" % "2.11.7",
-  "org.slf4j" % "slf4j-api" % "1.7.7",
-  "org.scalatest" %% "scalatest" % "2.2.4" % Test)
+   "org.scala-lang" % "scala-reflect" % "2.11.12",
+  "org.slf4j" % "slf4j-api" % "1.7.25",
+  "org.scalatest" %% "scalatest" % "2.2.6" % Test)

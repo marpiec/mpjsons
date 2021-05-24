@@ -19,6 +19,8 @@ pomIncludeRepository := { _ => false }
 
 publishLocal := {}
 
+publishTo := Some("snapshots" at sys.props.getOrElse("repo", default = ""))
+
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 
 libraryDependencies ++= Seq(

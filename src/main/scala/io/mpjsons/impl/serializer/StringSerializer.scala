@@ -29,10 +29,26 @@ class StringSerializer() extends JsonTypeSerializer[Any] {
         case '\n' => jsonBuilder.append("\\n")
         case '\r' => jsonBuilder.append("\\r")
         case '\t' => jsonBuilder.append("\\t")
+        case _ if currentChar < 32 => jsonBuilder.append("\\u"+toHex(currentChar))
         case _ => jsonBuilder.append(currentChar)
       }
     }
 
     jsonBuilder.append('"')
+  }
+
+  // To escape control characters from text
+  private def toHex(ch: Char): String = {
+    val hex = Integer.toHexString(ch)
+    val hexLength = hex.length
+    if(hexLength < 2) {
+      "000"+hex
+    } else if(hexLength < 3) {
+      "00"+hex
+    } else if(hexLength < 4) {
+      "0"+hex
+    } else {
+      hex
+    }
   }
 }

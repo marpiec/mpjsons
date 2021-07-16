@@ -36,6 +36,16 @@ object AbstractStringDeserializer {
           case 'n' => stringValue.append('\n')
           case 'r' => stringValue.append('\r')
           case 't' => stringValue.append('\t')
+          case 'u' =>
+            var i = 0
+            var numberText = new StringBuilder()
+            while(i < 4) {
+              jsonIterator.nextChar()
+              numberText += jsonIterator.currentChar
+              i += 1
+            }
+            val char = String.valueOf(Character.toChars(Integer.parseInt(numberText.toString(), 16)))
+            stringValue.append(char)
           case _ => throw new IllegalArgumentException("Unsupported control character [\\" + jsonIterator.currentChar + "]")
         }
 

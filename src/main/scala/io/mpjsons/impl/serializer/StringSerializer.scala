@@ -29,6 +29,7 @@ class StringSerializer() extends JsonTypeSerializer[Any] {
         case '\n' => jsonBuilder.append("\\n")
         case '\r' => jsonBuilder.append("\\r")
         case '\t' => jsonBuilder.append("\\t")
+        case _ if currentChar == 0 => throw new IllegalArgumentException("Null byte in String is not allowed")
         case _ if currentChar < 32 => jsonBuilder.append("\\u"+toHex(currentChar))
         case _ => jsonBuilder.append(currentChar)
       }

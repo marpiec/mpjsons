@@ -10,3 +10,8 @@ import io.mpjsons.impl.deserializer.jsontypes.AbstractFloatingPointDeserializer
 object FloatDeserializer extends AbstractFloatingPointDeserializer[Float] {
   override def deserialize(jsonIterator: StringIterator) = readNumberString(jsonIterator).toFloat
 }
+
+
+object JavaFloatDeserializer extends AbstractFloatingPointDeserializer[java.lang.Float] {
+  override def deserialize(jsonIterator: StringIterator): java.lang.Float = readNumberString(jsonIterator).toFloat
+}

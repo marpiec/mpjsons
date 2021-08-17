@@ -46,6 +46,20 @@ class SerializerFactoryImpl {
       return new SimpleToStringSerializer()
     } else if (typeOf[Float].typeSymbol == typeSymbol) {
       return new SimpleToStringSerializer()
+    } else if (typeOf[java.lang.Long].typeSymbol == typeSymbol) {
+      return new SimpleToStringSerializer()
+    } else if (typeOf[java.lang.Integer].typeSymbol == typeSymbol) {
+      return new SimpleToStringSerializer()
+    } else if (typeOf[java.lang.Short].typeSymbol == typeSymbol) {
+      return new SimpleToStringSerializer()
+    } else if (typeOf[java.lang.Byte].typeSymbol == typeSymbol) {
+      return new SimpleToStringSerializer()
+    } else if (typeOf[java.lang.Boolean].typeSymbol == typeSymbol) {
+      return new SimpleToStringSerializer()
+    } else if (typeOf[java.lang.Double].typeSymbol == typeSymbol) {
+      return new SimpleToStringSerializer()
+    } else if (typeOf[java.lang.Float].typeSymbol == typeSymbol) {
+      return new SimpleToStringSerializer()
     }
 
 

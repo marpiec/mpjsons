@@ -67,6 +67,22 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       return ByteDeserializer
     } else if (typeSymbol == typeOf[Char].typeSymbol) {
       return CharDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Long].typeSymbol) {
+      return LongDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Integer].typeSymbol) {
+      return IntDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Boolean].typeSymbol) {
+      return BooleanDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Double].typeSymbol) {
+      return DoubleDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Float].typeSymbol) {
+      return FloatDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Short].typeSymbol) {
+      return ShortDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Byte].typeSymbol) {
+      return ByteDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Character].typeSymbol) {
+      return CharDeserializer
     } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
       return new ArrayDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[(_, _)].typeSymbol) {

@@ -1,7 +1,5 @@
 package io.mpjsons.impl.special
 
-import io.mpjsons.impl.deserializer.BeanDeserializer
-import io.mpjsons.impl.serializer.BeanSerializer
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
 import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer}

@@ -20,3 +20,18 @@ object CharDeserializer extends AbstractStringDeserializer[Char] {
   }
 
 }
+
+object JavaCharDeserializer extends AbstractStringDeserializer[java.lang.Character] {
+
+  override def deserialize(jsonIterator: StringIterator): java.lang.Character = {
+
+    val deserializedString: String = readString(jsonIterator)
+
+    if (deserializedString.length == 1) {
+      deserializedString.charAt(0)
+    } else {
+      throw new IllegalArgumentException("Char value have to be 1 character long: [" + deserializedString + " ]")
+    }
+  }
+
+}

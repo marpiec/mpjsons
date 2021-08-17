@@ -4,7 +4,7 @@ name := "mpjsons"
 
 organization := "io.mpjsons"
 
-version := "0.6.36"
+version := "0.6.37"
 
 scalaVersion := "2.11.12"
 
@@ -19,7 +19,7 @@ pomIncludeRepository := { _ => false }
 
 publishLocal := {}
 
-publishTo := Some("snapshots" at sys.props.getOrElse("repo", default = ""))
+publishTo := Some("snapshots" at sys.props.getOrElse("repo", default = "."))
 
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 

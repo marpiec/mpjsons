@@ -15,7 +15,7 @@ class HashSetDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type
   extends AbstractJsonArrayDeserializer[E, HashSet[E]](deserializerFactory, tpe, context) {
 
   override def deserialize(jsonIterator: StringIterator): HashSet[E] = {
-    HashSet(deserializeArray(jsonIterator, tpe): _*)
+    HashSet(deserializeArray(jsonIterator, tpe).toSeq : _*)
   }
 
 }

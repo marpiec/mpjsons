@@ -14,7 +14,7 @@ class SetDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type, co
   extends AbstractJsonArrayDeserializer[E, Set[E]](deserializerFactory, tpe, context) {
 
   override def deserialize(jsonIterator: StringIterator): Set[E] = {
-    Set(deserializeArray(jsonIterator, tpe): _*)
+    Set(deserializeArray(jsonIterator, tpe).toSeq: _*)
   }
 
 }

@@ -6,7 +6,7 @@ organization := "io.mpjsons"
 
 version := "0.6.37"
 
-scalaVersion := "2.13.10"
+scalaVersion := "2.13.11"
 
 scalacOptions ++= Seq(
   "-feature")

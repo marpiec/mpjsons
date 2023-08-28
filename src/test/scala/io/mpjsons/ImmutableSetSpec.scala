@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 import scala.collection.immutable._
 
@@ -18,7 +18,7 @@ class ImmutableSetType {
 }
 
 
-class ImmutableSetSpec extends FlatSpec {
+class ImmutableSetSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 

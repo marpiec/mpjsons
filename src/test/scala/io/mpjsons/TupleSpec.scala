@@ -1,13 +1,13 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 class TupleDataObject {
   var tuple:(Int, String) = _
 }
 
-class TupleSpec extends FlatSpec {
+class TupleSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 

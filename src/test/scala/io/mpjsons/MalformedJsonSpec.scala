@@ -1,11 +1,12 @@
 package io.mpjsons
 
 import io.mpjsons.impl.JsonInnerException
-import org.scalatest.FlatSpec
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 
-
-class MalformedJsonSpec extends FlatSpec {
+class MalformedJsonSpec extends AnyFlatSpec {
 
   case class Sample(a: Int, b: String)
 

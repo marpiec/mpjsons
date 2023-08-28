@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 /**
  * @author Marcin Pieciukiewicz
@@ -21,7 +21,7 @@ class OptionalDataObject {
 
 
 
-class OptionSerializationSpec extends FlatSpec {
+class OptionSerializationSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 

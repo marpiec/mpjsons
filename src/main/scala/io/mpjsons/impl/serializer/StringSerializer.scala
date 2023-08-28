@@ -6,7 +6,7 @@ import io.mpjsons.JsonTypeSerializer
  * @author Marcin Pieciukiewicz
  */
 
-class StringSerializer() extends JsonTypeSerializer[Any] {
+object StringSerializer extends JsonTypeSerializer[Any] {
   override def serialize(obj: Any, jsonBuilder: StringBuilder) {
 
     val string = obj.toString

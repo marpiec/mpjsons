@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 object AbstractSerializationSpec {
 
@@ -13,7 +13,7 @@ object AbstractSerializationSpec {
 }
 
 
-class AbstractSerializationSpec extends FlatSpec {
+class AbstractSerializationSpec extends AnyFlatSpec {
 
   import AbstractSerializationSpec._
 

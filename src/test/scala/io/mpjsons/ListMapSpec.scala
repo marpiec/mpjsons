@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 import scala.collection.immutable.ListMap
 
@@ -9,7 +9,7 @@ import scala.collection.immutable.ListMap
 case class ListMapEntry(name: String)
 
 
-class ListMapSpec extends FlatSpec {
+class ListMapSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 

@@ -1,6 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.{MustMatchers, FlatSpec}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 object InnerParamsSpec {
 
@@ -12,7 +13,7 @@ object InnerParamsSpec {
 
 }
 
-class InnerParamsSpec extends FlatSpec with MustMatchers {
+class InnerParamsSpec extends AnyFlatSpec {
   import InnerParamsSpec._
 
   val mpjsons = new MPJsons

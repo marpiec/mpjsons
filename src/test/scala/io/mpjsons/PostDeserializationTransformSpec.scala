@@ -1,13 +1,15 @@
 package io.mpjsons
 
 import io.mpjsons.PostDeserializationTransformSpec.Sample
-import org.scalatest.{FlatSpec, GivenWhenThen, MustMatchers}
+import org.scalatest.GivenWhenThen
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 object PostDeserializationTransformSpec {
   case class Sample(a: String, b: String)
 }
 
-class PostDeserializationTransformSpec extends FlatSpec with MustMatchers with GivenWhenThen {
+class PostDeserializationTransformSpec extends AnyFlatSpec with GivenWhenThen {
 
 
   "Deserializer" must "be able to post process object" in {

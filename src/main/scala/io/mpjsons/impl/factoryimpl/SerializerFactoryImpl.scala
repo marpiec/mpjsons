@@ -3,6 +3,7 @@ package io.mpjsons.impl.factoryimpl
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
+import io.mpjsons.impl.serializer.time.{LocalDateSerializer, LocalDateTimeSerializer, LocalTimeSerializer}
 import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
@@ -33,34 +34,41 @@ class SerializerFactoryImpl {
 
     // Primitives, by toString (except Char)
     if (typeOf[Long].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[Int].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[Short].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[Byte].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[Boolean].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[Double].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[Float].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[java.lang.Long].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[java.lang.Integer].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[java.lang.Short].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[java.lang.Byte].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[java.lang.Boolean].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[java.lang.Double].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
     } else if (typeOf[java.lang.Float].typeSymbol == typeSymbol) {
-      return new SimpleToStringSerializer()
+      return SimpleToStringSerializer
+    } else if (typeOf[java.time.LocalDate].typeSymbol == typeSymbol) {
+      return LocalDateSerializer
+    } else if (typeOf[java.time.LocalTime].typeSymbol == typeSymbol) {
+      return LocalTimeSerializer
+    } else if (typeOf[java.time.LocalDateTime].typeSymbol == typeSymbol) {
+      return LocalDateTimeSerializer
     }
+
 
 
     // String, StringBuilder, Char
@@ -68,7 +76,7 @@ class SerializerFactoryImpl {
     if (typeOf[String].typeSymbol == typeSymbol ||
       typeOf[mutable.StringBuilder].typeSymbol == typeSymbol ||
       typeOf[Char].typeSymbol == typeSymbol || typeOf[java.lang.Character].typeSymbol == typeSymbol) {
-      return new StringSerializer()
+      return StringSerializer
     }
 
     // Arrays
@@ -147,7 +155,7 @@ class SerializerFactoryImpl {
 
 
     if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
-      return new SingletonObjectSerializer()
+      return SingletonObjectSerializer
     }
 
     val additionalSerializerOption = additionalSerializers.get(tpe.toString)

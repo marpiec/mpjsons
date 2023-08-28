@@ -1,13 +1,14 @@
 package io.mpjsons
 
-import org.scalatest.{MustMatchers, FlatSpec}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 class EitherDataObject {
   var intInt: Either[Int, Int] = _
   var booleanString: Either[Boolean, String] = _
 }
 
-class EitherSerializationSpec extends FlatSpec with MustMatchers {
+class EitherSerializationSpec extends AnyFlatSpec {
   val mpjsons = new MPJsons
 
   "Serializer" must "handle Either" in {

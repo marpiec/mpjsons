@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 // For now singleton objects are not supported!
 
@@ -12,7 +12,7 @@ import org.scalatest.MustMatchers._
 //
 //case object UserRegisterMessage
 //
-//class SingletonObjectSpec extends FlatSpec {
+//class SingletonObjectSpec extends AnyFlatSpec {
 //
 //  "Serializer" must "handle singleton Objects" in {
 //

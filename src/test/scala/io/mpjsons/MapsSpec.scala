@@ -4,8 +4,8 @@ package io.mpjsons
  * @author Marcin Pieciukiewicz
  */
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 // this tests also non default constructor and final fields
 class MapElement(var intValue: Int, val stringValue: String)
@@ -19,7 +19,7 @@ class SimpleMapsObject {
   
 }
 
-class MapsSpec extends FlatSpec {
+class MapsSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 
@@ -53,7 +53,7 @@ class MapsSpec extends FlatSpec {
         |    "objectMap" : [ [  { "intValue" : 1 , "stringValue" : "one" } ,
         |     { "intValue" : 100 , "stringValue" : "one hundred" } ] ,
         |      [ {"intValue":5,"stringValue":"five"},
-        |      {"intValue":500,"stringValue":"five hundred"} ] ] } """.stripMargin.lines.mkString("")
+        |      {"intValue":500,"stringValue":"five hundred"} ] ] } """.stripMargin.lines.toArray.mkString("")
 
     smoDeserialized = mpjsons.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
 

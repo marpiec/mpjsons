@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 import scala.annotation.meta.field
 
@@ -16,7 +16,7 @@ case class PrimitiveHolder(
    @(nullable @field) h: java.lang.Character
 )
 
-class JavaPrimitivesSpec extends FlatSpec {
+class JavaPrimitivesSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 

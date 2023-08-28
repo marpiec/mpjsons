@@ -1,6 +1,9 @@
 package io.mpjsons
 
-import org.scalatest.{GivenWhenThen, MustMatchers, FlatSpec}
+import org.scalatest.GivenWhenThen
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
+
 import scala.reflect.runtime.universe._
 object PerformanceSpec {
   class SimpleDataObject {
@@ -18,7 +21,7 @@ object PerformanceSpec {
   }
 }
 
-class PerformanceSpec extends FlatSpec with MustMatchers with GivenWhenThen {
+class PerformanceSpec extends AnyFlatSpec with GivenWhenThen {
 
 
   "Serializer" must "perform well" in {

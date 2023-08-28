@@ -1,8 +1,7 @@
 package io.mpjsons
 
-
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 import org.scalatest.exceptions.TestFailedException
 
 import scala.annotation.meta.{field, param}
@@ -39,7 +38,7 @@ class SimpleDataObjectB {
 
 case class SimpleObjectWithNulls(@(nullable @field) a: String, b: String)
 
-class BeanSerializationSpec extends FlatSpec {
+class BeanSerializationSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 

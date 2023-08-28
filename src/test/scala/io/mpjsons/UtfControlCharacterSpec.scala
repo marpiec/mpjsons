@@ -1,11 +1,11 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 case class UtfControlCharacterHolder(text: String)
 
-class UtfControlCharacterSpec extends FlatSpec {
+class UtfControlCharacterSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 

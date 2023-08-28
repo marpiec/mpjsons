@@ -1,8 +1,8 @@
 package io.mpjsons
 
 import io.mpjsons.impl.JsonInnerException
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 object SkipFieldsSpec {
 
@@ -10,7 +10,7 @@ object SkipFieldsSpec {
 
 }
 
-class SkipFieldsSpec extends FlatSpec {
+class SkipFieldsSpec extends AnyFlatSpec {
 
   val value = """{"a": true, "c": "Hello", "d": [1,2,3,4], "e":{"a":false, "b":[{}], "c":"a"}, "f": false, "b": 3}"""
 

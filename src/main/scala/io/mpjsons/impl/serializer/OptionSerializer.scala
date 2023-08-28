@@ -9,7 +9,7 @@ import scala.reflect.runtime.universe._
 
 class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context) extends JsonTypeSerializer[Option[T]] {
 
-  val subTypeSerializer = serializerFactory.getSerializer(TypesUtil.getSubElementsType(tpe), context).asInstanceOf[JsonTypeSerializer[T]]
+  private val subTypeSerializer = serializerFactory.getSerializer(TypesUtil.getSubElementsType(tpe), context).asInstanceOf[JsonTypeSerializer[T]]
 
   override def serialize(obj: Option[T], jsonBuilder: StringBuilder): Unit = {
 

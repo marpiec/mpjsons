@@ -13,10 +13,10 @@ import scala.reflect.runtime.universe._
 
 class BitSetSerializer(serializerFactory: SerializerFactory, tpe: Type, context: Context) extends JsonTypeSerializer[BitSet] {
 
-  val subTypeSerializer = serializerFactory.getSerializer[Int](typeOf[Int], context)
+  private val subTypeSerializer = serializerFactory.getSerializer[Int](typeOf[Int], context)
 
 
-  override def serialize(obj: BitSet, jsonBuilder: StringBuilder) {
+  override def serialize(obj: BitSet, jsonBuilder: StringBuilder): Unit = {
 
     jsonBuilder.append('[')
 

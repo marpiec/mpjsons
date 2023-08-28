@@ -10,7 +10,7 @@ import scala.reflect.runtime.universe._
 
 private object ErrorMessageFormatter {
 
-  final val trimmingSize = 40
+  private final val trimmingSize = 40
 
   def formatDeserializationError(json: String, jsonIterator: StringIterator, e: RuntimeException, tpe: Type): String = {
     val consumed = jsonIterator.debugGetConsumedString
@@ -30,7 +30,7 @@ private object ErrorMessageFormatter {
 /**
  * Serializer for a single type.
  */
-class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], tpe: Type) {
+class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T]) {
 
   /**
    * Takes an object and returns a String containing JSON representation of that object.
@@ -220,7 +220,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * Creates a specialized serializer for a passed type name (class name).
    */
   def buildStaticSerializer[T](tpe: Type): StaticSerializer[T] = {
-    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Context(List.empty, Map.empty)), tpe)
+    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Context(List.empty, Map.empty)))
   }
 
   /**
@@ -237,7 +237,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * @param deserializer deserializer that will be used to serialize given type
    */
   def registerConverter[T: TypeTag](serializer: SerializerFactory => JsonTypeSerializer[T],
-                                    deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]) {
+                                    deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]): Unit = {
     if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
     } else {
@@ -274,7 +274,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
       val typeName: String = tpe.baseClasses.head.fullName
       val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
       registerConverter[T](
-        sf => new TypedSerializer[T](packageName, sf),
+        sf => new TypedSerializer[T](sf),
         df => new TypedDeserializer[T](packageName, df))
     }
   }
@@ -293,7 +293,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
       val typeName: String = tpe.baseClasses.head.fullName
       val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
       registerSuperclassConverter[T](
-        sf => new TypedSerializer[T](packageName, sf),
+        sf => new TypedSerializer[T](sf),
         df => new TypedDeserializer[T](packageName, df))
     }
   }
@@ -302,7 +302,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
   /**
     * Method that allows object to be transformed after deserialization, e.g. to get rid of nulls for missing JSON properties.
     */
-  def postDeserializationTransform[T](transform: (T) => T)(implicit tag: TypeTag[T]): Unit = {
+  def postDeserializationTransform[T](transform: T => T)(implicit tag: TypeTag[T]): Unit = {
     if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {

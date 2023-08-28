@@ -15,7 +15,7 @@ import scala.reflect.runtime.universe._
 class BitSetDeserializer(deserializerFactory: DeserializerFactory, tpe: Type, context: Context)
   extends JsonTypeDeserializer[BitSet] {
 
-  val deserializer = deserializerFactory.getDeserializer[Int](typeOf[Int], context)
+  private val deserializer = deserializerFactory.getDeserializer[Int](typeOf[Int], context)
 
 
   override def deserialize(jsonIterator: StringIterator): BitSet = {
@@ -37,7 +37,7 @@ class BitSetDeserializer(deserializerFactory: DeserializerFactory, tpe: Type, co
     }
 
     jsonIterator.nextChar()
-    BitSet(buffer.toArray: _*)
+    BitSet.fromSpecific(buffer)
   }
 
 }

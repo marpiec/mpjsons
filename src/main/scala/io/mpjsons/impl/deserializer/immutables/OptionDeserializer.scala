@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe._
 
 class OptionDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type, context: Context) extends JsonTypeDeserializer[Option[E]] {
 
-  val subTypeDeserializer = deserializerFactory.getDeserializer(TypesUtil.getSubElementsType(tpe), context).asInstanceOf[JsonTypeDeserializer[E]]
+  private val subTypeDeserializer = deserializerFactory.getDeserializer(TypesUtil.getSubElementsType(tpe), context).asInstanceOf[JsonTypeDeserializer[E]]
 
   override def deserialize(jsonIterator: StringIterator): Option[E] = {
 

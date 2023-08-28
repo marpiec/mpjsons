@@ -14,9 +14,9 @@ import scala.reflect.runtime.universe._
 class EitherDeserializer[L, R](val deserializerFactory: DeserializerFactory, tpe: Type, context: Context)
   extends JsonTypeDeserializer[Either[L, R]] {
 
-  val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
-  val leftDeserializer = deserializerFactory.getDeserializer[L](leftType, context)
-  val rightDeserializer = deserializerFactory.getDeserializer[R](rightType, context)
+  private val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
+  private val leftDeserializer = deserializerFactory.getDeserializer[L](leftType, context)
+  private val rightDeserializer = deserializerFactory.getDeserializer[R](rightType, context)
 
 
   override def deserialize(jsonIterator: StringIterator): Either[L, R] = {

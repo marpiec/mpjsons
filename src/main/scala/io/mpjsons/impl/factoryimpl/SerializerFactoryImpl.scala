@@ -20,11 +20,11 @@ class SerializerFactoryImpl {
   private var additionalSerializers: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
   private var additionalSuperclassSerializers: Map[Symbol, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
 
-  def registerSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]) {
+  def registerSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]): Unit = {
     additionalSerializers += tpe.toString -> serializer
   }
 
-  def registerSuperclassSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]) {
+  def registerSuperclassSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]): Unit = {
     additionalSuperclassSerializers += tpe.typeSymbol -> serializer
   }
 

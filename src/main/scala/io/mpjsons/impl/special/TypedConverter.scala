@@ -9,8 +9,7 @@ import scala.reflect.runtime.universe._
 
 object TypedConverter {
 
-  class TypedSerializer[T <: AnyRef](packageName: String, serializerFactory: SerializerFactory)
-                                    (implicit tag: TypeTag[T]) extends JsonTypeSerializer[T] {
+  class TypedSerializer[T <: AnyRef](serializerFactory: SerializerFactory) extends JsonTypeSerializer[T] {
 
     private var serializers: Map[String, JsonTypeSerializer[AnyRef]] = Map.empty
 

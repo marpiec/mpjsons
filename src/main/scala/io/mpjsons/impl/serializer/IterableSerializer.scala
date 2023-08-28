@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe._
 class IterableSerializer[E](serializerFactory: SerializerFactory, tpe: Type, context: Context)
   extends IteratorSerializer[E, Iterable[E]](serializerFactory, tpe, context) {
 
-  override def serialize(obj: Iterable[E], jsonBuilder: StringBuilder) {
+  override def serialize(obj: Iterable[E], jsonBuilder: StringBuilder): Unit = {
     serializeIterator(obj.iterator, jsonBuilder)
   }
 

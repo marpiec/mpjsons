@@ -30,11 +30,11 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
     postTransform += tpe -> transform
   }
 
-  def registerDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]) {
+  def registerDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]): Unit = {
     additionalDeserializers += tpe.toString -> deserializer
   }
 
-  def registerSuperclassDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]) {
+  def registerSuperclassDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]): Unit = {
     additionalSuperclassDeserializers += tpe.typeSymbol -> deserializer
   }
 

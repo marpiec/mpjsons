@@ -25,7 +25,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
   }
 
 
-  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder) = {
+  override def serialize(obj: AnyRef, jsonBuilder: StringBuilder): Unit = {
 
 
     jsonBuilder.append('{')

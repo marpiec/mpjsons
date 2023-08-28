@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe._
 class ProductSerializer(serializerFactory: SerializerFactory, tpe: Type, context: Context)
   extends IteratorSerializer[Any, Product](serializerFactory, tpe, context) {
 
-  override def serialize(obj: Product, jsonBuilder: StringBuilder) {
+  override def serialize(obj: Product, jsonBuilder: StringBuilder): Unit = {
     serializeIterator(obj.productIterator, jsonBuilder)
   }
 

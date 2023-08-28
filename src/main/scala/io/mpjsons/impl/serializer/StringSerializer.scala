@@ -7,7 +7,7 @@ import io.mpjsons.JsonTypeSerializer
  */
 
 object StringSerializer extends JsonTypeSerializer[Any] {
-  override def serialize(obj: Any, jsonBuilder: StringBuilder) {
+  override def serialize(obj: Any, jsonBuilder: StringBuilder): Unit = {
 
     val string = obj.toString
     val stringLength = string.length

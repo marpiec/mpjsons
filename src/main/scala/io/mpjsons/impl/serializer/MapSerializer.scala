@@ -14,11 +14,11 @@ class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, conte
   extends JsonTypeSerializer[scala.collection.Map[K, V]] {
 
   private val subtypes = TypesUtil.getDoubleSubElementsType(tpe)
-  val keySerializer = serializerFactory.getSerializer(subtypes._1, context).asInstanceOf[JsonTypeSerializer[K]]
-  val valueSerializer = serializerFactory.getSerializer(subtypes._2, context).asInstanceOf[JsonTypeSerializer[V]]
+  private val keySerializer = serializerFactory.getSerializer(subtypes._1, context).asInstanceOf[JsonTypeSerializer[K]]
+  private val valueSerializer = serializerFactory.getSerializer(subtypes._2, context).asInstanceOf[JsonTypeSerializer[V]]
 
 
-  override def serialize(map: scala.collection.Map[K, V], jsonBuilder: StringBuilder) = {
+  override def serialize(map: scala.collection.Map[K, V], jsonBuilder: StringBuilder): Unit = {
 
 
     jsonBuilder.append('[')

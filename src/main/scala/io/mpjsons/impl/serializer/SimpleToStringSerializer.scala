@@ -7,7 +7,7 @@ import io.mpjsons.JsonTypeSerializer
  */
 
 object SimpleToStringSerializer extends JsonTypeSerializer[Any] {
-  override def serialize(obj: Any, jsonBuilder: StringBuilder) {
+  override def serialize(obj: Any, jsonBuilder: StringBuilder): Unit = {
     jsonBuilder.append(obj)
   }
 }

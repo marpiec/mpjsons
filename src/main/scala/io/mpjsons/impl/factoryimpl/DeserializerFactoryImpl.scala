@@ -4,7 +4,7 @@ import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.DeserializerFactory
 import io.mpjsons.impl.deserializer.immutables._
 import io.mpjsons.impl.deserializer.mutables.ArrayDeserializer
-import io.mpjsons.impl.deserializer.time.{LocalDateDeserializer, LocalDateTimeDeserializer, LocalTimeDeserializer}
+import io.mpjsons.impl.deserializer.time.{DurationDeserializer, LocalDateDeserializer, LocalDateTimeDeserializer, LocalTimeDeserializer}
 import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple2Deserializer}
 import io.mpjsons.impl.deserializer.values._
 import io.mpjsons.impl.deserializer.{BeanDeserializer, PostTransformDeserializer, SingletonObjectDeserializer}
@@ -88,6 +88,8 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       return LocalDateDeserializer
     } else if (typeSymbol == typeOf[java.time.LocalDateTime].typeSymbol) {
       return LocalDateTimeDeserializer
+    } else if (typeSymbol == typeOf[java.time.Duration].typeSymbol) {
+      return DurationDeserializer
     } else if (typeSymbol == typeOf[java.lang.Character].typeSymbol) {
       return CharDeserializer
     } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {

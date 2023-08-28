@@ -3,7 +3,7 @@ package io.mpjsons.impl.factoryimpl
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
-import io.mpjsons.impl.serializer.time.{LocalDateSerializer, LocalDateTimeSerializer, LocalTimeSerializer}
+import io.mpjsons.impl.serializer.time.{DurationSerializer, LocalDateSerializer, LocalDateTimeSerializer, LocalTimeSerializer}
 import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.util.reflection.ReflectionUtil
 
@@ -67,6 +67,8 @@ class SerializerFactoryImpl {
       return LocalTimeSerializer
     } else if (typeOf[java.time.LocalDateTime].typeSymbol == typeSymbol) {
       return LocalDateTimeSerializer
+    } else if (typeOf[java.time.Duration].typeSymbol == typeSymbol) {
+      return DurationSerializer
     }
 
 

@@ -30,11 +30,21 @@ class TimeSpec extends AnyFlatSpec {
 
   "Serializer" must "handle dateTime serialization" in {
 
-      val dateTime = LocalDateTime.of(2023, 8, 23, 14, 30, 17, 125)
+    val dateTime = LocalDateTime.of(2023, 8, 23, 14, 30, 17, 125)
 
-      val serialized = mpjsons.serialize(dateTime)
+    val serialized = mpjsons.serialize(dateTime)
 
-      serialized mustBe """{"date":{"year":2023,"month":8,"day":23},"time":{"hour":14,"minute":30,"second":17,"nano":125}}"""
+    serialized mustBe """{"date":{"year":2023,"month":8,"day":23},"time":{"hour":14,"minute":30,"second":17,"nano":125}}"""
+  }
+
+  "Serializer" must "handle duration deserialization" in {
+
+    val duration = java.time.Duration.ofSeconds(123, 456)
+
+    val serialized = mpjsons.serialize(duration)
+
+    serialized mustBe """{"seconds":123,"nanos":456}"""
+
   }
 
   "Deserializer" must "handle time deserialization" in {
@@ -64,5 +74,14 @@ class TimeSpec extends AnyFlatSpec {
     val deserialized = mpjsons.deserialize[LocalDateTime](json)
 
     deserialized mustBe LocalDateTime.of(2023, 8, 23, 14, 30, 17, 125)
+  }
+
+  "Deserializer" must "handle duration deserialization" in {
+
+    val json = """ { "seconds"   :   125  ,   "nanos"  :  457  }  """
+
+    val deserialized = mpjsons.deserialize[java.time.Duration](json)
+
+    deserialized mustBe java.time.Duration.ofSeconds(125, 457)
   }
 }

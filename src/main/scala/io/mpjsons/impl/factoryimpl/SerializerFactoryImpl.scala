@@ -61,13 +61,13 @@ class SerializerFactoryImpl {
       return SimpleToStringSerializer
     } else if (typeOf[java.lang.Float].typeSymbol == typeSymbol) {
       return SimpleToStringSerializer
-    } else if (typeOf[java.time.LocalDate].typeSymbol == typeSymbol) {
+    } else if (typeOf[java.time.LocalDate].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return LocalDateSerializer
-    } else if (typeOf[java.time.LocalTime].typeSymbol == typeSymbol) {
+    } else if (typeOf[java.time.LocalTime].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return LocalTimeSerializer
-    } else if (typeOf[java.time.LocalDateTime].typeSymbol == typeSymbol) {
+    } else if (typeOf[java.time.LocalDateTime].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return LocalDateTimeSerializer
-    } else if (typeOf[java.time.Duration].typeSymbol == typeSymbol) {
+    } else if (typeOf[java.time.Duration].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return DurationSerializer
     }
 

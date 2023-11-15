@@ -184,7 +184,7 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
     } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
       new SingletonObjectDeserializer(tpe)
     } else {
-      new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+      new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, ignoreNonExistingFields)
     }
   }
 

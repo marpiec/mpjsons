@@ -15,7 +15,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class SerializerFactoryImpl {
+class SerializerFactoryImpl(ignoreNullFields: Boolean) {
 
   private var additionalSerializers: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
   private var additionalSuperclassSerializers: Map[Symbol, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
@@ -171,7 +171,7 @@ class SerializerFactoryImpl {
     } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
       SingletonObjectSerializer
     } else {
-      new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, !ignoreNullFields)
     }
 
     //TODO Range, NumericRange

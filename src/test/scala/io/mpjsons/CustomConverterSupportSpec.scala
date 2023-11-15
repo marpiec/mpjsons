@@ -44,7 +44,7 @@ class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: D
     jsonIterator.nextChar()
 
     jsonIterator.skipWhitespaceChars()
-    val value = new BeanDeserializer[T](deserializerFactory, elementType, Context(List.empty, Map.empty)).deserialize(jsonIterator).asInstanceOf[T]
+    val value = new BeanDeserializer[T](deserializerFactory, elementType, Context(List.empty, Map.empty), false).deserialize(jsonIterator).asInstanceOf[T]
 
     jsonIterator.skipWhitespaceChars()
     jsonIterator.nextChar()

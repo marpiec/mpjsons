@@ -15,7 +15,7 @@ import scala.reflect.runtime.universe._
  */
 
 class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
-                          private val tpe: Type, private val context: Context) extends JsonTypeDeserializer[T] {
+                          private val tpe: Type, private val context: Context, private val ignoreNonExistingFields: Boolean = false) extends JsonTypeDeserializer[T] {
 
 
   val clazz = TypesUtil.getClassFromType[T](tpe)
@@ -52,7 +52,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
           if (jsonIterator.currentChar == ',') {
             jsonIterator.nextChar()
           }
-        case None if deserializerFactory.ignoreNonExistingFields =>
+        case None if ignoreNonExistingFields =>
           skipValue(jsonIterator)
           jsonIterator.skipWhitespaceChars()
           if (jsonIterator.currentChar == ',') {

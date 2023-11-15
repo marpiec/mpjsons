@@ -15,7 +15,7 @@ import scala.reflect.runtime.universe._
 
 case class FieldInfo[T](field: Field, name: String, jsonTypeSerializer: JsonTypeSerializer[T], nullable: Boolean)
 
-class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context) extends JsonTypeSerializer[AnyRef] {
+class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, errorOnNulls: Boolean = true) extends JsonTypeSerializer[AnyRef] {
 
   private val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type serializer */
@@ -35,10 +35,8 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
     for (field <- fieldsWithSerializers) {
 
       val value = field.field.get(obj)
-      if (value == null) {
-        if (!field.nullable) {
-          throw new IllegalArgumentException("Null value is not allowed for field " + field.name +" in type " + tpe.typeSymbol.fullName)
-        }
+      if (value == null && errorOnNulls && !field.nullable) {
+        throw new IllegalArgumentException("Null value is not allowed for field " + field.name +" in type " + tpe.typeSymbol.fullName)
       } else {
 
         if (isNotFirstField) {

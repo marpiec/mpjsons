@@ -10,7 +10,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class SerializerFactoryMemoizer extends SerializerFactoryImpl {
+class SerializerFactoryMemoizer(ignoreNullFields: Boolean) extends SerializerFactoryImpl(ignoreNullFields) {
 
   private var getSerializerCache: Map[(Type, Boolean), JsonTypeSerializer[_]] = Map.empty
 

@@ -35,8 +35,10 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
     for (field <- fieldsWithSerializers) {
 
       val value = field.field.get(obj)
-      if (value == null && errorOnNulls && !field.nullable) {
-        throw new IllegalArgumentException("Null value is not allowed for field " + field.name +" in type " + tpe.typeSymbol.fullName)
+      if (value == null) {
+        if(errorOnNulls && !field.nullable) {
+          throw new IllegalArgumentException("Null value is not allowed for field " + field.name + " in type " + tpe.typeSymbol.fullName)
+        }
       } else {
 
         if (isNotFirstField) {

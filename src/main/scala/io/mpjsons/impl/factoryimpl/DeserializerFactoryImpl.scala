@@ -82,11 +82,11 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       return ShortDeserializer
     } else if (typeSymbol == typeOf[java.lang.Byte].typeSymbol) {
       return ByteDeserializer
-    } else if (typeSymbol == typeOf[java.time.LocalTime].typeSymbol) {
+    } else if (typeSymbol == typeOf[java.time.LocalTime].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return LocalTimeDeserializer
-    } else if (typeSymbol == typeOf[java.time.LocalDate].typeSymbol) {
+    } else if (typeSymbol == typeOf[java.time.LocalDate].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return LocalDateDeserializer
-    } else if (typeSymbol == typeOf[java.time.LocalDateTime].typeSymbol) {
+    } else if (typeSymbol == typeOf[java.time.LocalDateTime].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return LocalDateTimeDeserializer
     } else if (typeSymbol == typeOf[java.time.Duration].typeSymbol) {
       return DurationDeserializer
@@ -171,11 +171,6 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
     }
 
 
-    if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
-      return new SingletonObjectDeserializer(tpe)
-    }
-
-
     val additionalDeserializerOption = additionalDeserializers.get(tpe.toString)
 
     if (additionalDeserializerOption.isDefined) {
@@ -186,6 +181,8 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       throw new IllegalArgumentException("Deserialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if (typeOf[AnyRef].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
+    } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
+      new SingletonObjectDeserializer(tpe)
     } else {
       new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }

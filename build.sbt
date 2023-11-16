@@ -4,7 +4,7 @@ name := "mpjsons"
 
 organization := "io.mpjsons"
 
-version := "0.6.44"
+version := "0.6.45"
 
 scalaVersion := "2.13.11"
 

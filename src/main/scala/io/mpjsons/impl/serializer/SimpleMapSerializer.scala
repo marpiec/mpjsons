@@ -40,7 +40,8 @@ class SimpleMapSerializer[T](serializerFactory: SerializerFactory, private val c
             isNotFirstField = true
           }
 
-          jsonBuilder.append('"').append(name).append('"').append(':')
+          StringSerializer.serialize(name, jsonBuilder)
+          jsonBuilder.append(':')
           valueSerializer.serialize(value, jsonBuilder)
         }
     }

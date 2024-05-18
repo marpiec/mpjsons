@@ -28,9 +28,9 @@ class SimpleMapsSpec extends AnyFlatSpec {
     val testMapC: Map[String, SimpleMapElement] = Map("a" -> new SimpleMapElement(100, "one hundred"), "k" -> new SimpleMapElement(500, "five hundred"))
 
 
-   val mapASerializer = new SimpleMapSerializer[String](new SerializerFactory, Context(List.empty, Map.empty))
-   val mapBSerializer = new SimpleMapSerializer[Double](new SerializerFactory, Context(List.empty, Map.empty))
-   val mapCSerializer = new SimpleMapSerializer[SimpleMapElement](new SerializerFactory, Context(List.empty, Map.empty))
+   val mapASerializer = new SimpleMapSerializer[String](new SerializerFactory(false), Context(List.empty, Map.empty))
+   val mapBSerializer = new SimpleMapSerializer[Double](new SerializerFactory(false), Context(List.empty, Map.empty))
+   val mapCSerializer = new SimpleMapSerializer[SimpleMapElement](new SerializerFactory(false), Context(List.empty, Map.empty))
 
     val builderA = new StringBuilder
     mapASerializer.serialize(testMapA, builderA)

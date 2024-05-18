@@ -119,15 +119,20 @@ class SerializerFactoryImpl {
 
       if (tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
         return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      }
-
-      if (tpe.baseClasses.contains(typeOf[Option[_]].typeSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Option[_]].typeSymbol)) {
         return new OptionSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      }
-
-      // Every Tuple, Option
-      if (tpe.baseClasses.contains(typeOf[Product].typeSymbol)) {
-        return new ProductSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[Tuple1[_]].typeSymbol)) {
+        return new Tuple1Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[Tuple2[_, _]].typeSymbol)) {
+        return new Tuple2Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[Tuple3[_, _, _]].typeSymbol)) {
+        return new Tuple3Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[Tuple4[_, _, _, _]].typeSymbol)) {
+        return new Tuple4Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[Tuple5[_, _, _, _, _]].typeSymbol)) {
+        return new Tuple5Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[Tuple6[_, _, _, _, _, _]].typeSymbol)) {
+        return new Tuple6Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
     }

@@ -4,7 +4,7 @@ import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.DeserializerFactory
 import io.mpjsons.impl.deserializer.immutables._
 import io.mpjsons.impl.deserializer.mutables.ArrayDeserializer
-import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple2Deserializer}
+import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple1Deserializer, Tuple2Deserializer, Tuple3Deserializer, Tuple4Deserializer, Tuple5Deserializer, Tuple6Deserializer}
 import io.mpjsons.impl.deserializer.values._
 import io.mpjsons.impl.deserializer.{BeanDeserializer, PostTransformDeserializer, SingletonObjectDeserializer}
 import io.mpjsons.impl.util.Context
@@ -85,8 +85,6 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       return CharDeserializer
     } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
       return new ArrayDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == typeOf[(_, _)].typeSymbol) {
-      return new Tuple2Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Option[_]].typeSymbol) {
       return new OptionDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Map[_, _]].typeSymbol || typeSymbol == typeOf[immutable.Map[_, _]].typeSymbol) {
@@ -95,6 +93,22 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       return new EitherDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
 
+
+    // tuple
+
+    if (typeSymbol == typeOf[Tuple1[_]].typeSymbol) {
+      return new Tuple1Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[Tuple2[_, _]].typeSymbol) {
+      return new Tuple2Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[Tuple3[_, _, _]].typeSymbol) {
+      return new Tuple3Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[Tuple4[_, _, _, _]].typeSymbol) {
+      return new Tuple4Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[Tuple5[_, _, _, _, _]].typeSymbol) {
+      return new Tuple5Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[Tuple6[_, _, _, _, _, _]].typeSymbol) {
+      return new Tuple6Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    }
     // seq
     if (typeSymbol == typeOf[List[_]].typeSymbol || typeSymbol == typeOf[immutable.List[_]].typeSymbol) {
       return new ListDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)

@@ -176,9 +176,6 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
       throw new IllegalArgumentException("Serialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
       SingletonObjectSerializer
-    } else if (tpe.baseClasses.contains(typeOf[Product].typeSymbol)) {
-      // Do not serialize product we'll cannot deserialize
-      throw new IllegalArgumentException("Serialization of this Product type: " + tpe + " is not supported. Types: " + context.typesStackMessage)
     } else {
       new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, !ignoreNullFields)
     }

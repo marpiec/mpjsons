@@ -14,6 +14,8 @@ class CollectionsDataObject {
   var stringsVector: Vector[String] = _
   var stringsStream: Stream[String] = _
   var stringsQueue: Queue[String] = _
+  var stringSome: Option[String] = _
+  var stringNone: Option[String] = _
 }
 
 class CollectionsSpec extends AnyFlatSpec {
@@ -31,9 +33,14 @@ class CollectionsSpec extends AnyFlatSpec {
     cdo.stringsVector = Vector[String]("x", "Y", "zz")
     cdo.stringsQueue = Queue("An", "Be", "Do")
     cdo.stringsStream = Stream.iterate("A")(_ + "A").take(5)
+    cdo.stringSome = Some("Hello")
+    cdo.stringNone = None
 
 
     val simpleJson = mpjsons.serialize(cdo)
+
+    println(simpleJson)
+
     val dataObject = mpjsons.deserialize[CollectionsDataObject](simpleJson)
 
     val deserializedObject = dataObject.asInstanceOf[CollectionsDataObject]
@@ -46,6 +53,8 @@ class CollectionsSpec extends AnyFlatSpec {
     deserializedObject.stringsVector mustEqual cdo.stringsVector
     deserializedObject.stringsQueue mustEqual cdo.stringsQueue
     deserializedObject.stringsStream mustEqual cdo.stringsStream
+    deserializedObject.stringSome mustEqual cdo.stringSome
+    deserializedObject.stringNone mustEqual cdo.stringNone
 
 
   }

@@ -38,6 +38,9 @@ class SimpleDataObjectB {
 
 case class SimpleObjectWithNulls(@(nullable @field) a: String, b: String)
 
+
+case class SimpleCaseClassObjectWithNulls(a: String)
+
 class BeanSerializationSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
@@ -63,6 +66,7 @@ class BeanSerializationSpec extends AnyFlatSpec {
 
   val withNullsCorrect = SimpleObjectWithNulls(null, "ok")
   val withNullsIncorrect = SimpleObjectWithNulls("fail", null)
+  val simpleCaseClass = SimpleCaseClassObjectWithNulls("Hello")
 
   val properJsonSometimesIdentifiersWithoutQuotes = " { " +
     "charValue  : \"M\"  " +
@@ -208,6 +212,17 @@ class BeanSerializationSpec extends AnyFlatSpec {
 
   "Serializer" must "allow null values im annotated" in {
     val serialized = mpjsons.serialize(withNullsCorrect)
+  }
+
+
+  "Serializer" must "serialize case class" in {
+    val serialized = mpjsons.serialize(simpleCaseClass)
+
+    serialized mustBe "{\"a\":\"Hello\"}"
+
+    val deserialized = mpjsons.deserialize[SimpleCaseClassObjectWithNulls](serialized)
+
+    deserialized mustBe simpleCaseClass
   }
 
 }

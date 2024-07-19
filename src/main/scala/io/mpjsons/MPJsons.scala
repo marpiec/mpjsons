@@ -261,6 +261,18 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
     }
   }
 
+  /**
+   * Method to register custom json converter to support custom types of data _and_all_types_that_are_extending_it_.
+   * @param serializer serializer that will be used to serialize  given type and its descendant, it will handle any subtype of given type, eg. Something[T](value: T)
+   */
+  def registerSerializerForAnySubtype[T](serializer: SerializerFactory => JsonTypeSerializer[T])(implicit tag: TypeTag[T]): Unit = {
+    if (tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
+    } else {
+      serializerFactory.registerSerializerAllSubTypes[T](extractType(tag), serializer)
+    }
+  }
+
 
   /**
    * Method that allows to specify which type will have added type information to serialized json,

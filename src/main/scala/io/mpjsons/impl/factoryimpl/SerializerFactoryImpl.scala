@@ -18,6 +18,7 @@ import scala.reflect.runtime.universe._
 class SerializerFactoryImpl(ignoreNullFields: Boolean) {
 
   private var additionalSerializers: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
+  private var additionalSerializersAnySubType: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
   private var additionalSuperclassSerializers: Map[Symbol, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
 
   def registerSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]): Unit = {
@@ -26,6 +27,14 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
 
   def registerSuperclassSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]): Unit = {
     additionalSuperclassSerializers += tpe.typeSymbol -> serializer
+  }
+
+  def registerSerializerAllSubTypes[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]): Unit = {
+    additionalSerializersAnySubType += stripTypes(tpe.toString) -> serializer
+  }
+
+  private def stripTypes(typeName: String): String = {
+    typeName.replaceAll("\\[.*\\]", "")
   }
 
   protected def getSerializerNoCache(tpe: Type, context: Context, allowSuperType: Boolean): JsonTypeSerializer[_] = {
@@ -163,7 +172,6 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
 
 
 
-
     val additionalSerializerOption = additionalSerializers.get(tpe.toString)
 
     if (additionalSerializerOption.isDefined) {
@@ -177,7 +185,14 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
     } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
       SingletonObjectSerializer
     } else {
-      new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, !ignoreNullFields)
+
+
+      val additionalOption = additionalSerializersAnySubType.get(stripTypes(tpe.toString))
+      additionalOption match {
+        case Some(serializer) => serializer(this.asInstanceOf[SerializerFactory])
+        case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, !ignoreNullFields)
+      }
+
     }
 
     //TODO Range, NumericRange

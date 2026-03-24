@@ -15,66 +15,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-object SerializerFactoryImpl {
-
-  private lazy val primitiveSerializers: Map[Symbol, JsonTypeSerializer[_]] = Map(
-    typeOf[Long].typeSymbol -> SimpleToStringSerializer,
-    typeOf[Int].typeSymbol -> SimpleToStringSerializer,
-    typeOf[Short].typeSymbol -> SimpleToStringSerializer,
-    typeOf[Byte].typeSymbol -> SimpleToStringSerializer,
-    typeOf[Boolean].typeSymbol -> SimpleToStringSerializer,
-    typeOf[Double].typeSymbol -> SimpleToStringSerializer,
-    typeOf[Float].typeSymbol -> SimpleToStringSerializer,
-    typeOf[java.lang.Long].typeSymbol -> SimpleToStringSerializer,
-    typeOf[java.lang.Integer].typeSymbol -> SimpleToStringSerializer,
-    typeOf[java.lang.Short].typeSymbol -> SimpleToStringSerializer,
-    typeOf[java.lang.Byte].typeSymbol -> SimpleToStringSerializer,
-    typeOf[java.lang.Boolean].typeSymbol -> SimpleToStringSerializer,
-    typeOf[java.lang.Double].typeSymbol -> SimpleToStringSerializer,
-    typeOf[java.lang.Float].typeSymbol -> SimpleToStringSerializer
-  )
-
-  private lazy val stringSerializers: Set[Symbol] = Set(
-    typeOf[String].typeSymbol,
-    typeOf[mutable.StringBuilder].typeSymbol,
-    typeOf[Char].typeSymbol,
-    typeOf[java.lang.Character].typeSymbol
-  )
-
-  private lazy val localDateSymbol: Symbol = typeOf[java.time.LocalDate].typeSymbol
-  private lazy val localTimeSymbol: Symbol = typeOf[java.time.LocalTime].typeSymbol
-  private lazy val localDateTimeSymbol: Symbol = typeOf[java.time.LocalDateTime].typeSymbol
-  private lazy val durationSymbol: Symbol = typeOf[java.time.Duration].typeSymbol
-
-  private lazy val mutableSeqSymbol: Symbol = typeOf[mutable.Seq[_]].typeSymbol
-  private lazy val mutableSetSymbol: Symbol = typeOf[mutable.Set[_]].typeSymbol
-  private lazy val mutableMapSymbol: Symbol = typeOf[mutable.Map[_, _]].typeSymbol
-  private lazy val mutableIterableSymbol: Symbol = typeOf[mutable.Iterable[_]].typeSymbol
-
-  private lazy val collectionSeqSymbol: Symbol = typeOf[collection.Seq[_]].typeSymbol
-  private lazy val bitSetSymbol: Symbol = typeOf[BitSet].typeSymbol
-  private lazy val collectionSetSymbol: Symbol = typeOf[collection.Set[_]].typeSymbol
-  private lazy val collectionMapSymbol: Symbol = typeOf[collection.Map[_, _]].typeSymbol
-  private lazy val collectionIterableSymbol: Symbol = typeOf[Iterable[_]].typeSymbol
-
-  private lazy val eitherSymbol: Symbol = typeOf[Either[_, _]].typeSymbol
-  private lazy val optionSymbol: Symbol = typeOf[Option[_]].typeSymbol
-  private lazy val tuple1Symbol: Symbol = typeOf[Tuple1[_]].typeSymbol
-  private lazy val tuple2Symbol: Symbol = typeOf[Tuple2[_, _]].typeSymbol
-  private lazy val tuple3Symbol: Symbol = typeOf[Tuple3[_, _, _]].typeSymbol
-  private lazy val tuple4Symbol: Symbol = typeOf[Tuple4[_, _, _, _]].typeSymbol
-  private lazy val tuple5Symbol: Symbol = typeOf[Tuple5[_, _, _, _, _]].typeSymbol
-  private lazy val tuple6Symbol: Symbol = typeOf[Tuple6[_, _, _, _, _, _]].typeSymbol
-
-  private lazy val nothingSymbol: Symbol = typeOf[Nothing].typeSymbol
-  private lazy val anySymbol: Symbol = typeOf[Any].typeSymbol
-  private lazy val anyRefSymbol: Symbol = typeOf[AnyRef].typeSymbol
-
-}
-
 class SerializerFactoryImpl(ignoreNullFields: Boolean) {
-
-  import SerializerFactoryImpl._
 
   private var additionalSerializers: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
   private var additionalSerializersAnySubType: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
@@ -100,80 +41,119 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
 
     val typeSymbol = tpe.typeSymbol
 
-    // Primitives
-    primitiveSerializers.get(typeSymbol).foreach(return _)
-
-    // Time types (allow override via additionalSerializers)
-    val tpeString = tpe.toString
-    if (typeSymbol == localDateSymbol && !additionalSerializers.contains(tpeString)) {
+    // Primitives, by toString (except Char)
+    if (typeOf[Long].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[Int].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[Short].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[Byte].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[Boolean].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[Double].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[Float].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[java.lang.Long].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[java.lang.Integer].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[java.lang.Short].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[java.lang.Byte].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[java.lang.Boolean].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[java.lang.Double].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[java.lang.Float].typeSymbol == typeSymbol) {
+      return SimpleToStringSerializer
+    } else if (typeOf[java.time.LocalDate].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return LocalDateSerializer
-    } else if (typeSymbol == localTimeSymbol && !additionalSerializers.contains(tpeString)) {
+    } else if (typeOf[java.time.LocalTime].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return LocalTimeSerializer
-    } else if (typeSymbol == localDateTimeSymbol && !additionalSerializers.contains(tpeString)) {
+    } else if (typeOf[java.time.LocalDateTime].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return LocalDateTimeSerializer
-    } else if (typeSymbol == durationSymbol && !additionalSerializers.contains(tpeString)) {
+    } else if (typeOf[java.time.Duration].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return DurationSerializer
     }
 
+
+
     // String, StringBuilder, Char
-    if (stringSerializers.contains(typeSymbol)) {
+
+    if (typeOf[String].typeSymbol == typeSymbol ||
+      typeOf[mutable.StringBuilder].typeSymbol == typeSymbol ||
+      typeOf[Char].typeSymbol == typeSymbol || typeOf[java.lang.Character].typeSymbol == typeSymbol) {
       return StringSerializer
     }
 
     // Arrays
-    tpe match {
-      case typeRef: TypeRefApi if typeRef.sym == definitions.ArrayClass =>
-        return new ArraySerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      case _ =>
+    if (tpe.isInstanceOf[TypeRefApi] && tpe.asInstanceOf[TypeRefApi].sym == definitions.ArrayClass) {
+      return new ArraySerializer(this.asInstanceOf[SerializerFactory], tpe, context)
     }
 
     // We don't want to support user's custom collections implicitly,
     // because there will be problem with deserialization, but we want to support standard subtypes
     if (typeSymbol.fullName.startsWith("scala.")) {
 
-      val baseClasses = tpe.baseClasses
 
       //Every mutable collection
-      if (baseClasses.contains(mutableSeqSymbol)) {
+      if (tpe.baseClasses.contains(typeOf[mutable.Seq[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(mutableSetSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[mutable.Set[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(mutableMapSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[mutable.Map[_, _]].typeSymbol)) {
         return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(mutableIterableSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[mutable.Iterable[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
       //Every immutable collection
-      if (baseClasses.contains(collectionSeqSymbol)) {
+      if (tpe.baseClasses.contains(typeOf[collection.Seq[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (typeSymbol == bitSetSymbol) {
+      } else if (typeOf[BitSet].typeSymbol == typeSymbol) {
         return new BitSetSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(collectionSetSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[collection.Set[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(collectionMapSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[collection.Map[_, _]].typeSymbol)) {
         return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(collectionIterableSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Iterable[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
 
-      if (baseClasses.contains(eitherSymbol)) {
+      // Other
+      if (tpe.baseClasses.contains(typeOf[scala.collection.Seq[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[scala.collection.Set[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[scala.collection.Map[_, _]].typeSymbol)) {
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      } else if (tpe.baseClasses.contains(typeOf[scala.collection.Iterable[_]].typeSymbol)) {
+        return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+      }
+
+
+      if (tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
         return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(optionSymbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Option[_]].typeSymbol)) {
         return new OptionSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(tuple1Symbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Tuple1[_]].typeSymbol)) {
         return new Tuple1Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(tuple2Symbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Tuple2[_, _]].typeSymbol)) {
         return new Tuple2Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(tuple3Symbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Tuple3[_, _, _]].typeSymbol)) {
         return new Tuple3Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(tuple4Symbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Tuple4[_, _, _, _]].typeSymbol)) {
         return new Tuple4Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(tuple5Symbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Tuple5[_, _, _, _, _]].typeSymbol)) {
         return new Tuple5Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
-      } else if (baseClasses.contains(tuple6Symbol)) {
+      } else if (tpe.baseClasses.contains(typeOf[Tuple6[_, _, _, _, _, _]].typeSymbol)) {
         return new Tuple6Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
+
 
     }
 
@@ -192,21 +172,22 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
 
 
 
-    val additionalSerializerOption = additionalSerializers.get(tpeString)
+    val additionalSerializerOption = additionalSerializers.get(tpe.toString)
 
     if (additionalSerializerOption.isDefined) {
       additionalSerializerOption.get(this.asInstanceOf[SerializerFactory])
-    } else if (nothingSymbol == typeSymbol) {
+    } else if (typeOf[Nothing].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Serialization of 'Nothing' type is not supported, be sure to define types everywhere. Types: " + context.typesStackMessage)
-    } else if (anySymbol == typeSymbol) {
+    } else if (typeOf[Any].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Serialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
-    } else if (anyRefSymbol == typeSymbol) {
+    } else if (typeOf[AnyRef].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Serialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
       SingletonObjectSerializer
     } else {
 
-      val additionalOption = additionalSerializersAnySubType.get(stripTypes(tpeString))
+
+      val additionalOption = additionalSerializersAnySubType.get(stripTypes(tpe.toString))
       additionalOption match {
         case Some(serializer) => serializer(this.asInstanceOf[SerializerFactory])
         case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, !ignoreNullFields)

@@ -20,83 +20,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-object DeserializerFactoryImpl {
-
-  private lazy val primitiveDeserializers: Map[Symbol, JsonTypeDeserializer[_]] = Map(
-    typeOf[Long].typeSymbol -> LongDeserializer,
-    typeOf[Int].typeSymbol -> IntDeserializer,
-    typeOf[Boolean].typeSymbol -> BooleanDeserializer,
-    typeOf[String].typeSymbol -> StringDeserializer,
-    typeOf[Double].typeSymbol -> DoubleDeserializer,
-    typeOf[Float].typeSymbol -> FloatDeserializer,
-    typeOf[Short].typeSymbol -> ShortDeserializer,
-    typeOf[Byte].typeSymbol -> ByteDeserializer,
-    typeOf[Char].typeSymbol -> CharDeserializer,
-    typeOf[java.lang.Long].typeSymbol -> LongDeserializer,
-    typeOf[java.lang.Integer].typeSymbol -> IntDeserializer,
-    typeOf[java.lang.Boolean].typeSymbol -> BooleanDeserializer,
-    typeOf[java.lang.Double].typeSymbol -> DoubleDeserializer,
-    typeOf[java.lang.Float].typeSymbol -> FloatDeserializer,
-    typeOf[java.lang.Short].typeSymbol -> ShortDeserializer,
-    typeOf[java.lang.Byte].typeSymbol -> ByteDeserializer,
-    typeOf[java.lang.Character].typeSymbol -> CharDeserializer
-  )
-
-  private lazy val localTimeSymbol: Symbol = typeOf[java.time.LocalTime].typeSymbol
-  private lazy val localDateSymbol: Symbol = typeOf[java.time.LocalDate].typeSymbol
-  private lazy val localDateTimeSymbol: Symbol = typeOf[java.time.LocalDateTime].typeSymbol
-  private lazy val durationSymbol: Symbol = typeOf[java.time.Duration].typeSymbol
-
-  private lazy val optionSymbol: Symbol = typeOf[Option[_]].typeSymbol
-  private lazy val mapSymbol: Symbol = typeOf[Map[_, _]].typeSymbol
-  private lazy val immutableMapSymbol: Symbol = typeOf[immutable.Map[_, _]].typeSymbol
-  private lazy val eitherSymbol: Symbol = typeOf[Either[_, _]].typeSymbol
-
-  private lazy val tuple1Symbol: Symbol = typeOf[Tuple1[_]].typeSymbol
-  private lazy val tuple2Symbol: Symbol = typeOf[Tuple2[_, _]].typeSymbol
-  private lazy val tuple3Symbol: Symbol = typeOf[Tuple3[_, _, _]].typeSymbol
-  private lazy val tuple4Symbol: Symbol = typeOf[Tuple4[_, _, _, _]].typeSymbol
-  private lazy val tuple5Symbol: Symbol = typeOf[Tuple5[_, _, _, _, _]].typeSymbol
-  private lazy val tuple6Symbol: Symbol = typeOf[Tuple6[_, _, _, _, _, _]].typeSymbol
-
-  private lazy val listSymbol: Symbol = typeOf[List[_]].typeSymbol
-  private lazy val immutableListSymbol: Symbol = typeOf[immutable.List[_]].typeSymbol
-  private lazy val vectorSymbol: Symbol = typeOf[Vector[_]].typeSymbol
-  private lazy val immutableVectorSymbol: Symbol = typeOf[immutable.Vector[_]].typeSymbol
-  private lazy val iterableSymbol: Symbol = typeOf[Iterable[_]].typeSymbol
-  private lazy val immutableIterableSymbol: Symbol = typeOf[immutable.Iterable[_]].typeSymbol
-  private lazy val seqSymbol: Symbol = typeOf[Seq[_]].typeSymbol
-  private lazy val immutableSeqSymbol: Symbol = typeOf[immutable.Seq[_]].typeSymbol
-  @annotation.nowarn("cat=deprecation")
-  private lazy val streamSymbol: Symbol = typeOf[Stream[_]].typeSymbol
-  @annotation.nowarn("cat=deprecation")
-  private lazy val immutableStreamSymbol: Symbol = typeOf[immutable.Stream[_]].typeSymbol
-  private lazy val queueSymbol: Symbol = typeOf[immutable.Queue[_]].typeSymbol
-
-  private lazy val setSymbol: Symbol = typeOf[Set[_]].typeSymbol
-  private lazy val immutableSetSymbol: Symbol = typeOf[immutable.Set[_]].typeSymbol
-  private lazy val hashSetSymbol: Symbol = typeOf[immutable.HashSet[_]].typeSymbol
-  private lazy val listSetSymbol: Symbol = typeOf[immutable.ListSet[_]].typeSymbol
-  private lazy val sortedSetSymbol: Symbol = typeOf[immutable.SortedSet[_]].typeSymbol
-  private lazy val treeSetSymbol: Symbol = typeOf[immutable.TreeSet[_]].typeSymbol
-  private lazy val bitSetSymbol: Symbol = typeOf[BitSet].typeSymbol
-  private lazy val immutableBitSetSymbol: Symbol = typeOf[immutable.BitSet].typeSymbol
-
-  private lazy val hashMapSymbol: Symbol = typeOf[immutable.HashMap[_, _]].typeSymbol
-  private lazy val sortedMapSymbol: Symbol = typeOf[immutable.SortedMap[_, _]].typeSymbol
-  private lazy val treeMapSymbol: Symbol = typeOf[immutable.TreeMap[_, _]].typeSymbol
-  private lazy val listMapSymbol: Symbol = typeOf[immutable.ListMap[_, _]].typeSymbol
-
-  private lazy val listBufferSymbol: Symbol = typeOf[ListBuffer[_]].typeSymbol
-  private lazy val nothingSymbol: Symbol = typeOf[Nothing].typeSymbol
-  private lazy val anySymbol: Symbol = typeOf[Any].typeSymbol
-  private lazy val anyRefSymbol: Symbol = typeOf[AnyRef].typeSymbol
-
-}
-
 class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
-
-  import DeserializerFactoryImpl._
 
   private var additionalDeserializers: Map[String, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty
   private var additionalSuperclassDeserializers: Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty
@@ -126,91 +50,122 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
 
     val typeSymbol = tpe.typeSymbol
 
-    // Primitives and string types
-    primitiveDeserializers.get(typeSymbol).foreach(return _)
-
-    // Time types (allow override via additionalDeserializers)
-    val tpeString = tpe.toString
-    if (typeSymbol == localTimeSymbol && !additionalDeserializers.contains(tpeString)) {
+    if (typeSymbol == typeOf[Long].typeSymbol) {
+      return LongDeserializer
+    } else if (typeSymbol == typeOf[Int].typeSymbol) {
+      return IntDeserializer
+    } else if (typeSymbol == typeOf[Boolean].typeSymbol) {
+      return BooleanDeserializer
+    } else if (typeSymbol == typeOf[String].typeSymbol) {
+      return StringDeserializer
+    } else if (typeSymbol == typeOf[Double].typeSymbol) {
+      return DoubleDeserializer
+    } else if (typeSymbol == typeOf[Float].typeSymbol) {
+      return FloatDeserializer
+    } else if (typeSymbol == typeOf[Short].typeSymbol) {
+      return ShortDeserializer
+    } else if (typeSymbol == typeOf[Byte].typeSymbol) {
+      return ByteDeserializer
+    } else if (typeSymbol == typeOf[Char].typeSymbol) {
+      return CharDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Long].typeSymbol) {
+      return LongDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Integer].typeSymbol) {
+      return IntDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Boolean].typeSymbol) {
+      return BooleanDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Double].typeSymbol) {
+      return DoubleDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Float].typeSymbol) {
+      return FloatDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Short].typeSymbol) {
+      return ShortDeserializer
+    } else if (typeSymbol == typeOf[java.lang.Byte].typeSymbol) {
+      return ByteDeserializer
+    } else if (typeSymbol == typeOf[java.time.LocalTime].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return LocalTimeDeserializer
-    } else if (typeSymbol == localDateSymbol && !additionalDeserializers.contains(tpeString)) {
+    } else if (typeSymbol == typeOf[java.time.LocalDate].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return LocalDateDeserializer
-    } else if (typeSymbol == localDateTimeSymbol && !additionalDeserializers.contains(tpeString)) {
+    } else if (typeSymbol == typeOf[java.time.LocalDateTime].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return LocalDateTimeDeserializer
-    } else if (typeSymbol == durationSymbol && !additionalDeserializers.contains(tpeString)) {
+    } else if (typeSymbol == typeOf[java.time.Duration].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return DurationDeserializer
-    }
-
-    // Arrays
-    tpe match {
-      case typeRef: TypeRefApi if typeRef.sym == definitions.ArrayClass =>
-        return new ArrayDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-      case _ =>
-    }
-
-    if (typeSymbol == optionSymbol) {
+    } else if (typeSymbol == typeOf[java.lang.Character].typeSymbol) {
+      return CharDeserializer
+    } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
+      return new ArrayDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[Option[_]].typeSymbol) {
       return new OptionDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == mapSymbol || typeSymbol == immutableMapSymbol) {
+    } else if (typeSymbol == typeOf[Map[_, _]].typeSymbol || typeSymbol == typeOf[immutable.Map[_, _]].typeSymbol) {
       return new MapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == eitherSymbol) {
+    } else if (typeSymbol == typeOf[Either[_, _]].typeSymbol) {
       return new EitherDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
 
     // tuple
-    if (typeSymbol == tuple1Symbol) {
+
+    if (typeSymbol == typeOf[Tuple1[_]].typeSymbol) {
       return new Tuple1Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == tuple2Symbol) {
+    } else if (typeSymbol == typeOf[Tuple2[_, _]].typeSymbol) {
       return new Tuple2Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == tuple3Symbol) {
+    } else if (typeSymbol == typeOf[Tuple3[_, _, _]].typeSymbol) {
       return new Tuple3Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == tuple4Symbol) {
+    } else if (typeSymbol == typeOf[Tuple4[_, _, _, _]].typeSymbol) {
       return new Tuple4Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == tuple5Symbol) {
+    } else if (typeSymbol == typeOf[Tuple5[_, _, _, _, _]].typeSymbol) {
       return new Tuple5Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == tuple6Symbol) {
+    } else if (typeSymbol == typeOf[Tuple6[_, _, _, _, _, _]].typeSymbol) {
       return new Tuple6Deserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
 
     // seq
-    if (typeSymbol == listSymbol || typeSymbol == immutableListSymbol) {
+    if (typeSymbol == typeOf[List[_]].typeSymbol || typeSymbol == typeOf[immutable.List[_]].typeSymbol) {
       return new ListDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == vectorSymbol || typeSymbol == immutableVectorSymbol) {
+    } else if (typeSymbol == typeOf[Vector[_]].typeSymbol || typeSymbol == typeOf[immutable.Vector[_]].typeSymbol) {
       return new VectorDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == iterableSymbol || typeSymbol == immutableIterableSymbol) {
+    } else if (typeSymbol == typeOf[Iterable[_]].typeSymbol || typeSymbol == typeOf[immutable.Iterable[_]].typeSymbol) {
       return new IterableDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == seqSymbol || typeSymbol == immutableSeqSymbol) {
+    } else if (typeSymbol == typeOf[Seq[_]].typeSymbol || typeSymbol == typeOf[immutable.Seq[_]].typeSymbol) {
       return new SeqDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == streamSymbol || typeSymbol == immutableStreamSymbol) {
+    } else if (typeSymbol == typeOf[Stream[_]].typeSymbol || typeSymbol == typeOf[immutable.Stream[_]].typeSymbol) {
       return new StreamDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == queueSymbol) {
+    } else if (typeSymbol == typeOf[immutable.Queue[_]].typeSymbol) {
       return new QueueDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
 
     // set
-    if (typeSymbol == setSymbol || typeSymbol == immutableSetSymbol) {
+    if (typeSymbol == typeOf[Set[_]].typeSymbol || typeSymbol == typeOf[immutable.Set[_]].typeSymbol) {
       return new SetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == hashSetSymbol) {
+    } else if (typeSymbol == typeOf[immutable.HashSet[_]].typeSymbol) {
       return new HashSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == listSetSymbol) {
+    } else if (typeSymbol == typeOf[immutable.ListSet[_]].typeSymbol) {
       return new ListSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == sortedSetSymbol) {
+    } else if (typeSymbol == typeOf[immutable.SortedSet[_]].typeSymbol) {
+      // Unsupported because of missing ordering type class
+      // return SortedSetDeserializer
       throw new IllegalStateException("SortedSet is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
-    } else if (typeSymbol == treeSetSymbol) {
+    } else if (typeSymbol == typeOf[immutable.TreeSet[_]].typeSymbol) {
+      // return TreeSetDeserializer
       throw new IllegalStateException("TreeSet is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
-    } else if (typeSymbol == bitSetSymbol || typeSymbol == immutableBitSetSymbol) {
+    } else if (typeSymbol == typeOf[BitSet].typeSymbol || typeSymbol == typeOf[immutable.BitSet].typeSymbol) {
       return new BitSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
 
     // map
-    if (typeSymbol == hashMapSymbol) {
+    if (typeSymbol == typeOf[Map[_, _]].typeSymbol) {
+      return new MapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[immutable.HashMap[_, _]].typeSymbol) {
       return new HashMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == sortedMapSymbol) {
+    } else if (typeSymbol == typeOf[immutable.SortedMap[_, _]].typeSymbol) {
       throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
-    } else if (typeSymbol == treeMapSymbol) {
+      //return SortedMapDeserializer
+    } else if (typeSymbol == typeOf[immutable.TreeMap[_, _]].typeSymbol) {
       throw new IllegalStateException("TreeMap is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)
-    } else if (typeSymbol == listMapSymbol) {
+      //return TreeMapDeserializer
+    } else if (typeSymbol == typeOf[immutable.ListMap[_, _]].typeSymbol) {
       return new ListMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
+
 
 
     if(allowSuperType) {
@@ -225,20 +180,20 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       }
     }
 
-    if (typeSymbol == listBufferSymbol) {
+    if (typeSymbol == typeOf[ListBuffer[_]].typeSymbol) {
       throw new IllegalArgumentException("ListBuffer is not supported, use immutable List instead. Types: " + context.typesStackMessage)
     }
 
 
-    val additionalDeserializerOption = additionalDeserializers.get(tpeString)
+    val additionalDeserializerOption = additionalDeserializers.get(tpe.toString)
 
     if (additionalDeserializerOption.isDefined) {
       additionalDeserializerOption.get(this.asInstanceOf[DeserializerFactory])
-    } else if (nothingSymbol == typeSymbol) {
+    } else if (typeOf[Nothing].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'Nothing' type is not supported, be sure to define types everywhere. Types: " + context.typesStackMessage)
-    } else if (anySymbol == typeSymbol) {
+    } else if (typeOf[Any].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
-    } else if (anyRefSymbol == typeSymbol) {
+    } else if (typeOf[AnyRef].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
       new SingletonObjectDeserializer(tpe)

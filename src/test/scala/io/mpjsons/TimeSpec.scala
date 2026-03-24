@@ -84,4 +84,13 @@ class TimeSpec extends AnyFlatSpec {
 
     deserialized mustBe java.time.Duration.ofSeconds(125, 457)
   }
+
+  "Deserializer" must "handle negative duration deserialization" in {
+
+    val json = """ { "seconds"   :   -125  ,   "nanos"  :  457  }  """
+
+    val deserialized = mpjsons.deserialize[java.time.Duration](json)
+
+    deserialized mustBe java.time.Duration.ofSeconds(-125, 457)
+  }
 }

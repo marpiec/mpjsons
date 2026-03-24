@@ -14,6 +14,8 @@ object DurationDeserializer extends JsonTypeDeserializer[Duration] {
     jsonIterator.consumeObjectStart()
     jsonIterator.skipWhitespaceChars()
 
+    var secondsEmpty = true
+    var nanosEmpty = true
     var seconds: Long = -1
     var nanos: Int = -1
 
@@ -28,15 +30,19 @@ object DurationDeserializer extends JsonTypeDeserializer[Duration] {
       jsonIterator.skipWhitespaceChars()
       jsonIterator.consumeFieldValueSeparator()
       identifier match {
-        case "seconds" => seconds = LongDeserializer.deserialize(jsonIterator)
-        case "nanos" => nanos = IntDeserializer.deserialize(jsonIterator)
+        case "seconds" =>
+          seconds = LongDeserializer.deserialize(jsonIterator)
+          secondsEmpty = false
+        case "nanos" =>
+          nanos = IntDeserializer.deserialize(jsonIterator)
+          nanosEmpty = false
         case _ => throw new RuntimeException("Incorrect identifier in Duration '" + identifier + "'")
       }
     }
 
-    if(seconds < -1) {
+    if(secondsEmpty) {
       throw new RuntimeException("Cannot deserialize Duration due to missing 'seconds' field")
-    } else if(nanos < -1) {
+    } else if(nanosEmpty) {
       throw new RuntimeException("Cannot deserialize Duration due to missing 'nanos' field")
     } else {
       jsonIterator.skipWhitespaceChars()

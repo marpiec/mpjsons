@@ -88,7 +88,7 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       return LocalDateDeserializer
     } else if (typeSymbol == typeOf[java.time.LocalDateTime].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return LocalDateTimeDeserializer
-    } else if (typeSymbol == typeOf[java.time.Duration].typeSymbol) {
+    } else if (typeSymbol == typeOf[java.time.Duration].typeSymbol && !additionalDeserializers.contains(tpe.toString)) {
       return DurationDeserializer
     } else if (typeSymbol == typeOf[java.lang.Character].typeSymbol) {
       return CharDeserializer

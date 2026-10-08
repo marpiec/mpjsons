@@ -8,17 +8,19 @@ Guidance for working in this repository. This is a deep, factual map of the code
 
 `mpjsons` is a Scala object ⇄ JSON conversion library (`io.mpjsons`, version `0.7.0`). The selling point is a minimal API: `mpjsons.serialize[T](obj)` / `mpjsons.deserialize[T](json)` with no hand-written serializers required. It uses **Scala 2.13 runtime reflection** (`scala-reflect`, `scala.reflect.runtime.universe`) to inspect types and build per-type (de)serializers, which are then cached.
 
-- Build tool: sbt `1.11.7` (`project/build.properties`), Scala `2.13.16`.
+- Build tool: Maven (`pom.xml`, `io.mpjsons:mpjsons_2.13`), Scala `2.13.18`.
 - Current branch is `scala_2.13`; main/PR branch is `master`.
-- Runtime deps: `scala-reflect` only. Test: `scalatest 3.2.15` (FlatSpec + MustMatchers). Benchmarks: `sbt-jmh` (`src/jmh`).
+- Runtime deps: `scala-reflect` only. Test: `scalatest 3.2.20` (FlatSpec + MustMatchers). Benchmarks: `sbt-jmh` (`src/jmh`).
 
 ## Build & test commands
 
 ```bash
-sbt compile
-sbt test                              # run all specs
-sbt "testOnly io.mpjsons.PerformanceSpec"   # single spec
-sbt "testOnly io.mpjsons.TimeSpec"
+mvn compile
+mvn test                                        # run all specs
+mvn test -Dsuites=io.mpjsons.PerformanceSpec    # single spec
+mvn test -Dsuites=io.mpjsons.TimeSpec
+mvn install                                     # install into ~/.m2
+mvn deploy                                      # publish to Nexus; bump version in pom.xml first
 ```
 
 Tests live in `src/test/scala/io/mpjsons/`, one spec per feature area (Collections, Maps, Tuples, Either, Option, Time, MalformedJson, SkipFields, InfiniteDepth, ScientificNumberNotation, etc.). `PerformanceSpec` asserts a hard wall-clock budget (`< 500ms` for 5000 serialize+deserialize round-trips of a small object) — **it is timing-sensitive and machine-dependent**; treat failures there as a signal, not necessarily a regression.

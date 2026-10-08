@@ -40,7 +40,7 @@ For most use cases, `serialize` and `deserialize` are all you will ever need.
 
 ## Requirements
 
-- Scala **2.13.16**
+- Scala **2.13.18**
 - A JVM (deserialization can fall back to `sun.misc.Unsafe` for constructor-less classes — see [Limitations](#limitations--notes))
 
 ## Installation
@@ -48,29 +48,29 @@ For most use cases, `serialize` and `deserialize` are all you will ever need.
 mpjsons is **not published to Maven Central** or any public repository. Build it from
 source and consume it locally.
 
-Clone and compile:
+Clone and build (requires Maven and a JDK):
 
 ```bash
 git clone <repo-url>
 cd mpjsons
-sbt compile
-sbt test        # optional: run the full spec suite
+mvn test        # optional: run the full spec suite
+mvn install     # build and install into your local Maven repository (~/.m2)
 ```
 
-To use it from another project, enable local publishing. The `publishLocal` task is
-disabled in `build.sbt` (`publishLocal := {}`); remove that line, then:
+and add the dependency to your project's `pom.xml`:
 
-```bash
-sbt publishLocal
+```xml
+<dependency>
+    <groupId>io.mpjsons</groupId>
+    <artifactId>mpjsons_2.13</artifactId>
+    <version>0.6.51</version>
+</dependency>
 ```
 
-and add the dependency to your project:
+To publish to the Nexus repositories configured in `distributionManagement`, bump the
+version in `pom.xml` and run `mvn deploy`.
 
-```scala
-libraryDependencies += "io.mpjsons" %% "mpjsons" % "0.7.0"
-```
-
-(Current version: `0.7.0`, Scala `2.13.16`. Runtime dependency: `scala-reflect`.)
+(Current version: `0.7.0`, Scala `2.13.18`. Runtime dependency: `scala-reflect`.)
 
 ---
 
@@ -543,9 +543,8 @@ dependency changes, is in [docs/upgrading.md](docs/upgrading.md).
 ## Building & testing
 
 ```bash
-sbt compile
-sbt test                                       # all specs
-sbt "testOnly io.mpjsons.BeanSerializationSpec" # a single spec
+mvn test                                          # all specs
+mvn test -Dsuites=io.mpjsons.BeanSerializationSpec # a single spec
 ```
 
 Specs live under `src/test/scala/io/mpjsons/`, one per feature area (collections, maps,

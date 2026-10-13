@@ -236,11 +236,31 @@ new MPJsons().deserialize[TestObject](json)
 // throws JsonInnerException
 ```
 
+### Field names in JSON
+
+By default the JSON key is the Scala field name. `@jsonName` overrides it, which is the
+simplest way to make the output smaller or to match an external schema. It works on case
+class parameters, `val`s and `var`s directly, without a meta-annotation, and also on
+inherited fields.
+
+```scala
+import io.mpjsons.jsonName
+
+case class User(@jsonName("n") firstName: String, @jsonName("l") lastName: String, age: Int)
+
+mpjsons.serialize(User("John", "Doe", 42))        // {"n":"John","l":"Doe","age":42}
+mpjsons.deserialize[User]("""{"n":"John","l":"Doe","age":42}""")
+```
+
+Only the JSON name is recognised on read (the Scala name becomes an unknown key), and two
+fields of one type must not share a JSON name: that is reported when the (de)serializer is
+built.
+
 ### Nullable fields and null handling
 
 By default, serializing a `null` field throws. Mark a field with `@nullable` to allow it
-to be omitted from the output when it's null. On a case-class parameter, apply it as a
-field meta-annotation:
+to be omitted from the output when it's null. It works directly on case-class parameters
+(the `@(nullable @field)` form shown below is still accepted):
 
 ```scala
 import io.mpjsons.nullable

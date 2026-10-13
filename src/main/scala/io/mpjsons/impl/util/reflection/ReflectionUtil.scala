@@ -6,7 +6,15 @@ import java.util.concurrent.ConcurrentHashMap
 import scala.reflect.runtime.universe._
 
 
-case class FieldWithTypeInfo(field: Field, tpe: Type, nullable: Boolean)
+/**
+ * @param field    the Java field
+ * @param tpe      the field's Scala type as seen from the bean type
+ * @param nullable whether a null value may be omitted on serialize (annotated with a "nullable" annotation)
+ * @param jsonName the JSON key: the `@jsonName` value if present, otherwise the field name
+ */
+case class FieldWithTypeInfo(field: Field, tpe: Type, nullable: Boolean, jsonName: String) {
+  def this(field: Field, tpe: Type, nullable: Boolean) = this(field, tpe, nullable, field.getName)
+}
 
 /**
  * ReflectionUtilNoCache wrapper that caches results of function calls.

@@ -23,10 +23,10 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   } catch {
     case e: NoSuchMethodException => null
   }
-  lazy val fields = ReflectionUtil.getAllAccessibleFields(tpe)
+  val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type deserializer */
   lazy val fieldTable: BeanFieldTable = new BeanFieldTable(fields.map { field =>
-    BeanField(field.field.getName, field.field, field.tpe, tpe.toString, deserializerFactory.getDeserializer(field.tpe, context))
+    BeanField(field.jsonName, field.field, field.tpe, tpe.toString, deserializerFactory.getDeserializer(field.tpe, context))
   })
   /** Option fields are initialised to None when construction left them null, so an absent key reads as None. */
   private lazy val optionFields: Array[Field] = fields.filter(_.tpe <:< BeanDeserializer.optionType).map(_.field)

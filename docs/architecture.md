@@ -23,7 +23,8 @@ Runtime dependency: `scala-reflect` only (the unused `slf4j-api` dependency was 
 | `registerSerializerForAnySubtype[T]` | Serialize-only; keyed by the type's string with `[...]` stripped (regex `\[.*\]`), consulted last (`SerializerFactoryImpl.scala:190`). |
 | `markTypedClass[T]` / `markTypedSuperClass[T]` | Register `TypedConverter` for `T` (wrapper `{"SimpleName":{...}}`). |
 | `postDeserializationTransform[T](f: T => T)` | Wraps the deserializer of exactly `T` in `PostTransformDeserializer`. |
-| `@nullable` (`final class nullable extends StaticAnnotation`) | Field may be `null` on serialize (omitted). Must be applied with `@(nullable @field)` on case-class params (**verified**: without `@field` the annotation lands on the constructor parameter and is invisible to the field scan). |
+| `@nullable` (`final class nullable extends StaticAnnotation`) | Field may be `null` on serialize (omitted under `NullPolicy.Fail`). Found on the field, the constructor parameter of the same name or the getter, so no `@field` meta-annotation is needed. |
+| `@jsonName("key")` (`jsonName.scala`) | Overrides the JSON key of a field; same lookup places as `@nullable`; duplicates within a type fail at build time. |
 
 The traits user code implements for custom converters (`JsonTypeSerializer[T]`, `JsonTypeDeserializer[T]`) and
 the classes those implementations touch (`StringIterator`, `SerializerFactory`, `DeserializerFactory`, `Context`)
@@ -157,6 +158,7 @@ Properties of this scan:
 
 - Key order is **declaration order**, superclass fields first (`Ordered(zeta, alpha, mid, beta)` serializes as `{"zeta":..,"alpha":..,"mid":..,"beta":..}`). Up to 0.6.51 the order was reversed (an artefact of `Type.members`).
 - A field name declared in both a class and its superclass is taken once, from the most-derived class.
+- Annotations are gathered from the field symbol, the declaring class's primary-constructor parameter of the same name and the getter (`tpe.member(TermName(name))`), because an annotation on a case class parameter stays on the parameter unless a `@field` meta-annotation is used. `@jsonName` is read from the annotation tree's literal argument; `nullable` is a substring match on the annotation's `toString`.
 - Local field names carry a trailing space in Scala reflection, hence `.trim`.
 - Non-field members that survive the filter (nested classes, type members, modules) resolve to `null` via `NoSuchFieldException` and are filtered out; cold-path cost only.
 - `getAccessibleField` walks `clazz.getSuperclass` until it equals `Object`; for an interface/trait `getSuperclass` is `null` → NPE (seen when the target type is `mutable.Map`).

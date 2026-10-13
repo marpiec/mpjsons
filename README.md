@@ -261,6 +261,29 @@ was renamed keeps loading; if another field owns that name as its JSON name, the
 Two fields of one type must not share a JSON name: that is reported when the (de)serializer is
 built.
 
+### Leaving fields out of the output
+
+`@skipSerialization` leaves a field out of the JSON that `serialize` writes. Reading is not
+affected.
+
+```scala
+import io.mpjsons.skipSerialization
+
+case class Session(user: String, @skipSerialization token: String)
+
+mpjsons.serialize(Session("ann", "secret"))                        // {"user":"ann"}
+mpjsons.deserialize[Session]("""{"user":"ann","token":"secret"}""") // Session("ann", "secret")
+mpjsons.deserialize[Session]("""{"user":"ann"}""")                  // Session("ann", null)
+```
+
+- The key is still read, under its `@jsonName` if it has one. When the key is absent, the field
+  gets zero, false, null or None, like any other absent key. A serialize-then-deserialize round
+  trip therefore loses the value.
+- No serializer is built for the field, so its type does not need to be serializable, and the
+  null policy does not apply to it. A deserializer is still built, so the type must be readable.
+- Like `@jsonName`, it works on case class parameters, `val`s and `var`s without a
+  meta-annotation, and on inherited fields.
+
 ### Nullable fields and null handling
 
 By default, serializing a `null` field throws. Mark a field with `@nullable` to allow it

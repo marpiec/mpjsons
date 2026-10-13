@@ -3,7 +3,7 @@ package io.mpjsons.impl.util.reflection
 import java.lang.reflect.Field
 
 import io.mpjsons.impl.util.TypesUtil
-import io.mpjsons.jsonName
+import io.mpjsons.{jsonName, skipSerialization}
 
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
@@ -15,6 +15,7 @@ import scala.reflect.runtime.universe._
 private[reflection] object ReflectionUtilNoCache {
 
   private val jsonNameType = typeOf[jsonName]
+  private val skipSerializationType = typeOf[skipSerialization]
 
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
@@ -28,7 +29,7 @@ private[reflection] object ReflectionUtilNoCache {
    * format and their fields cannot be opened under the module system. A field that cannot be made accessible is
    * skipped as well.
    *
-   * Annotations (`@jsonName`, `@nullable`) are looked up on the field, on the constructor parameter of the same
+   * Annotations (`@jsonName`, `@nullable`, `@skipSerialization`) are looked up on the field, on the constructor parameter of the same
    * name and on the getter, so case class parameters need no `@field` meta-annotation.
    *
    * @param tpe type from which the fields should be retrieved
@@ -61,7 +62,8 @@ private[reflection] object ReflectionUtilNoCache {
               field,
               member.typeSignatureIn(tpe),
               annotations.exists(_.toString.toLowerCase().contains("nullable")),
-              jsonNameOf(annotations).getOrElse(fieldName))
+              jsonNameOf(annotations).getOrElse(fieldName),
+              annotations.exists(_.tree.tpe <:< skipSerializationType))
             collected += ((classCount - classIndex, declarationIndex, info))
           }
         }

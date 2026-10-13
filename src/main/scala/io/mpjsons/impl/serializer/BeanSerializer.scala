@@ -255,7 +255,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
 
   private val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type serializer */
-  private lazy val fieldsWithSerializers: Array[FieldInfo[AnyRef]] = fields.map { field =>
+  private lazy val fieldsWithSerializers: Array[FieldInfo[AnyRef]] = fields.filterNot(_.skipSerialization).map { field =>
     FieldInfo(field.field, field.jsonName, serializerFactory.getSerializer(field.tpe, context)
       .asInstanceOf[JsonTypeSerializer[AnyRef]], field.nullable, field.tpe)
   }

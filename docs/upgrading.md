@@ -47,13 +47,13 @@ recompiled.
 | Member | Change |
 |---|---|
 | `MPJsons` constructor | primary is now `new MPJsons(config: MPJsonsConfig)`; `new MPJsons(ignoreNonExistingFields = false, ignoreNullFields = false, nullPolicy = NullPolicy.Fail)` is an auxiliary constructor with defaults. The 2-argument constructor no longer exists as a binary signature; Java callers must pass three arguments or a config. New: `mpjsons.config`. |
-| `NullPolicy`, `MPJsonsConfig`, `jsonName`, `typeName` | new public types in `io.mpjsons` |
+| `NullPolicy`, `MPJsonsConfig`, `jsonName`, `typeName`, `skipSerialization` | new public types in `io.mpjsons` |
 | `SerializerFactory` / `DeserializerFactory` | primary constructors take `MPJsonsConfig`; the `Boolean` constructors remain |
 | `BeanSerializer`, `BeanDeserializer`, `OptionSerializer`, `OptionDeserializer`, `MapSerializer`, `TypedSerializer`, `TypedDeserializer` | gained new primary constructors (config, or the typed-name table); the previous overloads remain |
 | `StringIterator` | 1-argument constructor remains (lenient); `nextCharOrNullIfLast` now returns `Unit` and always advances; new `seek`, `tryConsumeNull`, `afterValue`, `isAtEnd`, `expectEnd` |
 | `AbstractStringDeserializer.readString` | returns `String` (was `StringBuilder`) |
 | `AbstractIntegerDeserializer` / `AbstractFloatingPointDeserializer` | the protected `readNumberString` is replaced by `readLong` / `readInt` / `readShort` / `readByte` and `readDouble` / `readFloat`; the companion's `readNumberString` is replaced by `scanNumber` / `skipNumber` / `readDouble` / `readFloat`. **Custom deserializers extending these classes need updating.** |
-| `FieldInfo`, `FieldWithTypeInfo` | gained a trailing field (`tpe` with a default; `jsonName`, with an auxiliary constructor for the old arity). Pattern matches with the old arity need updating. |
+| `FieldInfo`, `FieldWithTypeInfo` | gained a trailing field (`tpe` with a default; `FieldWithTypeInfo` gained `jsonName`, with an auxiliary constructor for the old arity, and `skipSerialization` with a default). Pattern matches with the old arity need updating. |
 | `SimpleToStringSerializer` | kept but no longer used by the factories (primitives have dedicated serializers) |
 | Dependency | `slf4j-api` is no longer a dependency of mpjsons; add it yourself if you relied on it transitively |
 

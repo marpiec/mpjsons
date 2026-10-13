@@ -11,8 +11,9 @@ import scala.reflect.runtime.universe._
  * @param tpe      the field's Scala type as seen from the bean type
  * @param nullable whether a null value may be omitted on serialize (annotated with a "nullable" annotation)
  * @param jsonName the JSON key: the `@jsonName` value if present, otherwise the field name
+ * @param skipSerialization whether the field is left out on serialize (annotated with `@skipSerialization`)
  */
-case class FieldWithTypeInfo(field: Field, tpe: Type, nullable: Boolean, jsonName: String) {
+case class FieldWithTypeInfo(field: Field, tpe: Type, nullable: Boolean, jsonName: String, skipSerialization: Boolean = false) {
   def this(field: Field, tpe: Type, nullable: Boolean) = this(field, tpe, nullable, field.getName)
 }
 

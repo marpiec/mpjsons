@@ -25,6 +25,7 @@ Runtime dependency: `scala-reflect` only (the unused `slf4j-api` dependency was 
 | `postDeserializationTransform[T](f: T => T)` | Wraps the deserializer of exactly `T` in `PostTransformDeserializer`. |
 | `@nullable` (`final class nullable extends StaticAnnotation`) | Field may be `null` on serialize (omitted under `NullPolicy.Fail`). Found on the field, the constructor parameter of the same name or the getter, so no `@field` meta-annotation is needed. |
 | `@jsonName("key")` (`jsonName.scala`) | Overrides the JSON key of a field; same lookup places as `@nullable`; duplicates within a type fail at build time. |
+| `@skipSerialization` (`skipSerialization.scala`) | Leaves a field out on write (`BeanSerializer` filters it before building serializers); `BeanDeserializer` still reads it. Same lookup places as `@nullable`. |
 
 The traits user code implements for custom converters (`JsonTypeSerializer[T]`, `JsonTypeDeserializer[T]`) and
 the classes those implementations touch (`StringIterator`, `SerializerFactory`, `DeserializerFactory`, `Context`)

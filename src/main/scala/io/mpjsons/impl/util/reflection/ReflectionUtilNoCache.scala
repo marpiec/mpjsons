@@ -24,6 +24,10 @@ private[reflection] object ReflectionUtilNoCache {
    * most derived class. Field types are resolved as seen from `tpe`, so a field `payload: T` declared in
    * `Base[T]` is reported as `String` for `Derived extends Base[String]`.
    *
+   * Superclasses from the JDK (java.*, javax.*, jdk.*, sun.*) contribute no fields: they are not part of the JSON
+   * format and their fields cannot be opened under the module system. A field that cannot be made accessible is
+   * skipped as well.
+   *
    * Annotations (`@jsonName`, `@nullable`) are looked up on the field, on the constructor parameter of the same
    * name and on the getter, so case class parameters need no `@field` meta-annotation.
    *
@@ -40,7 +44,7 @@ private[reflection] object ReflectionUtilNoCache {
     val baseClasses = tpe.baseClasses // linearization: the class itself first
     val classCount = baseClasses.length
 
-    for ((baseClass, classIndex) <- baseClasses.zipWithIndex) {
+    for ((baseClass, classIndex) <- baseClasses.zipWithIndex if !isJdkClass(baseClass)) {
       val declaredFields = tpe.baseType(baseClass).decls.toList.filter { member =>
         member.isTerm && !member.isMethod && !member.isSynthetic && !member.isModule
       }
@@ -67,6 +71,11 @@ private[reflection] object ReflectionUtilNoCache {
     val result = collected.sortBy(entry => (entry._1, entry._2)).map(_._3).toArray
     checkUniqueJsonNames(tpe, result)
     result
+  }
+
+  private def isJdkClass(classSymbol: Symbol): Boolean = {
+    val name = classSymbol.fullName
+    name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("jdk.") || name.startsWith("sun.")
   }
 
   private def primaryConstructorParams(classSymbol: Symbol): List[Symbol] = {
@@ -105,13 +114,17 @@ private[reflection] object ReflectionUtilNoCache {
    * Returns Field from given class, by given filed name. It supports type inheritance.
    * @param clazz class from which the field should be retrieved
    * @param fieldName field name
-   * @return retrieved Field or null if field does not exists.
+   * @return retrieved Field, or null if the field does not exist or cannot be made accessible
    */
   def getAccessibleField(clazz: Class[_], fieldName: String): Field = {
     try {
       val field: Field = clazz.getDeclaredField(fieldName)
-      field.setAccessible(true)
-      field
+      try {
+        field.setAccessible(true)
+        field
+      } catch {
+        case _: RuntimeException => null // e.g. InaccessibleObjectException under the module system
+      }
     } catch {
       case e: NoSuchFieldException =>
         val superclass = clazz.getSuperclass

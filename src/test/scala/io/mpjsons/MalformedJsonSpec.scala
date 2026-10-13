@@ -40,6 +40,37 @@ class MalformedJsonSpec extends AnyFlatSpec {
     }
   }
 
+  "Deserializer" must "keep error messages small instead of copying the whole input" in {
+    val longNumber = """{"a":""" + "1" * 10000 + ""","b":"c"}"""
+    val e1 = intercept[JsonInnerException] { mpjsons.deserialize[Sample](longNumber) }
+    e1.getMessage.length must be < 1000
+    e1.getMessage must include("10000 chars")
+
+    val longKey = "{\"" + "k" * 10000 + "\":1}"
+    val e2 = intercept[JsonInnerException] { mpjsons.deserialize[Sample](longKey) }
+    e2.getMessage.length must be < 1000
+    e2.getMessage must include("No field [kkk")
+
+    val padded = """{"a":12,"b":"c" ,""" + " " * 10000 + """ "zzz":1}"""
+    val e3 = intercept[JsonInnerException] { mpjsons.deserialize[Sample](padded) }
+    e3.getMessage.length must be < 1000
+    e3.getMessage must not include ("Json:")
+  }
+
+  "Deserializer" must "point the caret at the failing character" in {
+    val e = intercept[JsonInnerException] { mpjsons.deserialize[Sample]("""{"a":"oops","b":"c"}""") }
+    val lines = e.getMessage.linesIterator.toList
+    val window = lines(lines.size - 2)
+    val caret = lines.last
+    e.getMessage must include("At position 5 of 20")
+    window.charAt(caret.indexOf('^')) mustBe '"'
+
+    val nested = "{\n  \"a\": 1,\n  \"b\": 2\n}"
+    val e2 = intercept[JsonInnerException] { mpjsons.deserialize[Sample](nested) }
+    val lines2 = e2.getMessage.linesIterator.toList
+    lines2(lines2.size - 2).charAt(lines2.last.indexOf('^')) mustBe '2'
+  }
+
   "Deserializer" must "fail gracefully on empty input for a primitive" in {
     intercept[JsonInnerException] {
       mpjsons.deserialize[Int]("")

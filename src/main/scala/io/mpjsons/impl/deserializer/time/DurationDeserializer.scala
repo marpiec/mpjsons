@@ -1,5 +1,7 @@
 package io.mpjsons.impl.deserializer.time
 
+import io.mpjsons.impl.util.Messages
+
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.StringIterator
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
@@ -32,7 +34,7 @@ object DurationDeserializer extends JsonTypeDeserializer[Duration] {
       identifier match {
         case "seconds" => seconds = LongDeserializer.deserialize(jsonIterator); hasSeconds = true
         case "nanos" => nanos = IntDeserializer.deserialize(jsonIterator); hasNanos = true
-        case _ => throw new IllegalArgumentException("Incorrect identifier in Duration '" + identifier + "'")
+        case _ => throw new IllegalArgumentException("Incorrect identifier in Duration '" + Messages.abbreviate(identifier) + "'")
       }
       jsonIterator.afterValue('}')
     }

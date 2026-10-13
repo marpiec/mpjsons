@@ -1,5 +1,7 @@
 package io.mpjsons.impl.deserializer.time
 
+import io.mpjsons.impl.util.Messages
+
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.StringIterator
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
@@ -38,7 +40,7 @@ object LocalTimeDeserializer extends JsonTypeDeserializer[LocalTime] {
         case "minute" => minute = IntDeserializer.deserialize(jsonIterator); hasMinute = true
         case "second" => second = IntDeserializer.deserialize(jsonIterator); hasSecond = true
         case "nano" => nano = IntDeserializer.deserialize(jsonIterator); hasNano = true
-        case _ => throw new IllegalArgumentException("Incorrect identifier in LocalTime '" + identifier + "'")
+        case _ => throw new IllegalArgumentException("Incorrect identifier in LocalTime '" + Messages.abbreviate(identifier) + "'")
       }
       jsonIterator.afterValue('}')
     }

@@ -1,5 +1,7 @@
 package io.mpjsons.impl.deserializer
 
+import io.mpjsons.impl.util.Messages
+
 import io.mpjsons.{JsonTypeDeserializer, MPJsonsConfig}
 import io.mpjsons.impl.deserializer.jsontypes.{AbstractFloatingPointDeserializer, AbstractStringDeserializer}
 import io.mpjsons.impl.util.reflection.{FieldWithTypeInfo, ReflectionUtil}
@@ -153,7 +155,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     if (ignoreNonExistingFields) {
       skipValue(jsonIterator)
     } else {
-      throw new IllegalArgumentException(s"No field [$identifier] in type [$tpe]. Types: ${context.typesStackMessage}")
+      throw new IllegalArgumentException(s"No field [${Messages.abbreviate(identifier)}] in type [$tpe]. Types: ${context.typesStackMessage}")
     }
   }
 
@@ -226,7 +228,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
     booleanString.toString() match {
       case "true" | "false" | "null" => ()
-      case _ => throw new IllegalArgumentException(s"Invalid boolean value: $booleanString")
+      case _ => throw new IllegalArgumentException(s"Invalid boolean value: ${Messages.abbreviate(booleanString.toString)}")
     }
   }
 

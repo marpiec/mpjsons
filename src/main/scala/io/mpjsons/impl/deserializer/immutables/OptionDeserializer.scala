@@ -1,5 +1,7 @@
 package io.mpjsons.impl.deserializer.immutables
 
+import io.mpjsons.impl.util.Messages
+
 import io.mpjsons.{JsonTypeDeserializer, MPJsonsConfig}
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
 import io.mpjsons.impl.util.{Context, JsonShapes, NullValues, TypesUtil}
@@ -54,7 +56,7 @@ class OptionDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type,
       val identifier = IdentifierDeserializer.deserialize(jsonIterator)
 
       if (identifier != "value") {
-        throw new IllegalArgumentException("Expected 'value' but was = " + identifier)
+        throw new IllegalArgumentException("Expected 'value' but was = " + Messages.abbreviate(identifier))
       }
 
       jsonIterator.consumeFieldValueSeparator()

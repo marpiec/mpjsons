@@ -13,18 +13,29 @@ private object ErrorMessageFormatter {
 
   private final val trimmingSize = 40
 
+  /**
+   * Describes a deserialization failure with only a short window of the input around the failing position, so the
+   * message stays small and does not copy whole (possibly sensitive) payloads into logs.
+   */
   def formatDeserializationError(json: String, jsonIterator: StringIterator, e: RuntimeException, tpe: Type): String = {
-    val consumed = jsonIterator.debugGetConsumedString
-    val remaining = jsonIterator.debugGetRemainingString
-    val consumedTrimmed = consumed.substring(Math.max(0, consumed.length - trimmingSize), consumed.length)
-    val remainingTrimmed = remaining.substring(0, Math.min(remaining.length, trimmingSize))
-    val consumedPlaceholder = " " * consumedTrimmed.length
+    val input = jsonIterator.stringValue
+    val position = Math.min(Math.max(jsonIterator.nextIndex - 1, 0), input.length)
+    val start = Math.max(0, position - trimmingSize)
+    val end = Math.min(input.length, position + trimmingSize)
+    val prefix = if (start > 0) "..." else ""
+    val suffix = if (end < input.length) "..." else ""
+    val window = printable(input.substring(start, end))
+    val caret = " " * (prefix.length + position - start) + "^"
     s"""|Problem deserializing: $tpe
         |Problem: ${e.toString}
-        |In this place:
-        |...$consumedTrimmed$remainingTrimmed...
-        | $consumedPlaceholder^
-        |Json: $json""".stripMargin
+        |At position $position of ${input.length}:
+        |$prefix$window$suffix
+        |$caret""".stripMargin
+  }
+
+  /** Keeps the window on one line so the caret lines up. */
+  private def printable(text: String): String = {
+    text.map(c => if (c < ' ') ' ' else c)
   }
 }
 

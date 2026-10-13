@@ -101,7 +101,7 @@ When evaluating perf changes, these are the paths exercised per call (after warm
 - One (de)serializer class per type/type-family, organized under `impl/serializer/…` and `impl/deserializer/…` with subpackages `immutables/`, `mutables/`, `values/`, `jsontypes/`, `utiltypes/`, `time/`, `common/`.
 - Serializers extend `JsonTypeSerializer[T]` (`serialize(obj, jsonBuilder: StringBuilder): Unit`); deserializers extend `JsonTypeDeserializer[T]` (`deserialize(jsonIterator): T`). Both are tiny single-method traits.
 - Element/key/value sub-serializers are resolved **once in the constructor (or a `lazy val` for recursive types)** by calling back into the factory with the threaded `context` — not per element.
-- Errors are `IllegalArgumentException`/`IllegalStateException`/`RuntimeException`, wrapped at the boundary in `JsonInnerException` with a pointer-annotated message (`ErrorMessageFormatter`).
+- Errors are `IllegalArgumentException`/`IllegalStateException`/`RuntimeException`, wrapped at the boundary in `JsonInnerException` with a pointer-annotated message (`ErrorMessageFormatter`). Never put the whole input into an exception message: the formatter shows a short window around the failing position, and quoted tokens go through `Messages.abbreviate`.
 - Adding support for a new type = add a (de)serializer class **and** wire it into both `*FactoryImpl` dispatch chains (order matters — more specific symbols must precede `baseClasses.contains` fallbacks).
 
 ## Known sharp edges (candidate areas to scrutinize)

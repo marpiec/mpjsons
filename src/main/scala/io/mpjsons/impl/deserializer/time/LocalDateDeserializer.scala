@@ -1,5 +1,7 @@
 package io.mpjsons.impl.deserializer.time
 
+import io.mpjsons.impl.util.Messages
+
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.StringIterator
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
@@ -35,7 +37,7 @@ object LocalDateDeserializer extends JsonTypeDeserializer[LocalDate] {
         case "year" => year = IntDeserializer.deserialize(jsonIterator); hasYear = true
         case "month" => month = IntDeserializer.deserialize(jsonIterator); hasMonth = true
         case "day" => day = IntDeserializer.deserialize(jsonIterator); hasDay = true
-        case _ => throw new IllegalArgumentException("Incorrect identifier in LocalDate '" + identifier + "'")
+        case _ => throw new IllegalArgumentException("Incorrect identifier in LocalDate '" + Messages.abbreviate(identifier) + "'")
       }
       jsonIterator.afterValue('}')
     }

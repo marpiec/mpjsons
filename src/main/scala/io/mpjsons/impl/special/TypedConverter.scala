@@ -1,5 +1,7 @@
 package io.mpjsons.impl.special
 
+import io.mpjsons.impl.util.Messages
+
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
 import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer}
@@ -82,7 +84,7 @@ object TypedConverter {
             Class.forName(binaryNamePrefix + typeName)
           } catch {
             case e: ClassNotFoundException =>
-              throw new IllegalArgumentException("Unknown type name '" + typeName + "' for typed class " + markedTypeName +
+              throw new IllegalArgumentException("Unknown type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
                 ": no such class " + binaryNamePrefix + typeName +
                 (if (knownSubclasses.nonEmpty) ", known subclasses: " + knownSubclasses.keys.toList.sorted.mkString(", ") else ""), e)
           }

@@ -1,5 +1,7 @@
 package io.mpjsons.impl.deserializer
 
+import io.mpjsons.impl.util.Messages
+
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.deserializer.jsontypes.{AbstractFloatingPointDeserializer, AbstractStringDeserializer}
 import io.mpjsons.impl.util.reflection.ReflectionUtil
@@ -106,7 +108,7 @@ class SimpleMapDeserializer[T](deserializerFactory: DeserializerFactory, private
 
     booleanString.toString() match {
       case "true" | "false" | "null" => ()
-      case _ => throw new IllegalArgumentException(s"Invalid boolean value: $booleanString")
+      case _ => throw new IllegalArgumentException(s"Invalid boolean value: ${Messages.abbreviate(booleanString.toString)}")
     }
   }
 

@@ -72,7 +72,7 @@ object AbstractIntegerDeserializer {
     while (end < input.length && isDigit(input.charAt(end))) {
       end += 1
     }
-    new NumberFormatException("For input string: \"" + input.substring(start, end) + "\"")
+    new NumberFormatException("For input string: \"" + io.mpjsons.impl.util.Messages.abbreviate(input.substring(start, end)) + "\"")
   }
 
   private[jsontypes] def describeCurrent(jsonIterator: StringIterator): String = {

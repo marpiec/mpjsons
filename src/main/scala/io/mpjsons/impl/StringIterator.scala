@@ -83,7 +83,7 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
         throw new IllegalArgumentException("Trailing ',' before '" + closing + "'")
       }
     } else if (strict && currentChar != closing) {
-      throw new IllegalArgumentException("Expected ',' or '" + closing + "' but was '" + currentChar + "'")
+      throw new IllegalArgumentException("Expected ',' or '" + closing + "' but found " + describeCurrent)
     }
   }
 
@@ -95,7 +95,7 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
     if (strict) {
       skipWhitespaceChars()
       if (!isAtEnd) {
-        throw new IllegalArgumentException("Unexpected content after the JSON value: '" + currentChar + "'")
+        throw new IllegalArgumentException("Unexpected content after the JSON value: " + describeCurrent)
       }
     }
   }
@@ -130,7 +130,7 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
   def consumeObjectStart(): Unit = {
     skipWhitespaceChars()
     if (currentChar != '{') {
-      throw new IllegalArgumentException("Object should start with '{' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
+      throw new IllegalArgumentException("Object should start with '{' symbol but found " + describeCurrent)
     }
     nextChar()
   }
@@ -138,7 +138,7 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
   def consumeObjectEnd(): Unit = {
     skipWhitespaceChars()
     if (currentChar != '}') {
-      throw new IllegalArgumentException("Object should end with '{' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
+      throw new IllegalArgumentException("Object should end with '}' symbol but found " + describeCurrent)
     }
     nextChar()
   }
@@ -146,7 +146,7 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
   def consumeFieldValueSeparator(): Unit = {
     skipWhitespaceChars()
     if (currentChar != ':') {
-      throw new IllegalArgumentException("Field name and value should be separated by ':' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
+      throw new IllegalArgumentException("Field name and value should be separated by ':' symbol but found " + describeCurrent)
     }
     nextChar()
   }
@@ -154,7 +154,7 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
   def consumeArrayStart(): Unit = {
     skipWhitespaceChars()
     if (currentChar != '[') {
-      throw new IllegalArgumentException("Array should start with '[' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
+      throw new IllegalArgumentException("Array should start with '[' symbol but found " + describeCurrent)
     }
     nextChar()
   }
@@ -162,7 +162,7 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
   def consumeArrayEnd(): Unit = {
     skipWhitespaceChars()
     if (currentChar != ']') {
-      throw new IllegalArgumentException("Array should end with ']' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
+      throw new IllegalArgumentException("Array should end with ']' symbol but found " + describeCurrent)
     }
     nextChar()
   }
@@ -170,10 +170,13 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
   def consumeArrayValuesSeparator(): Unit = {
     skipWhitespaceChars()
     if (currentChar != ',') {
-      throw new IllegalArgumentException("Array values should be separated by ',' symbol but was '" + currentChar + "'\n" + stringValue + "\n" + debugGetRemainingString)
+      throw new IllegalArgumentException("Array values should be separated by ',' symbol but found " + describeCurrent)
     }
     nextChar()
   }
+
+  /** The current character quoted, or "end of input" once the cursor is past the last character. */
+  def describeCurrent: String = if (nextIndex > stringLength) "end of input" else "'" + currentChar + "'"
 
   def debugGetRemainingString: String = {
     stringValue.substring(Math.min(nextIndex - 1, stringLength))

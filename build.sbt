@@ -31,3 +31,4 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest-mustmatchers" % "3.2.15" % Test)
 
 scalacOptions := Seq("-unchecked", "-deprecation")
+enablePlugins(JmhPlugin)

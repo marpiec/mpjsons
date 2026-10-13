@@ -112,18 +112,19 @@ Output key order follows `tpe.members` (reverse). `members.sorted` or `decls` gi
 (**verified**). Changing it alters output strings (only `JavaPrimitivesSpec` asserts a multi-field order), which
 matters for anyone diffing or hashing serialized JSON; see roadmap.md §2.3.
 
-### 18. Thread-safety — RISK
+### 18. Thread-safety — FIXED for caches, registries remain registration-time only
 
-All caches are unsynchronized `var Map`s (architecture.md §10). Concurrent first-time use of new types can
-build a (de)serializer twice and can race inside Scala runtime reflection. Warm up types before sharing an
-instance across threads, or move caches to `ConcurrentHashMap.computeIfAbsent` (and make the registries
-immutable after a `freeze()`).
+All (de)serializer, reflection and type caches are `ConcurrentHashMap`s with get-then-`putIfAbsent` (never
+`computeIfAbsent`, because building a (de)serializer re-enters the factory). `ConcurrencySpec` exercises cold
+first-time use of a dozen types from 8 threads. The converter registries (`registerConverter`,
+`markTypedClass`, `postDeserializationTransform`) are still plain `var Map`s: register everything before sharing
+an instance across threads.
 
-### 19. `TypeTag`-keyed cache does not cache — LIMITATION (verified by timing)
+### 19. `TypeTag`-keyed cache does not cache — FIXED
 
-`MPJsons.extractTypeCache` is keyed by `TypeTag`, whose `equals`/`hashCode` evaluate `tag.tpe`, which is the
-expensive step it tries to skip; and a fresh `TypeTag` object is materialised at every call site invocation
-(~0.15 µs). See performance.md §3.
+`MPJsons.extractType` is now just `tag.tpe`; the memoizer looks the cache up before building any `Context`, so a
+warm root lookup is one hash probe with no allocation. The remaining TypeTag-API overhead (~100 ns, ~100 B) is the
+`TypeTag` materialisation at the call site, which only `buildStatic*` avoids.
 
 ### 20. JDK evolution risks — RISK
 

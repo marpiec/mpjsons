@@ -77,21 +77,22 @@ DeserializerFactory (impl/DeserializerFactory.scala, empty concrete class)
 ### 3.1 Memoizer (`DeserializerFactoryMemoizer.scala:18-34`, `SerializerFactoryMemoizer.scala:17-34`)
 
 ```scala
-val tpe = if (orgtpe.typeSymbol.isParameter) context.typeParams(orgtpe.typeSymbol) else orgtpe
-val newContext = Context(tpe :: context.typesStack,
-  context.typeParams ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap)
-cache.getOrElse((tpe, allowSuperType), { build; cache += ...; result })
+val tpe = TypeParamsResolver.resolve(orgtpe, context)      // List[T] -> List[Int] using context.typeParams
+val map = if (allowSuperType) cache else cacheWithoutSuperTypes   // two ConcurrentHashMap[Type, ...]
+val cached = map.get(tpe); if (cached != null) return cached
+val newContext = Context(tpe :: context.typesStack, context.typeParams ++ (tpe's own params zip tpe.typeArgs))
+val created = build(tpe, newContext, allowSuperType); map.putIfAbsent(tpe, created)   // first stored wins
 ```
 
-Three facts that matter:
+Facts that matter:
 
-1. The cache key is `(Type, allowSuperType)` only. The type-parameter bindings in `context` are **not**
-   part of the key. For a field whose declared type *contains* a parameter but whose head symbol is not a
-   parameter (e.g. `items: List[T]` inside `Box[T]`), `tpe` stays `List[T]` and the first binding of `T`
-   wins forever. **Verified bug**, see known-issues §1.
-2. `newContext` (a `Context` case class and a new `Map`) is built on every call, including cache hits.
-   On the root call this is per-`serialize`/`deserialize` overhead (performance.md §3).
-3. `allowSuperType = false` is used only by `TypedConverter` to avoid re-entering the superclass converter
+1. The key is the **fully substituted** type, so different instantiations of a generic bean never share
+   element (de)serializers (`GenericTypeParamsSpec`). An unbound parameter is an error.
+2. A cache hit allocates nothing; `Context` is only built on a miss.
+3. `putIfAbsent` rather than `computeIfAbsent`: building a (de)serializer re-enters the factory for its
+   element types, which `computeIfAbsent` forbids. Under contention two threads may build the same
+   (de)serializer; the first stored wins and both are equivalent.
+4. `allowSuperType = false` is used only by `TypedConverter` to avoid re-entering the superclass converter
    for the concrete subtype (that was the "Cache fixed" commit `148f457`).
 
 ### 3.2 Dispatch chains (cold path, run once per `(Type, Boolean)`)
@@ -212,15 +213,16 @@ dispatch; the user instantiates them with a `TypeTag[T]` and registers them as a
 
 ## 10. Caches and mutability (thread-safety)
 
-Every cache is a `var` holding an immutable `Map`, updated with `+=`, unsynchronized:
-`MPJsons.extractTypeCache`, `extractTypeFromNameCache`; `*FactoryMemoizer.get*Cache`;
-`*FactoryImpl.additional*` registries and `postTransform`; `ReflectionUtil.getAllAccessibleFieldsCache`;
-the four maps in `TypesUtil` (global, shared across `MPJsons` instances); `TypedSerializer.serializers`,
-`TypedDeserializer.deserializers`. Lost updates under concurrent first use are possible (the worst
-outcome is rebuilding a (de)serializer twice, since values are deterministic), but torn reads of the
-`Map` reference are not possible on the JVM; the real risk is concurrent Scala-reflection work and
-double construction cost. Scala runtime reflection is documented thread-safe since 2.11 but is
-lock-based. Treat an `MPJsons` instance as read-mostly after warm-up.
+Caches are `java.util.concurrent.ConcurrentHashMap`s filled with get-then-`putIfAbsent`:
+`MPJsons.extractTypeFromNameCache`; the two maps in each `*FactoryMemoizer`; `ReflectionUtil.getAllAccessibleFieldsCache`;
+the three maps in `TypesUtil` (global, shared across `MPJsons` instances); `TypedSerializer.serializers`,
+`TypedDeserializer.deserializers`. Under contention a (de)serializer may be built twice; the first stored wins.
+`ConcurrencySpec` runs cold first-time use of a dozen types from 8 threads.
+
+Still plain `var Map`s, written only by the registration methods: `*FactoryImpl.additional*` registries and
+`postTransform`. Register converters and typed classes before sharing an instance across threads. Scala runtime
+reflection is documented thread-safe since 2.11 but is lock-based, so cold-start work from many threads
+serialises on that lock.
 
 ## 11. File map
 

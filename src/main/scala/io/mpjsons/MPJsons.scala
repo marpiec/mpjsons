@@ -85,25 +85,23 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
   private val deserializerFactory = new DeserializerFactory(ignoreNonExistingFields)
   private val serializerFactory = new SerializerFactory(ignoreNullFields)
 
-  private var extractTypeCache = Map[TypeTag[_], Type]()
-  private var extractTypeFromNameCache = Map[String, Type]()
+  private val extractTypeFromNameCache = new java.util.concurrent.ConcurrentHashMap[String, Type]()
 
   private val nothingTypeTag = typeTag[Nothing]
 
-  private def extractType[T](tag: TypeTag[T]): Type = {
-    extractTypeCache.getOrElse(tag, {
-      val tpe = tag.tpe
-      extractTypeCache += tag -> tpe
-      tpe
-    })
-  }
+  // A materialised TypeTag is a fresh object on every call and its equals/hashCode evaluate tag.tpe anyway,
+  // so caching by TypeTag cannot save that computation; tag.tpe itself is cheap for interned types.
+  private def extractType[T](tag: TypeTag[T]): Type = tag.tpe
 
   private def extractTypeFromName[T](typeName: String): Type = {
-    extractTypeFromNameCache.getOrElse(typeName, {
+    val cached = extractTypeFromNameCache.get(typeName)
+    if (cached != null) {
+      cached
+    } else {
       val tpe = TypesUtil.getTypeFromClass(Class.forName(typeName))
-      extractTypeFromNameCache += typeName -> tpe
+      extractTypeFromNameCache.putIfAbsent(typeName, tpe)
       tpe
-    })
+    }
   }
 
   /**

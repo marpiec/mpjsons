@@ -77,14 +77,13 @@ Maps serialize as a **JSON array of `[key,value]` pairs** (`MapSerializer` / `Ab
 
 ## Concurrency / state model (important for bug-hunting)
 
-Caches throughout are **`var` fields holding immutable `Map`s, mutated with `+=`** (not synchronized, not `concurrent.Map`):
-- `MPJsons.extractTypeCache`, `extractTypeFromNameCache`
-- `DeserializerFactoryMemoizer.getDeserializerCache`, `SerializerFactoryMemoizer.getSerializerCache`
-- `DeserializerFactoryImpl.additionalDeserializers` / `additionalSuperclassDeserializers` / `postTransform`, and serializer equivalents
-- `ReflectionUtil.getAllAccessibleFieldsCache`, all four caches in `TypesUtil`
+Caches are `ConcurrentHashMap`s filled with get-then-`putIfAbsent` (never `computeIfAbsent`: building a (de)serializer re-enters the factory for element types):
+- `MPJsons.extractTypeFromNameCache` (`extractType` is plain `tag.tpe`)
+- the two maps in `DeserializerFactoryMemoizer` / `SerializerFactoryMemoizer` (keyed by the fully substituted `Type`)
+- `ReflectionUtil.getAllAccessibleFieldsCache`, the three caches in `TypesUtil`
 - `TypedConverter.TypedSerializer.serializers` / `TypedDeserializer.deserializers`
 
-This means a single `MPJsons` instance is **not safe for concurrent first-time use of new types** (lost cache updates, racy reads). Once all types are warmed it is effectively read-mostly. Also note Scala 2.13 `scala.reflect.runtime` was historically not thread-safe — relevant if reviewing multi-threaded usage. Treat thread-safety as an open question to confirm against the user's deployment, not an established guarantee.
+Still plain `var Map`s, written only at registration time: `DeserializerFactoryImpl.additionalDeserializers` / `additionalSuperclassDeserializers` / `postTransform` and the serializer equivalents. Register converters before sharing an instance across threads. `ConcurrencySpec` covers cold first-time use from 8 threads. Scala runtime reflection is thread-safe (lock-based) since 2.11.
 
 ## Performance-sensitive hot paths
 

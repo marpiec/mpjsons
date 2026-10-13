@@ -4,6 +4,7 @@ import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
 import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer}
 
+import java.util.concurrent.ConcurrentHashMap
 import scala.reflect.runtime.universe._
 
 
@@ -11,19 +12,17 @@ object TypedConverter {
 
   class TypedSerializer[T <: AnyRef](serializerFactory: SerializerFactory) extends JsonTypeSerializer[T] {
 
-    private var serializers: Map[String, JsonTypeSerializer[AnyRef]] = Map.empty
+    private val serializers = new ConcurrentHashMap[Class[_], JsonTypeSerializer[AnyRef]]()
 
     override def serialize(obj: T, jsonBuilder: StringBuilder): Unit = {
-      val typeName = obj.getClass.getSimpleName
-      val innerElementSerializer = serializers.getOrElse(typeName, {
-        val s = serializerFactory.getSerializer(TypesUtil.getTypeFromClass(obj.getClass), Context(List.empty, Map.empty), allowSuperType = false).asInstanceOf[JsonTypeSerializer[AnyRef]]
-        serializers += typeName -> s
-        s
-      })
+      val clazz = obj.getClass
+      var innerElementSerializer = serializers.get(clazz)
+      if (innerElementSerializer == null) {
+        innerElementSerializer = serializerFactory.getSerializer(TypesUtil.getTypeFromClass(clazz), Context(List.empty, Map.empty), allowSuperType = false).asInstanceOf[JsonTypeSerializer[AnyRef]]
+        serializers.putIfAbsent(clazz, innerElementSerializer)
+      }
 
-      val simpleName: String = obj.getClass.getSimpleName
-      jsonBuilder.append("{\"" + simpleName + "\":")
-
+      jsonBuilder.append("{\"").append(clazz.getSimpleName).append("\":")
       innerElementSerializer.serialize(obj, jsonBuilder)
       jsonBuilder.append('}')
     }
@@ -33,7 +32,7 @@ object TypedConverter {
   class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: DeserializerFactory)
     extends JsonTypeDeserializer[T] {
 
-    private var deserializers: Map[String, JsonTypeDeserializer[AnyRef]] = Map.empty
+    private val deserializers = new ConcurrentHashMap[String, JsonTypeDeserializer[AnyRef]]()
 
     override def deserialize(jsonIterator: StringIterator): T = {
 
@@ -41,12 +40,12 @@ object TypedConverter {
 
       val typeName = extractTypeName(jsonIterator)
 
-      val innerElementDeserializer = deserializers.getOrElse(typeName, {
+      var innerElementDeserializer = deserializers.get(typeName)
+      if (innerElementDeserializer == null) {
         val elementType = TypesUtil.getTypeFromClass(Class.forName(packageName + "." + typeName))
-        val d = deserializerFactory.getDeserializer(elementType, Context(List.empty, Map.empty), allowSuperType = false).asInstanceOf[JsonTypeDeserializer[AnyRef]]
-        deserializers += typeName -> d
-        d
-      })
+        innerElementDeserializer = deserializerFactory.getDeserializer(elementType, Context(List.empty, Map.empty), allowSuperType = false).asInstanceOf[JsonTypeDeserializer[AnyRef]]
+        deserializers.putIfAbsent(typeName, innerElementDeserializer)
+      }
 
       jsonIterator.skipWhitespaceChars()
       jsonIterator.nextChar()
@@ -69,7 +68,3 @@ object TypedConverter {
   }
 
 }
-
-
-
-

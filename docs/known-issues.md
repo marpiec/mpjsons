@@ -68,10 +68,10 @@ nested types); an unknown name fails with a message listing the known subclasses
 Remaining limitation: subtypes of a **non-sealed** trait must be siblings of the trait, and two subtypes with the
 same simple name cannot be told apart (the wire format carries only the simple name; see roadmap.md §4.1 for aliases).
 
-### 11. Superclass-converter matching is nondeterministic — BUG (by inspection)
+### 11. Superclass-converter matching is nondeterministic — FIXED
 
-`DeserializerFactoryImpl.scala:175-179` / `SerializerFactoryImpl.scala:165-169` iterate a `Map[Symbol, _]`; when a
-type extends two registered supertypes, which converter wins depends on map iteration order.
+The registry is probed in the order of `tpe.baseClasses` (the linearization, most derived first), so the most
+specific registered supertype wins regardless of registration order. Covered by `SuperclassConverterSpec`.
 
 ### 12. Misleading errors on type mismatch — FIXED for numbers
 

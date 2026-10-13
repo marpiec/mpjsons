@@ -179,14 +179,10 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
     }
 
     if(allowSuperType) {
-      additionalSuperclassDeserializers.get(typeSymbol) match {
-        case Some(deserializer) => return deserializer(this.asInstanceOf[DeserializerFactory])
-        case None =>
-          for ((tpeType, deserializer) <- additionalSuperclassDeserializers) {
-            if (tpe.baseClasses.contains(tpeType)) {
-              return deserializer(this.asInstanceOf[DeserializerFactory])
-            }
-          }
+      // The most specific registered supertype wins: baseClasses is the linearization, most derived first.
+      val registered = tpe.baseClasses.iterator.flatMap(additionalSuperclassDeserializers.get).nextOption()
+      if (registered.isDefined) {
+        return registered.get(this.asInstanceOf[DeserializerFactory])
       }
     }
 

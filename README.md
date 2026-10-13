@@ -322,6 +322,35 @@ new MPJsons(nullPolicy = NullPolicy.WriteNull).serialize(List("a", null))       
 
 `ignoreNullFields = true` is the same as `NullPolicy.Omit`.
 
+### Compact output
+
+`MPJsonsConfig` holds opt-in format levers. The defaults reproduce the historical format, and
+the reader accepts both forms wherever they can be told apart, so an instance with a lever on can
+still read data written with it off.
+
+```scala
+import io.mpjsons.{MPJsons, MPJsonsConfig}
+
+val compact = new MPJsons(MPJsonsConfig(escapeSlash = false, compactOptions = true))
+
+case class Profile(name: String, nickname: Option[String], homepage: Option[String])
+
+compact.serialize(Profile("Ann", Some("annie"), None))
+// {"name":"Ann","nickname":"annie"}      (historical: {"name":"Ann","nickname":{"value":"annie"},"homepage":{}})
+```
+
+| Lever | Default | Effect when changed |
+|---|---|---|
+| `escapeSlash = false` | `true` | `/` is written unescaped instead of `\/`. Reading is unaffected. |
+| `compactOptions = true` | `false` | `Some(v)` is written as `v`; a `None` field is omitted and a `None` element is `null`. An `Option` directly inside another `Option` keeps the historical form so `Some(None)` survives. On read, the historical `{}` / `{"value":v}` is still recognised unless the element type is itself written as a JSON object (a bean, an `Option`, `Either`, a time type), in which case `{` is the inline element. |
+| `mapsAsObjects = true` | `false` | Maps whose key type is `String`, a number, `Boolean` or `Char` are written as `{"key":value}` instead of `[["key",value]]`; other key types keep the pair form. A null value is treated like a null bean field (dropped under `NullPolicy.Omit`, `"key":null` under `WriteNull`, error under `Fail`). Both forms are always read. |
+| `isoTime = true` | `false` | `LocalDate`, `LocalTime`, `LocalDateTime` and `Duration` are written as ISO-8601 strings (`"2023-07-23"`, `"PT1M"`) instead of objects. Both forms are always read. |
+| `strict = true` | `false` | Reading rejects missing commas, trailing commas and content after the root value instead of tolerating them. Bare keys and whitespace are still accepted. |
+| `omitDefaults = true` | `false` | Bean fields whose value equals what reading `{}` would produce (the no-arg constructor initialisers, or zero / false / null / None) are left out. Lossless for round trips through this library; such nulls are omitted regardless of `nullPolicy`. |
+| `caseClassesViaConstructor = true` | `false` | Case classes are built by calling their primary constructor with the parsed values (constructor bodies such as `require` run; no final field is written reflectively, which future JDKs restrict). Absent keys still give zero / false / null / None. Costs some boxing per value. |
+
+Other levers are listed in `docs/roadmap.md`.
+
 ### Post-deserialization transform
 
 Register a function to run on each instance of a type after deserialization — handy for

@@ -9,8 +9,10 @@ import scala.reflect.runtime.universe._
 /**
  * Historical form: an array of [key,value] pairs, which works for any key type.
  * Object form (`mapsAsObjects`, only for scalar key types, see MapKeys): {"key":value,...} with the key's text
- * as the JSON key. Null keys and values are written as `null` in the pair form when the NullPolicy allows nulls
- * and rejected under Fail; a null key has no object form and always fails.
+ * as the JSON key.
+ * Pair form: null keys and values are elements, written as `null` when the NullPolicy allows nulls and rejected
+ * under Fail. Object form: a null value is treated like a null bean field (Fail throws naming the key, Omit leaves
+ * the entry out, WriteNull writes `"key":null`); a null key has no object form and always fails.
  * @author Marcin Pieciukiewicz
  */
 
@@ -23,7 +25,8 @@ class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, conte
   private val keySerializer = serializerFactory.getSerializer(subtypes._1, context).asInstanceOf[JsonTypeSerializer[K]]
   private val valueSerializer = serializerFactory.getSerializer(subtypes._2, context).asInstanceOf[JsonTypeSerializer[V]]
   private val keyIsString = subtypes._1 <:< MapSerializer.stringType
-  private val nullsAllowed = serializerFactory.config.nullPolicy != NullPolicy.Fail
+  private val nullPolicy = serializerFactory.config.nullPolicy
+  private val nullsAllowed = nullPolicy != NullPolicy.Fail
 
 
   override def serialize(map: scala.collection.Map[K, V], jsonBuilder: StringBuilder): Unit = {
@@ -55,29 +58,39 @@ class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, conte
     jsonBuilder.append(']')
   }
 
+  /** Object form: a null value is treated like a null bean field (Fail throws, Omit skips the entry, WriteNull writes null). */
   private def serializeAsObject(map: scala.collection.Map[K, V], jsonBuilder: StringBuilder): Unit = {
 
     jsonBuilder.append('{')
     var nonFirstField = false
 
     map.foreachEntry { (key, value) =>
-      if (nonFirstField) {
-        jsonBuilder.append(',')
-      } else {
-        nonFirstField = true
-      }
-
       if (key == null) {
         throw new IllegalArgumentException("A null map key cannot be written as a JSON object key")
-      } else if (keyIsString) {
-        keySerializer.serialize(key, jsonBuilder)
-      } else {
-        jsonBuilder.append('"').append(key.toString).append('"')
       }
 
-      jsonBuilder.append(':')
+      if (value == null && nullPolicy == NullPolicy.Fail) {
+        throw new IllegalArgumentException("Null value is not allowed for map key '" + key + "' in " + tpe +
+          " (NullPolicy.Fail); use NullPolicy.Omit or WriteNull to allow nulls")
+      }
 
-      if (value == null) NullValues.writeNull(jsonBuilder, nullsAllowed, "a value of " + tpe) else valueSerializer.serialize(value, jsonBuilder)
+      if (value != null || nullPolicy == NullPolicy.WriteNull) {
+        if (nonFirstField) {
+          jsonBuilder.append(',')
+        } else {
+          nonFirstField = true
+        }
+
+        if (keyIsString) {
+          keySerializer.serialize(key, jsonBuilder)
+        } else {
+          jsonBuilder.append('"').append(key.toString).append('"')
+        }
+
+        jsonBuilder.append(':')
+
+        if (value == null) jsonBuilder.append("null") else valueSerializer.serialize(value, jsonBuilder)
+      }
     }
 
     jsonBuilder.append('}')

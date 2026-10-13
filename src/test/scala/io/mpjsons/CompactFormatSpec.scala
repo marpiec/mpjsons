@@ -91,10 +91,29 @@ class CompactFormatSpec extends AnyFlatSpec {
     mapsAsObjects.serialize(Map(true -> List(1))) mustBe """{"true":[1]}"""
     mapsAsObjects.serialize(Map('c' -> 1.5)) mustBe """{"c":1.5}"""
     new MPJsons(MPJsonsConfig(mapsAsObjects = true, nullPolicy = NullPolicy.WriteNull)).serialize(Map("q\"uote" -> (null: String))) mustBe """{"q\"uote":null}"""
-    intercept[IllegalArgumentException] { mapsAsObjects.serialize(Map("k" -> (null: String))) }
+    intercept[IllegalArgumentException] { mapsAsObjects.serialize(Map("k" -> (null: String))) }.getMessage must include("'k'")
     mapsAsObjects.serialize(Map(Nested(1) -> "bean")) mustBe """[[{"v":1},"bean"]]"""
     mapsAsObjects.serialize(scala.collection.mutable.Map("m" -> 1)) mustBe """{"m":1}"""
     legacy.serialize(Map("a" -> 1)) mustBe """[["a",1]]"""
+  }
+
+  "mapsAsObjects" must "treat a null value like a null bean field under each NullPolicy" in {
+    val withNull: Map[String, String] = Map("a" -> "x", "b" -> null)
+    val omitObjects = new MPJsons(MPJsonsConfig(mapsAsObjects = true, nullPolicy = NullPolicy.Omit))
+    val writeObjects = new MPJsons(MPJsonsConfig(mapsAsObjects = true, nullPolicy = NullPolicy.WriteNull))
+
+    omitObjects.serialize(withNull) mustBe """{"a":"x"}"""
+    omitObjects.serialize(Map[Int, String](1 -> null)) mustBe "{}"
+    omitObjects.serialize(scala.collection.mutable.LinkedHashMap[String, String]("a" -> null, "b" -> "y")) mustBe """{"b":"y"}"""
+    new MPJsons(MPJsonsConfig(mapsAsObjects = true, nullPolicy = NullPolicy.Omit)).deserialize[Map[String, String]](omitObjects.serialize(withNull)) mustBe Map("a" -> "x")
+
+    writeObjects.serialize(withNull) mustBe """{"a":"x","b":null}"""
+    writeObjects.deserialize[Map[String, String]](writeObjects.serialize(withNull)) mustBe withNull
+
+    // the pair form cannot drop an entry without losing its key, so Omit still writes null there
+    new MPJsons(nullPolicy = NullPolicy.Omit).serialize(withNull) mustBe """[["a","x"],["b",null]]"""
+    // a non-scalar key type keeps the pair form, so its null values stay as null elements
+    omitObjects.serialize(Map(Nested(1) -> (null: String))) mustBe """[[{"v":1},null]]"""
   }
 
   "mapsAsObjects" must "round trip and read both forms in both configurations" in {

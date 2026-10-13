@@ -15,41 +15,166 @@ import scala.reflect.runtime.universe._
 
 case class FieldInfo[T](field: Field, name: String, jsonTypeSerializer: JsonTypeSerializer[T], nullable: Boolean)
 
+/**
+ * Writes one bean field. `write` appends `"name":value` (with the leading comma when `notFirst`) and returns
+ * true, or appends nothing and returns false when the value is null and nulls are allowed for the field.
+ * Primitive fields are read without boxing when the built-in serializer is in use.
+ */
+abstract class BeanFieldWriter(val name: String, val field: Field, val nullable: Boolean) {
+
+  protected val prefix: String = "\"" + name + "\":"
+  protected val prefixWithComma: String = "," + prefix
+
+  def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean
+
+  protected final def appendPrefix(builder: java.lang.StringBuilder, notFirst: Boolean): Unit = {
+    builder.append(if (notFirst) prefixWithComma else prefix)
+  }
+}
+
+object BeanFieldWriter {
+
+  def apply(info: FieldInfo[AnyRef], errorOnNulls: Boolean, typeName: String): BeanFieldWriter = {
+    val field = info.field
+    val fieldType = field.getType
+    val serializer = info.jsonTypeSerializer
+    if (fieldType == java.lang.Integer.TYPE && (serializer eq SimpleToStringSerializer)) {
+      new IntWriter(info.name, field)
+    } else if (fieldType == java.lang.Long.TYPE && (serializer eq SimpleToStringSerializer)) {
+      new LongWriter(info.name, field)
+    } else if (fieldType == java.lang.Boolean.TYPE && (serializer eq SimpleToStringSerializer)) {
+      new BooleanWriter(info.name, field)
+    } else if (fieldType == java.lang.Double.TYPE && (serializer eq DoubleSerializer)) {
+      new DoubleWriter(info.name, field)
+    } else if (fieldType == java.lang.Float.TYPE && (serializer eq FloatSerializer)) {
+      new FloatWriter(info.name, field)
+    } else if (fieldType == java.lang.Short.TYPE && (serializer eq SimpleToStringSerializer)) {
+      new ShortWriter(info.name, field)
+    } else if (fieldType == java.lang.Byte.TYPE && (serializer eq SimpleToStringSerializer)) {
+      new ByteWriter(info.name, field)
+    } else {
+      new ObjectWriter(info.name, field, info.nullable, serializer, errorOnNulls, typeName)
+    }
+  }
+
+  final class ObjectWriter(name: String, field: Field, nullable: Boolean, serializer: JsonTypeSerializer[AnyRef],
+                           errorOnNulls: Boolean, typeName: String) extends BeanFieldWriter(name, field, nullable) {
+    private val failOnNull = errorOnNulls && !nullable
+
+    override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val value = field.get(obj)
+      if (value == null) {
+        if (failOnNull) {
+          throw new IllegalArgumentException("Null value is not allowed for field " + name + " in type " + typeName)
+        }
+        false
+      } else {
+        appendPrefix(jsonBuilder.underlying, notFirst)
+        serializer.serialize(value, jsonBuilder)
+        true
+      }
+    }
+  }
+
+  final class IntWriter(name: String, field: Field) extends BeanFieldWriter(name, field, false) {
+    override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val builder = jsonBuilder.underlying
+      appendPrefix(builder, notFirst)
+      builder.append(field.getInt(obj))
+      true
+    }
+  }
+
+  final class LongWriter(name: String, field: Field) extends BeanFieldWriter(name, field, false) {
+    override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val builder = jsonBuilder.underlying
+      appendPrefix(builder, notFirst)
+      builder.append(field.getLong(obj))
+      true
+    }
+  }
+
+  final class BooleanWriter(name: String, field: Field) extends BeanFieldWriter(name, field, false) {
+    override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val builder = jsonBuilder.underlying
+      appendPrefix(builder, notFirst)
+      builder.append(if (field.getBoolean(obj)) "true" else "false")
+      true
+    }
+  }
+
+  final class DoubleWriter(name: String, field: Field) extends BeanFieldWriter(name, field, false) {
+    override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val value = field.getDouble(obj)
+      if (!java.lang.Double.isFinite(value)) {
+        throw new IllegalArgumentException("Non-finite floating point value " + value + " in field " + name + " cannot be represented in JSON")
+      }
+      val builder = jsonBuilder.underlying
+      appendPrefix(builder, notFirst)
+      builder.append(value)
+      true
+    }
+  }
+
+  final class FloatWriter(name: String, field: Field) extends BeanFieldWriter(name, field, false) {
+    override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val value = field.getFloat(obj)
+      if (!java.lang.Float.isFinite(value)) {
+        throw new IllegalArgumentException("Non-finite floating point value " + value + " in field " + name + " cannot be represented in JSON")
+      }
+      val builder = jsonBuilder.underlying
+      appendPrefix(builder, notFirst)
+      builder.append(value)
+      true
+    }
+  }
+
+  final class ShortWriter(name: String, field: Field) extends BeanFieldWriter(name, field, false) {
+    override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val builder = jsonBuilder.underlying
+      appendPrefix(builder, notFirst)
+      builder.append(field.getShort(obj).toInt)
+      true
+    }
+  }
+
+  final class ByteWriter(name: String, field: Field) extends BeanFieldWriter(name, field, false) {
+    override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val builder = jsonBuilder.underlying
+      appendPrefix(builder, notFirst)
+      builder.append(field.getByte(obj).toInt)
+      true
+    }
+  }
+}
+
 class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, errorOnNulls: Boolean = true) extends JsonTypeSerializer[AnyRef] {
 
   private val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type serializer */
-  private lazy val fieldsWithSerializers = fields.map { field =>
+  private lazy val fieldsWithSerializers: Array[FieldInfo[AnyRef]] = fields.map { field =>
     FieldInfo(field.field, field.field.getName, serializerFactory.getSerializer(field.tpe, context)
       .asInstanceOf[JsonTypeSerializer[AnyRef]], field.nullable)
+  }
+  private lazy val writers: Array[BeanFieldWriter] = {
+    val typeName = tpe.typeSymbol.fullName
+    fieldsWithSerializers.map(info => BeanFieldWriter(info, errorOnNulls, typeName))
   }
 
 
   override def serialize(obj: AnyRef, jsonBuilder: StringBuilder): Unit = {
 
+    val fieldWriters = writers
 
     jsonBuilder.append('{')
 
     var isNotFirstField = false
-
-    for (field <- fieldsWithSerializers) {
-
-      val value = field.field.get(obj)
-      if (value == null) {
-        if(errorOnNulls && !field.nullable) {
-          throw new IllegalArgumentException("Null value is not allowed for field " + field.name + " in type " + tpe.typeSymbol.fullName)
-        }
-      } else {
-
-        if (isNotFirstField) {
-          jsonBuilder.append(',')
-        } else {
-          isNotFirstField = true
-        }
-
-        jsonBuilder.append('"').append(field.name).append('"').append(':')
-        field.jsonTypeSerializer.serialize(value, jsonBuilder)
+    var index = 0
+    while (index < fieldWriters.length) {
+      if (fieldWriters(index).write(obj, jsonBuilder, isNotFirstField)) {
+        isNotFirstField = true
       }
+      index += 1
     }
 
     jsonBuilder.append('}')

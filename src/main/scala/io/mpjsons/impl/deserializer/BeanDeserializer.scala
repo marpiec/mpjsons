@@ -25,7 +25,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   lazy val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type deserializer */
   lazy val fieldTable: BeanFieldTable = new BeanFieldTable(fields.map { field =>
-    new BeanField(field.field.getName, field.field, deserializerFactory.getDeserializer(field.tpe, context).asInstanceOf[JsonTypeDeserializer[AnyRef]])
+    BeanField(field.field.getName, field.field, deserializerFactory.getDeserializer(field.tpe, context))
   })
 
 
@@ -42,7 +42,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
       if (field != null) {
         jsonIterator.consumeFieldValueSeparator()
-        field.field.set(instance, field.deserializer.deserialize(jsonIterator))
+        field.set(instance.asInstanceOf[AnyRef], jsonIterator)
       } else {
         val identifier = IdentifierDeserializer.deserialize(jsonIterator)
         jsonIterator.consumeFieldValueSeparator()

@@ -4,24 +4,27 @@ import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.StringIterator
 
 /**
+ * Reads the literals true / false by comparing the raw input in place.
  * @author Marcin Pieciukiewicz
  */
 object BooleanDeserializer extends JsonTypeDeserializer[Boolean] {
 
   override def deserialize(jsonIterator: StringIterator): Boolean = {
-    val booleanString = new StringBuilder()
 
     jsonIterator.skipWhitespaceChars()
 
-    while (jsonIterator.isCurrentCharASmallLetter) {
-      booleanString.append(jsonIterator.currentChar)
-      jsonIterator.nextChar()
-    }
+    val input = jsonIterator.stringValue
+    val start = jsonIterator.nextIndex - 1
 
-    booleanString.toString() match {
-      case "true" => true
-      case "false" => false
-      case _ => throw new IllegalArgumentException(s"Invalid boolean value: $booleanString")
+    if (input.startsWith("true", start)) {
+      jsonIterator.seek(start + 4)
+      true
+    } else if (input.startsWith("false", start)) {
+      jsonIterator.seek(start + 5)
+      false
+    } else {
+      val found = if (start >= jsonIterator.stringLength) "end of input" else "'" + jsonIterator.currentChar + "'"
+      throw new IllegalArgumentException("Expected a boolean (true or false) but found " + found)
     }
   }
 
@@ -30,20 +33,7 @@ object BooleanDeserializer extends JsonTypeDeserializer[Boolean] {
 object JavaBooleanDeserializer extends JsonTypeDeserializer[java.lang.Boolean] {
 
   override def deserialize(jsonIterator: StringIterator): java.lang.Boolean = {
-    val booleanString = new StringBuilder()
-
-    jsonIterator.skipWhitespaceChars()
-
-    while (jsonIterator.isCurrentCharASmallLetter) {
-      booleanString.append(jsonIterator.currentChar)
-      jsonIterator.nextChar()
-    }
-
-    booleanString.toString() match {
-      case "true" => java.lang.Boolean.TRUE
-      case "false" => java.lang.Boolean.FALSE
-      case _ => throw new IllegalArgumentException(s"Invalid boolean value: $booleanString")
-    }
+    if (BooleanDeserializer.deserialize(jsonIterator)) java.lang.Boolean.TRUE else java.lang.Boolean.FALSE
   }
 
 }

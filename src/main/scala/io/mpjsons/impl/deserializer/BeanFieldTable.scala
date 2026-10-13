@@ -1,14 +1,6 @@
 package io.mpjsons.impl.deserializer
 
-import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.StringIterator
-
-import java.lang.reflect.Field
-
-/** One bean field: its JSON key, the reflective field and the deserializer for its type. */
-final class BeanField(val name: String, val field: Field, val deserializer: JsonTypeDeserializer[AnyRef]) {
-  val hash: Int = name.hashCode
-}
 
 /**
  * Immutable open-addressing table of bean fields keyed by their JSON name.

@@ -139,7 +139,7 @@ warm root lookup is one hash probe with no allocation. The remaining TypeTag-API
 
 ### 21. Miscellaneous (by inspection)
 
-- `Iterable[T]` deserializes to a mutable `ArrayBuffer` exposed as `Iterable`; `Stream` is deprecated in 2.13 and `LazyList` is unsupported.
+- `Iterable[T]` deserializes to a mutable `ArrayBuffer` exposed as `Iterable`; `Stream` is deprecated in 2.13 (`LazyList` is supported, read eagerly).
 - `registerConverter` keys on `tpe.toString`; two different types with the same printed name (e.g. same simple name after `import`-dependent printing? no, `toString` is fully qualified for `TypeRef`) are unlikely but type aliases print as their alias.
 - `TypesUtil.getClassFromType` uses the library's class loader; `getTypeFromClass` uses the class's loader; `deserialize(json, typeName)` uses `Class.forName(typeName)` with the caller-independent loader. Multi-classloader deployments (app servers, plugins) can fail to resolve application classes.
 - `slf4j-api` is a declared runtime dependency but is never used.

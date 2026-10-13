@@ -128,6 +128,8 @@ class DeserializerFactoryImpl(config: MPJsonsConfig) {
       return new SeqDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Stream[_]].typeSymbol || typeSymbol == typeOf[immutable.Stream[_]].typeSymbol) {
       return new StreamDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[LazyList[_]].typeSymbol) {
+      return new LazyListDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[immutable.Queue[_]].typeSymbol) {
       return new QueueDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }

@@ -106,7 +106,7 @@ Facts that matter:
 4. `Array` via `tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass` (**unguarded cast**, crashes for `SingleType` such as `Foo.type`, known-issues §3).
 5. `Option`, `Map`/`immutable.Map`, `Either`.
 6. `Tuple1..Tuple6`.
-7. Seqs: `List`, `Vector`, `Iterable`, `Seq`, `Stream`, `immutable.Queue` (each matched for both the `scala.collection` and `immutable` symbol where both exist).
+7. Seqs: `List`, `Vector`, `Iterable`, `Seq`, `Stream`, `LazyList`, `immutable.Queue` (each matched for both the `scala.collection` and `immutable` symbol where both exist).
 8. Sets: `Set`, `immutable.HashSet`, `immutable.ListSet`; `SortedSet`/`TreeSet` → `IllegalStateException`; `BitSet`.
 9. Maps: `immutable.HashMap`; `SortedMap`/`TreeMap` → throw; `immutable.ListMap`.
 10. Mutable collections: `mutable.ArrayBuffer/Buffer/Seq/IndexedSeq/Iterable` → `ArrayBufferDeserializer`; `mutable.Set/HashSet` → `MutableHashSetDeserializer`; `mutable.Map/HashMap` → `MutableHashMapDeserializer`.

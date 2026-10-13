@@ -4,6 +4,7 @@ import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerialize
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
 
+import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.StaticAnnotation
 import scala.reflect.runtime.universe._
 
@@ -28,9 +29,26 @@ private object ErrorMessageFormatter {
 }
 
 /**
+ * Remembers the length of the last output produced for one type, so the next output buffer can be
+ * allocated at the right size instead of growing from the default capacity in several steps.
+ * Races between threads only make the hint slightly stale, which is harmless.
+ */
+private[mpjsons] final class OutputSizeHint {
+  @volatile private var length: Int = 64
+
+  def newBuilder(): StringBuilder = new StringBuilder(length + 16)
+
+  def update(builder: StringBuilder): Unit = {
+    length = builder.length
+  }
+}
+
+/**
  * Serializer for a single type.
  */
 class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T]) {
+
+  private val sizeHint = new OutputSizeHint
 
   /**
    * Takes an object and returns a String containing JSON representation of that object.
@@ -45,8 +63,9 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T]) {
    * which requires copying of underlying char array.
    */
   def serializeToStringBuilder(obj: T): StringBuilder = {
-    val json = new StringBuilder()
+    val json = sizeHint.newBuilder()
     innerSerializer.serialize(obj, json)
+    sizeHint.update(json)
     json
   }
 }
@@ -85,7 +104,8 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
   private val deserializerFactory = new DeserializerFactory(ignoreNonExistingFields)
   private val serializerFactory = new SerializerFactory(ignoreNullFields)
 
-  private val extractTypeFromNameCache = new java.util.concurrent.ConcurrentHashMap[String, Type]()
+  private val extractTypeFromNameCache = new ConcurrentHashMap[String, Type]()
+  private val outputSizeHints = new ConcurrentHashMap[Type, OutputSizeHint]()
 
   private val nothingTypeTag = typeTag[Nothing]
 
@@ -101,6 +121,17 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
       val tpe = TypesUtil.getTypeFromClass(Class.forName(typeName))
       extractTypeFromNameCache.putIfAbsent(typeName, tpe)
       tpe
+    }
+  }
+
+  private def outputSizeHint(tpe: Type): OutputSizeHint = {
+    val cached = outputSizeHints.get(tpe)
+    if (cached != null) {
+      cached
+    } else {
+      val hint = new OutputSizeHint
+      val previous = outputSizeHints.putIfAbsent(tpe, hint)
+      if (previous == null) hint else previous
     }
   }
 
@@ -188,8 +219,10 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
    * @return JSON representation of given object
    */
   def serialize[T](obj: T, tpe: Type): String = {
-    val json = new StringBuilder()
+    val hint = outputSizeHint(tpe)
+    val json = hint.newBuilder()
     serializerFactory.getSerializer(tpe, Context(List.empty, Map.empty)).serialize(obj, json)
+    hint.update(json)
     json.toString()
   }
 

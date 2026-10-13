@@ -20,4 +20,30 @@ class MalformedJsonSpec extends AnyFlatSpec {
     }
   }
 
+  "Deserializer" must "fail gracefully on empty input" in {
+    val e = intercept[JsonInnerException] {
+      mpjsons.deserialize[Sample]("")
+    }
+    e.getMessage must include("Sample")
+  }
+
+  "Deserializer" must "fail gracefully on whitespace-only input" in {
+    intercept[JsonInnerException] {
+      mpjsons.deserialize[Sample]("   ")
+    }
+  }
+
+  "Deserializer" must "fail gracefully on empty input for a static deserializer" in {
+    val deserializer = mpjsons.buildStaticDeserializer[Sample]
+    intercept[JsonInnerException] {
+      deserializer.deserialize("")
+    }
+  }
+
+  "Deserializer" must "fail gracefully on empty input for a primitive" in {
+    intercept[JsonInnerException] {
+      mpjsons.deserialize[Int]("")
+    }
+  }
+
 }

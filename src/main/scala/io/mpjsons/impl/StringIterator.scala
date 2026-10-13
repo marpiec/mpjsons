@@ -8,7 +8,7 @@ class StringIterator(val stringValue: String) {
 
   val stringLength = stringValue.length
   var nextIndex = 1
-  var currentChar: Char = stringValue.charAt(0)
+  var currentChar: Char = if (stringLength == 0) '\u0000' else stringValue.charAt(0)
 
   def skipWhitespaceChars(): Unit = {
     while (currentChar.isWhitespace) {

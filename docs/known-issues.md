@@ -38,10 +38,10 @@ mutable collection** (`ArrayBuffer`, `mutable.Map`, `mutable.Set`, ...), althoug
 (`SerializerFactoryImpl.scala:100-125`). Either add them (`mutable.ArrayBuffer`, `mutable.HashMap`,
 `mutable.HashSet`, `ListBuffer` are the obvious set) or fail with a clear "unsupported type" message.
 
-### 5. Empty input escapes the error wrapper — BUG (verified)
+### 5. Empty input escapes the error wrapper — FIXED
 
-`m.deserialize[Stat]("")` throws raw `StringIndexOutOfBoundsException` from `StringIterator.scala:11`
-(`stringValue.charAt(0)` in the constructor, which runs before the `try` in `MPJsons.deserialize`).
+Fixed: `StringIterator` starts at the end-of-input marker for an empty string, so the failure is reported as a
+`JsonInnerException` naming the target type. Covered by `MalformedJsonSpec`.
 
 ### 6. `null` inside containers produces raw NPEs — BUG (verified)
 

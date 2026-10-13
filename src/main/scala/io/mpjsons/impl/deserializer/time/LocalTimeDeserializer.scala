@@ -40,11 +40,7 @@ object LocalTimeDeserializer extends JsonTypeDeserializer[LocalTime] {
         case "nano" => nano = IntDeserializer.deserialize(jsonIterator); hasNano = true
         case _ => throw new IllegalArgumentException("Incorrect identifier in LocalTime '" + identifier + "'")
       }
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue('}')
     }
     jsonIterator.consumeObjectEnd()
 

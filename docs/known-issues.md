@@ -80,12 +80,12 @@ field still stops after `1` and fails on the following `.5` with a separator err
 
 ## Limitations and sharp edges
 
-### 13. Parser is lenient, not validating — LIMITATION (verified)
+### 13. Parser is lenient, not validating — ADDRESSED by an opt-in lever
 
-Missing commas, trailing commas, trailing garbage after the root value, duplicate keys (last wins) and bare keys are
-all accepted silently; there is no recursion depth limit. Acceptable for trusted producers (this library's own
-output), risky for external input. Any rewrite of the hot loops should decide explicitly which of these to keep
-(bare keys and whitespace tolerance are documented features and tested; the rest are accidents).
+`MPJsonsConfig(strict = true)` rejects missing commas, trailing commas and content after the root value
+(`StringIterator.afterValue` / `expectEnd`, `StrictParsingSpec`). Bare keys, whitespace and duplicate keys (last
+wins) are accepted in both modes; there is still no recursion depth limit. The default stays lenient (owner
+decision 6 in roadmap.md §6 is about the default only).
 
 ### 14. No `null` literal support on read — FIXED (owner decisions 13/10/2026)
 

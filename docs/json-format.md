@@ -77,13 +77,15 @@ accepted on read (`"` → `parse`, `{` → object form). All four can also be re
 
 Sizes: a `LocalDateTime` is ~90 bytes vs 19-29 for ISO-8601 `"2023-08-23T14:30:17.000000125"`.
 
-## 8. Parser leniency summary (**all verified**)
+## 8. Parser leniency summary
+
+Default (lenient) behaviour; with `MPJsonsConfig(strict = true)` the first three rows are errors instead.
 
 | Input | Behaviour |
 |---|---|
-| `{"a":1} garbage` | trailing content ignored |
-| `{"zeta":1 "alpha":2}` | missing comma accepted |
-| `{"a":1,}` / `[1,]` | trailing comma accepted |
+| `{"a":1} garbage` | trailing content ignored (strict: `Unexpected content after the JSON value`) |
+| `{"zeta":1 "alpha":2}` | missing comma accepted (strict: `Expected ',' or '}'`) |
+| `{"a":1,}` / `[1,]` | trailing comma accepted (strict: `Trailing ','`) |
 | `{a:1}` | bare keys accepted |
 | `{"a":1,"a":2}` | last wins |
 | `""` (empty) | `StringIndexOutOfBoundsException`, not `JsonInnerException` |

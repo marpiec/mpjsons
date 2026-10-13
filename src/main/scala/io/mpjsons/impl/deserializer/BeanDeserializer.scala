@@ -75,11 +75,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         }
       }
 
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue('}')
     }
 
     jsonIterator.nextCharOrNullIfLast
@@ -121,11 +117,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
       IdentifierDeserializer.deserialize(jsonIterator)
       jsonIterator.consumeFieldValueSeparator()
       skipValue(jsonIterator)
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue('}')
     }
     jsonIterator.nextCharOrNullIfLast
   }
@@ -135,11 +127,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
       skipValue(jsonIterator)
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue(']')
     }
     jsonIterator.nextChar()
   }

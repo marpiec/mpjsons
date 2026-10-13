@@ -42,11 +42,7 @@ class SimpleMapDeserializer[T](deserializerFactory: DeserializerFactory, private
 
       instance.put(identifier, value)
 
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue('}')
     }
 
     jsonIterator.nextCharOrNullIfLast
@@ -75,10 +71,7 @@ class SimpleMapDeserializer[T](deserializerFactory: DeserializerFactory, private
       IdentifierDeserializer.deserialize(jsonIterator)
       jsonIterator.consumeFieldValueSeparator()
       skipValue(jsonIterator)
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-      }
+      jsonIterator.afterValue('}')
     }
     jsonIterator.nextCharOrNullIfLast
   }
@@ -88,10 +81,7 @@ class SimpleMapDeserializer[T](deserializerFactory: DeserializerFactory, private
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
       skipValue(jsonIterator)
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-      }
+      jsonIterator.afterValue(']')
     }
     jsonIterator.nextChar()
   }

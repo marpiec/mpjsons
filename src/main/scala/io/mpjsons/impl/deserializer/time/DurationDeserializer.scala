@@ -34,11 +34,7 @@ object DurationDeserializer extends JsonTypeDeserializer[Duration] {
         case "nanos" => nanos = IntDeserializer.deserialize(jsonIterator); hasNanos = true
         case _ => throw new IllegalArgumentException("Incorrect identifier in Duration '" + identifier + "'")
       }
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue('}')
     }
     jsonIterator.consumeObjectEnd()
 

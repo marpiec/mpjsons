@@ -51,12 +51,7 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
       builder += ((key, value))
 
       jsonIterator.consumeArrayEnd() // ]
-      jsonIterator.skipWhitespaceChars()
-
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue(']')
 
     }
 
@@ -84,11 +79,7 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
 
       builder += ((key, value))
 
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue('}')
     }
 
     jsonIterator.nextChar()

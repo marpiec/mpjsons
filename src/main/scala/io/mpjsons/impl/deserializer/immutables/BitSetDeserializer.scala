@@ -30,11 +30,7 @@ class BitSetDeserializer(deserializerFactory: DeserializerFactory, tpe: Type, co
 
       builder += (if (useBuiltIn) IntDeserializer.deserialize(jsonIterator) else deserializer.deserialize(jsonIterator))
 
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue(']')
     }
 
     jsonIterator.nextChar()

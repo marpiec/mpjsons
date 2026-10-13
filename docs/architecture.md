@@ -203,6 +203,7 @@ Single mutable cursor shared by all deserializers:
 - `skipWhitespaceChars()` loops on `Char.isWhitespace`.
 - `consume*` helpers: skip whitespace, check one expected char, advance; error messages embed the whole input and the remainder.
 - `seek(index)` positions the cursor on an absolute index; readers that scan ahead on the raw string (`stringValue`, `stringLength`, `nextIndex - 1` = index of `currentChar`) use it to hand the cursor back.
+- `afterValue(closing)` is called by every element loop after a member/element: it skips whitespace and an optional comma; with `strict = true` (second constructor argument, set from `MPJsonsConfig.strict`) a missing comma or a comma before `closing` is an error, and `expectEnd()` rejects content after the root value. `isAtEnd` is `nextIndex > stringLength`; `nextCharOrNullIfLast` now always advances.
 - `nextCharOrNullIfLast` returns `Any` (Unit or null); used to step over a closing `}` when it may be the last char.
 - `isCurrentCharADigitPart` accepts digits and `-`; `isCurrentCharAFloatingPointPart` additionally `+ . e E`.
 - `checkFutureChar`, `hasNextChar`, `nextNonWhitespaceChar` are **unused** (verified by grep).

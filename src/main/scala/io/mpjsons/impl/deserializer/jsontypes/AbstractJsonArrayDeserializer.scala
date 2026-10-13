@@ -29,11 +29,7 @@ abstract class AbstractJsonArrayDeserializer[T, C]
 
       builder += (if (jsonIterator.tryConsumeNull()) elementNull.get().asInstanceOf[T] else deserializer.deserialize(jsonIterator))
 
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue(']')
     }
 
     jsonIterator.nextChar()

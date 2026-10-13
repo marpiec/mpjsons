@@ -37,11 +37,7 @@ object LocalDateDeserializer extends JsonTypeDeserializer[LocalDate] {
         case "day" => day = IntDeserializer.deserialize(jsonIterator); hasDay = true
         case _ => throw new IllegalArgumentException("Incorrect identifier in LocalDate '" + identifier + "'")
       }
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-        jsonIterator.skipWhitespaceChars()
-      }
+      jsonIterator.afterValue('}')
     }
     jsonIterator.consumeObjectEnd()
 

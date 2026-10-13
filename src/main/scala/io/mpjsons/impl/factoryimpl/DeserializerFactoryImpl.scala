@@ -173,10 +173,8 @@ class DeserializerFactoryImpl(config: MPJsonsConfig) {
       return new BitSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
 
-    // map
-    if (typeSymbol == typeOf[Map[_, _]].typeSymbol) {
-      return new MapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
-    } else if (typeSymbol == typeOf[immutable.HashMap[_, _]].typeSymbol) {
+    // map (plain Map is matched above)
+    if (typeSymbol == typeOf[immutable.HashMap[_, _]].typeSymbol) {
       return new HashMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[immutable.SortedMap[_, _]].typeSymbol) {
       throw new IllegalStateException("SortedMap is unsupported, because of missing ordering type class. Types: " + context.typesStackMessage)

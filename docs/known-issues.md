@@ -145,7 +145,7 @@ warm root lookup is one hash probe with no allocation. The remaining TypeTag-API
 - `registerConverter` keys on `tpe.toString`; two different types with the same printed name (e.g. same simple name after `import`-dependent printing? no, `toString` is fully qualified for `TypeRef`) are unlikely but type aliases print as their alias.
 - `TypesUtil.getClassFromType` uses the library's class loader; `getTypeFromClass` uses the class's loader; `deserialize(json, typeName)` uses `Class.forName(typeName)` with the caller-independent loader. Multi-classloader deployments (app servers, plugins) can fail to resolve application classes.
 - `slf4j-api` is a declared runtime dependency but is never used.
-- `checkFutureChar`, `hasNextChar`, `nextNonWhitespaceChar` in `StringIterator`, the `Java*Deserializer` objects in `values/`, and the `NoSuchMethodException` catch in `ObjectConstructionUtil.createInstance` are dead code.
+- `checkFutureChar`, `hasNextChar`, `nextNonWhitespaceChar` in `StringIterator` and the `Java*Deserializer` objects in `values/` are unused but kept because they are public (the dead `NoSuchMethodException` catch in `ObjectConstructionUtil.createInstance` and the duplicate `Map` branch in the deserializer dispatch were removed).
 - `IdentifierDeserializer` for bare keys stops at `:` or whitespace only; a bare key containing `}` or `,` would swallow them.
 - Tuple7 and larger serialize as beans (`{"_7":..}`) rather than arrays like Tuple1..6.
-- `DeserializerFactoryImpl.scala:99` and `:155` check `Map` twice (harmless).
+- (removed) the duplicate `Map` check in `DeserializerFactoryImpl`.

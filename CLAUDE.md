@@ -32,7 +32,7 @@ Tests live in `src/test/scala/io/mpjsons/`, one spec per feature area (Collectio
 - `registerConverter`, `registerSuperclassConverter`, `registerSerializerForAnySubtype` — custom (de)serializers.
 - `markTypedClass[T]` / `markTypedSuperClass[T]` — emit/parse a type tag wrapper `{"TypeName":{...}}` so collections of subtypes round-trip (see `TypedConverter`).
 - `postDeserializationTransform[T](f)` — post-process the deserialized object.
-- `@nullable` annotation (`final class nullable extends StaticAnnotation`) — marks a bean field allowed to be null (skipped instead of throwing on serialize). `@jsonName("key")` (`jsonName.scala`) overrides the JSON key. Both are found on the field, the constructor parameter or the getter, so case class parameters need no `@field` meta-annotation.
+- `@nullable` annotation (`final class nullable extends StaticAnnotation`) — marks a bean field allowed to be null (skipped instead of throwing on serialize). `@jsonName("key")` (`jsonName.scala`) overrides the JSON key; on read the Scala field name is still accepted as a fallback unless another field owns it as its JSON name. Both are found on the field, the constructor parameter or the getter, so case class parameters need no `@field` meta-annotation.
 
 `MPJsons` also keeps two `var` caches: `extractTypeCache` (TypeTag→Type) and `extractTypeFromNameCache` (class name→Type).
 

@@ -24,10 +24,28 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     case e: NoSuchMethodException => null
   }
   val fields = ReflectionUtil.getAllAccessibleFields(tpe)
-  /** Lazy val to prevent StackOverflow while construction recursive type deserializer */
-  lazy val fieldTable: BeanFieldTable = new BeanFieldTable(fields.map { field =>
-    BeanField(field.jsonName, field.field, field.tpe, tpe.toString, deserializerFactory.getDeserializer(field.tpe, context))
-  })
+
+  /**
+   * Keys accepted for each field: its JSON name, plus the Scala field name as a fallback when `@jsonName`
+   * renamed it (so JSON written before the rename still reads). A fallback is not registered when another
+   * field already owns that name as its JSON name.
+   * Lazy val to prevent StackOverflow while construction recursive type deserializer.
+   */
+  lazy val fieldTable: BeanFieldTable = {
+    val typeName = tpe.toString
+    val jsonNames = fields.map(_.jsonName).toSet
+    val entries = fields.flatMap { field =>
+      val deserializer = deserializerFactory.getDeserializer(field.tpe, context)
+      val primary = BeanField(field.jsonName, field.field, field.tpe, typeName, deserializer)
+      val scalaName = field.field.getName
+      if (scalaName != field.jsonName && !jsonNames.contains(scalaName)) {
+        Array(primary, BeanField(scalaName, field.field, field.tpe, typeName, deserializer))
+      } else {
+        Array(primary)
+      }
+    }
+    new BeanFieldTable(entries)
+  }
   /** Option fields are initialised to None when construction left them null, so an absent key reads as None. */
   private lazy val optionFields: Array[Field] = fields.filter(_.tpe <:< BeanDeserializer.optionType).map(_.field)
 

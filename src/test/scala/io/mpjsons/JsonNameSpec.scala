@@ -24,6 +24,7 @@ object JsonNameSpec {
   class Derived extends Base { @jsonName("l") var label: String = _ }
 
   case class Duplicate(@jsonName("x") a: Int, @jsonName("x") b: Int)
+  case class Swapped(@jsonName("b") a: Int, @jsonName("a") b: Int)
   case class ClashWithPlain(@jsonName("b") a: Int, b: Int)
 
   // @nullable also no longer needs the @field meta-annotation.
@@ -45,9 +46,25 @@ class JsonNameSpec extends AnyFlatSpec {
     mpjsons.deserialize[Renamed]("""{ n : "Bob", a : 4, plain : false }""") mustBe Renamed("Bob", 4, plain = false)
   }
 
-  "@jsonName" must "make the Scala field name unknown to the deserializer" in {
-    intercept[JsonInnerException] { mpjsons.deserialize[Renamed]("""{"name":"Ann","age":3,"plain":true}""") }.getMessage must include("No field [name]")
-    new MPJsons(ignoreNonExistingFields = true).deserialize[Renamed]("""{"name":"Ann","a":3,"plain":true}""") mustBe Renamed(null, 3, plain = true)
+  "@jsonName" must "still accept the Scala field name on read, so JSON written before the rename loads" in {
+    mpjsons.deserialize[Renamed]("""{"name":"Ann","age":3,"plain":true}""") mustBe Renamed("Ann", 3, plain = true)
+    mpjsons.deserialize[Renamed]("""{"n":"Ann","age":3,"plain":true}""") mustBe Renamed("Ann", 3, plain = true)
+    mpjsons.deserialize[Renamed]("""{ name : "Ann", a : 3, plain : true }""") mustBe Renamed("Ann", 3, plain = true)
+    mpjsons.deserialize[Bean]("""{"value":8,"other":"p"}""").value mustBe 8
+    val derived = mpjsons.deserialize[Derived]("""{"identifier":6,"label":"m"}""")
+    derived.identifier mustBe 6L
+    derived.label mustBe "m"
+    mpjsons.deserialize[Generic[Int]]("""{"value":1,"values":[2]}""") mustBe Generic(1, List(2))
+    // when both names are present the last one wins, like any duplicate key
+    mpjsons.deserialize[Renamed]("""{"name":"Old","n":"New","age":3,"plain":true}""") mustBe Renamed("New", 3, plain = true)
+    // unrelated keys are still unknown
+    intercept[JsonInnerException] { mpjsons.deserialize[Renamed]("""{"firstName":"Ann","age":3,"plain":true}""") }.getMessage must include("No field [firstName]")
+  }
+
+  "@jsonName" must "let a real JSON name win over another field's fallback name" in {
+    // "a" is field b's JSON name, so it is not a fallback for field a; "b" likewise belongs to field a.
+    mpjsons.deserialize[Swapped]("""{"b":1,"a":2}""") mustBe Swapped(1, 2)
+    mpjsons.serialize(Swapped(1, 2)) mustBe """{"b":1,"a":2}"""
   }
 
   "@jsonName" must "work on vars, with the @field meta-annotation, and on inherited fields" in {

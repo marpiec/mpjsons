@@ -252,8 +252,9 @@ mpjsons.serialize(User("John", "Doe", 42))        // {"n":"John","l":"Doe","age"
 mpjsons.deserialize[User]("""{"n":"John","l":"Doe","age":42}""")
 ```
 
-Only the JSON name is recognised on read (the Scala name becomes an unknown key), and two
-fields of one type must not share a JSON name: that is reported when the (de)serializer is
+On read, the Scala field name is still accepted as a fallback, so JSON written before a field
+was renamed keeps loading; if another field owns that name as its JSON name, the JSON name wins.
+Two fields of one type must not share a JSON name: that is reported when the (de)serializer is
 built.
 
 ### Nullable fields and null handling

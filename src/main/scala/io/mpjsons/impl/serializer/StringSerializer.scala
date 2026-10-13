@@ -5,16 +5,18 @@ import io.mpjsons.JsonTypeSerializer
 /**
  * Writes a JSON string literal. Runs of characters that need no escaping are appended in bulk;
  * only the characters that need escaping are handled one by one.
+ *
+ * @param escapeSlash whether "/" is written as "\/" (the historical format) or as-is
  * @author Marcin Pieciukiewicz
  */
-object StringSerializer extends JsonTypeSerializer[Any] {
+class StringSerializerImpl(escapeSlash: Boolean) extends JsonTypeSerializer[Any] {
 
   /** Escape sequence for each ASCII char that needs one, null for chars that are written as-is. */
   private val escapes: Array[String] = {
     val table = new Array[String](128)
     var i = 0
     while (i < 32) {
-      table(i) = "\\u" + toHex(i.toChar)
+      table(i) = "\\u" + StringSerializerImpl.toHex(i.toChar)
       i += 1
     }
     table('\b') = "\\b"
@@ -24,7 +26,9 @@ object StringSerializer extends JsonTypeSerializer[Any] {
     table('\t') = "\\t"
     table('"') = "\\\""
     table('\\') = "\\\\"
-    table('/') = "\\/"
+    if (escapeSlash) {
+      table('/') = "\\/"
+    }
     table
   }
 
@@ -60,7 +64,9 @@ object StringSerializer extends JsonTypeSerializer[Any] {
 
     builder.append('"')
   }
+}
 
+object StringSerializerImpl {
   // To escape control characters from text
   private def toHex(ch: Char): String = {
     val hex = Integer.toHexString(ch)
@@ -75,4 +81,9 @@ object StringSerializer extends JsonTypeSerializer[Any] {
       hex
     }
   }
+}
+
+/** The historical serializer ("/" escaped); `withoutSlashEscape` is the compact variant. */
+object StringSerializer extends StringSerializerImpl(true) {
+  val withoutSlashEscape: JsonTypeSerializer[Any] = new StringSerializerImpl(false)
 }

@@ -1,6 +1,6 @@
 package io.mpjsons.impl.factoryimpl
 
-import io.mpjsons.{JsonTypeSerializer, NullPolicy}
+import io.mpjsons.{JsonTypeSerializer, MPJsonsConfig}
 import io.mpjsons.impl.util.Context
 
 import java.util.concurrent.ConcurrentHashMap
@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class SerializerFactoryMemoizer(nullPolicy: NullPolicy) extends SerializerFactoryImpl(nullPolicy) {
+class SerializerFactoryMemoizer(config: MPJsonsConfig) extends SerializerFactoryImpl(config) {
 
   private val cache = new ConcurrentHashMap[Type, JsonTypeSerializer[_]]()
   private val cacheWithoutSuperTypes = new ConcurrentHashMap[Type, JsonTypeSerializer[_]]()

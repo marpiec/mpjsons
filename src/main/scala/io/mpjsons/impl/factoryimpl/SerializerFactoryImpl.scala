@@ -1,6 +1,6 @@
 package io.mpjsons.impl.factoryimpl
 
-import io.mpjsons.{JsonTypeSerializer, NullPolicy}
+import io.mpjsons.{JsonTypeSerializer, MPJsonsConfig}
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
 import io.mpjsons.impl.serializer.time.{DurationSerializer, LocalDateSerializer, LocalDateTimeSerializer, LocalTimeSerializer}
@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class SerializerFactoryImpl(nullPolicy: NullPolicy) {
+class SerializerFactoryImpl(config: MPJsonsConfig) {
 
   private var additionalSerializers: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
   private var additionalSerializersAnySubType: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
@@ -86,7 +86,7 @@ class SerializerFactoryImpl(nullPolicy: NullPolicy) {
     if (typeOf[String].typeSymbol == typeSymbol ||
       typeOf[mutable.StringBuilder].typeSymbol == typeSymbol ||
       typeOf[Char].typeSymbol == typeSymbol || typeOf[java.lang.Character].typeSymbol == typeSymbol) {
-      return StringSerializer
+      return (if (config.escapeSlash) StringSerializer else StringSerializer.withoutSlashEscape)
     }
 
     // Arrays
@@ -185,7 +185,7 @@ class SerializerFactoryImpl(nullPolicy: NullPolicy) {
       val additionalOption = additionalSerializersAnySubType.get(stripTypes(tpe.toString))
       additionalOption match {
         case Some(serializer) => serializer(this.asInstanceOf[SerializerFactory])
-        case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, nullPolicy)
+        case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config.nullPolicy)
       }
 
     }

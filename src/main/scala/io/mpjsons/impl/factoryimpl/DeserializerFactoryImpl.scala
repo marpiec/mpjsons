@@ -1,6 +1,6 @@
 package io.mpjsons.impl.factoryimpl
 
-import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.{JsonTypeDeserializer, MPJsonsConfig}
 import io.mpjsons.impl.DeserializerFactory
 import io.mpjsons.impl.deserializer.immutables._
 import io.mpjsons.impl.deserializer.mutables.{ArrayBufferDeserializer, ArrayDeserializer, MutableHashMapDeserializer, MutableHashSetDeserializer}
@@ -19,7 +19,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
+class DeserializerFactoryImpl(config: MPJsonsConfig) {
 
   private var additionalDeserializers: Map[String, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty
   private var additionalSuperclassDeserializers: Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty
@@ -207,7 +207,7 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       throw new IllegalArgumentException("Cannot deserialize abstract type " + tpe + " (trait or abstract class) without a registered converter, " +
         "use registerConverter, registerSuperclassConverter or markTypedClass. Types: " + context.typesStackMessage)
     } else {
-      new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, ignoreNonExistingFields)
+      new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, config.ignoreNonExistingFields)
     }
   }
 

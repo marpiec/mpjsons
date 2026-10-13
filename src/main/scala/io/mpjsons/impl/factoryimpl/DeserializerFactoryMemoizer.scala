@@ -1,7 +1,7 @@
 package io.mpjsons.impl.factoryimpl
 
 
-import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.{JsonTypeDeserializer, MPJsonsConfig}
 import io.mpjsons.impl.util.Context
 
 import java.util.concurrent.ConcurrentHashMap
@@ -15,7 +15,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class DeserializerFactoryMemoizer(ignoreNonExistingFields: Boolean) extends DeserializerFactoryImpl(ignoreNonExistingFields) {
+class DeserializerFactoryMemoizer(config: MPJsonsConfig) extends DeserializerFactoryImpl(config) {
 
   private val cache = new ConcurrentHashMap[Type, JsonTypeDeserializer[_]]()
   private val cacheWithoutSuperTypes = new ConcurrentHashMap[Type, JsonTypeDeserializer[_]]()

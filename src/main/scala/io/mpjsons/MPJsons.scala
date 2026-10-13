@@ -100,10 +100,14 @@ final class nullable extends StaticAnnotation
  * Main class of json serialization library.
  * @author Marcin Pieciukiewicz
  */
-class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolean = false, nullPolicy: NullPolicy = NullPolicy.Fail) {
+class MPJsons(val config: MPJsonsConfig) {
 
-  private val deserializerFactory = new DeserializerFactory(ignoreNonExistingFields)
-  private val serializerFactory = new SerializerFactory(if (ignoreNullFields) NullPolicy.Omit else nullPolicy)
+  /** Backward compatible constructor; `ignoreNullFields = true` is the same as `NullPolicy.Omit`. */
+  def this(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolean = false, nullPolicy: NullPolicy = NullPolicy.Fail) =
+    this(MPJsonsConfig(ignoreNonExistingFields = ignoreNonExistingFields, nullPolicy = if (ignoreNullFields) NullPolicy.Omit else nullPolicy))
+
+  private val deserializerFactory = new DeserializerFactory(config)
+  private val serializerFactory = new SerializerFactory(config)
 
   private val extractTypeFromNameCache = new ConcurrentHashMap[String, Type]()
   private val outputSizeHints = new ConcurrentHashMap[Type, OutputSizeHint]()

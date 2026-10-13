@@ -4,10 +4,13 @@ import io.mpjsons.impl.JsonInnerException
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers._
 
+import java.time.{Duration, LocalDate, LocalDateTime, LocalTime}
+
 object CompactFormatSpec {
   case class Url(path: String)
   case class Nested(v: Int)
   case class Opts(a: Option[Int], b: Option[String], c: Option[Nested], d: Option[List[Int]], e: Option[Option[Int]])
+  case class Stamp(at: LocalDateTime, d: Option[Duration])
 }
 
 /** Opt-in format levers of MPJsonsConfig; defaults keep the historical format. */
@@ -110,6 +113,35 @@ class CompactFormatSpec extends AnyFlatSpec {
     both.serialize(Option(Map("a" -> 1))) mustBe """{"a":1}"""
     both.deserialize[Option[Map[String, Int]]]("""{"a":1}""") mustBe Some(Map("a" -> 1))
     both.deserialize[Option[Map[String, Int]]]("null") mustBe None
+  }
+
+  val isoTime = new MPJsons(MPJsonsConfig(isoTime = true))
+
+  "isoTime" must "write java.time values as ISO-8601 strings" in {
+    isoTime.serialize(LocalDate.of(2023, 7, 23)) mustBe "\"2023-07-23\""
+    isoTime.serialize(LocalTime.of(12, 30, 17, 125)) mustBe "\"12:30:17.000000125\""
+    isoTime.serialize(LocalDateTime.of(2023, 8, 23, 14, 30)) mustBe "\"2023-08-23T14:30\""
+    isoTime.serialize(Duration.ofSeconds(123, 456)) mustBe "\"PT2M3.000000456S\""
+    legacy.serialize(LocalDate.of(2023, 7, 23)) mustBe """{"year":2023,"month":7,"day":23}"""
+  }
+
+  "isoTime" must "read both forms in both configurations" in {
+    isoTime.deserialize[LocalDate]("\"2023-07-23\"") mustBe LocalDate.of(2023, 7, 23)
+    isoTime.deserialize[LocalDate]("""{"year":2023,"month":7,"day":23}""") mustBe LocalDate.of(2023, 7, 23)
+    legacy.deserialize[LocalTime]("\"12:30:17.000000125\"") mustBe LocalTime.of(12, 30, 17, 125)
+    legacy.deserialize[LocalDateTime]("\"2023-08-23T14:30\"") mustBe LocalDateTime.of(2023, 8, 23, 14, 30)
+    legacy.deserialize[Duration](" \"PT2M3.000000456S\" ") mustBe Duration.ofSeconds(123, 456)
+    intercept[JsonInnerException] { isoTime.deserialize[LocalDate]("\"not a date\"") }
+  }
+
+  "isoTime" must "combine with compactOptions" in {
+    val both = new MPJsons(MPJsonsConfig(isoTime = true, compactOptions = true))
+    val stamp = Stamp(LocalDateTime.of(2023, 8, 23, 14, 30), Some(Duration.ofMinutes(1)))
+    both.serialize(stamp) mustBe """{"at":"2023-08-23T14:30","d":"PT1M"}"""
+    both.deserialize[Stamp](both.serialize(stamp)) mustBe stamp
+    both.deserialize[Stamp]("""{"at":"2023-08-23T14:30"}""") mustBe stamp.copy(d = None)
+    legacy.deserialize[Stamp]("""{"at":"2023-08-23T14:30","d":{"value":"PT1M"}}""") mustBe stamp
+    legacy.serialize(stamp) mustBe """{"at":{"date":{"year":2023,"month":8,"day":23},"time":{"hour":14,"minute":30,"second":0,"nano":0}},"d":{"value":{"seconds":60,"nanos":0}}}"""
   }
 
   "compactOptions" must "keep the historical format for everything else" in {

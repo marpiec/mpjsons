@@ -14,9 +14,13 @@ package io.mpjsons
  * @param mapsAsObjects           write maps whose key type is String, a number, Boolean or Char as a JSON object
  *                                {"key":value} instead of an array of [key,value] pairs; other key types keep the
  *                                pair form. Both forms are always accepted on read.
+ * @param isoTime                 write java.time LocalDate/LocalTime/LocalDateTime/Duration as ISO-8601 strings
+ *                                ("2023-07-23", "12:30:17", "2023-07-23T12:30:17", "PT2M3S") instead of objects.
+ *                                Both forms are always accepted on read.
  */
 final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                nullPolicy: NullPolicy = NullPolicy.Fail,
                                escapeSlash: Boolean = true,
                                compactOptions: Boolean = false,
-                               mapsAsObjects: Boolean = false)
+                               mapsAsObjects: Boolean = false,
+                               isoTime: Boolean = false)

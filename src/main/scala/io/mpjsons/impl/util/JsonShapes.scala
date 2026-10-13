@@ -16,6 +16,9 @@ object JsonShapes {
     typeOf[java.lang.Double], typeOf[java.lang.Float], typeOf[java.lang.Boolean], typeOf[java.lang.Character],
     typeOf[String], typeOf[StringBuilder])
 
+  private val timeTypes: List[Type] = List(
+    typeOf[java.time.LocalDate], typeOf[java.time.LocalTime], typeOf[java.time.LocalDateTime], typeOf[java.time.Duration])
+
   // Existential types compare correctly with <:< (List[Int] <:< Iterable[_]); Array is matched by symbol because
   // the erasure of Array[_] is Object.
   private val arrayLikeTypes: List[Type] = List(
@@ -32,6 +35,8 @@ object JsonShapes {
       false
     } else if (symbol == definitions.ArrayClass) {
       false
+    } else if (timeTypes.exists(_.typeSymbol == symbol)) {
+      !config.isoTime // object form unless written as ISO strings
     } else if (tpe <:< mapType) {
       // written as an array of pairs, unless the object form is on and the key type supports it
       config.mapsAsObjects && MapKeys.supportsObjectForm(TypesUtil.getDoubleSubElementsType(tpe)._1)

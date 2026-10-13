@@ -3,6 +3,7 @@ package io.mpjsons.impl.deserializer.time
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.StringIterator
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
+import io.mpjsons.impl.deserializer.values.StringDeserializer
 import io.mpjsons.impl.deserializer.values.IntDeserializer
 
 import java.time.LocalDate
@@ -11,6 +12,11 @@ import java.time.LocalDate
 object LocalDateDeserializer extends JsonTypeDeserializer[LocalDate] {
 
   override def deserialize(jsonIterator: StringIterator): LocalDate = {
+
+    jsonIterator.skipWhitespaceChars()
+    if (jsonIterator.currentChar == '"') {
+      return LocalDate.parse(StringDeserializer.deserialize(jsonIterator))
+    }
 
     jsonIterator.consumeObjectStart()
     jsonIterator.skipWhitespaceChars()

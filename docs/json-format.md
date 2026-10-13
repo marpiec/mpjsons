@@ -71,7 +71,9 @@ After `markTypedClass[Base]`, a value whose **static** type is `Base` is written
 | `LocalDateTime` | `{"date":{...},"time":{...}}` | both required, same rules |
 | `Duration` | `{"seconds":123,"nanos":456}` | both required; negative seconds OK |
 
-All four can be replaced with `registerConverter` (e.g. ISO-8601 strings), in which case the built-in format is bypassed.
+With `MPJsonsConfig(isoTime = true)` all four are written as ISO-8601 strings instead (`"2023-07-23"`, `"12:30:17.000000125"`,
+`"2023-08-23T14:30:17.000000125"`, `"PT2M3.000000456S"`, i.e. the `toString` of the `java.time` value). Both forms are always
+accepted on read (`"` → `parse`, `{` → object form). All four can also be replaced with `registerConverter`.
 
 Sizes: a `LocalDateTime` is ~90 bytes vs 19-29 for ISO-8601 `"2023-08-23T14:30:17.000000125"`.
 
@@ -101,6 +103,6 @@ fields with a constructor default (absent keeps the default, `null` overwrites i
 | `None` | `{}` (2) + key | omitted key — **available**: `compactOptions = true` | 2 + key length + colon + comma |
 | `Map("k"->1)` | `[["k",1]]` (9) | `{"k":1}` (7) — **available**: `mapsAsObjects = true` | 2 per entry + 2 |
 | `"a/b"` | `"a\/b"` | `"a/b"` — **available**: `escapeSlash = false` | 1 per slash |
-| `LocalDate` | 30 bytes | `"2023-07-23"` 12 bytes | 18 |
+| `LocalDate` | 30 bytes | `"2023-07-23"` 12 bytes — **available**: `isoTime = true` | 18 |
 | field keys | full Scala field names | annotated short names (`@jsonName("n")`) | depends |
 | default-valued fields (`0`, `false`, `""`, empty collections) | always written | omitted when equal to a known default | depends |

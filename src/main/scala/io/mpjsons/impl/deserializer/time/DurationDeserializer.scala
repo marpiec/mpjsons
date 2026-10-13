@@ -3,6 +3,7 @@ package io.mpjsons.impl.deserializer.time
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.StringIterator
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
+import io.mpjsons.impl.deserializer.values.StringDeserializer
 import io.mpjsons.impl.deserializer.values.{IntDeserializer, LongDeserializer}
 
 import java.time.Duration
@@ -11,6 +12,11 @@ import java.time.Duration
 object DurationDeserializer extends JsonTypeDeserializer[Duration] {
 
   override def deserialize(jsonIterator: StringIterator): Duration = {
+
+    jsonIterator.skipWhitespaceChars()
+    if (jsonIterator.currentChar == '"') {
+      return Duration.parse(StringDeserializer.deserialize(jsonIterator))
+    }
 
     jsonIterator.consumeObjectStart()
     jsonIterator.skipWhitespaceChars()

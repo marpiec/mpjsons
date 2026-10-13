@@ -3,7 +3,7 @@ package io.mpjsons.impl.factoryimpl
 import io.mpjsons.{JsonTypeSerializer, MPJsonsConfig}
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
-import io.mpjsons.impl.serializer.time.{DurationSerializer, LocalDateSerializer, LocalDateTimeSerializer, LocalTimeSerializer}
+import io.mpjsons.impl.serializer.time._
 import io.mpjsons.impl.util.{Context, MapKeys, TypesUtil}
 
 import scala.collection.immutable._
@@ -70,13 +70,13 @@ class SerializerFactoryImpl(config: MPJsonsConfig) {
     } else if (typeOf[java.lang.Float].typeSymbol == typeSymbol) {
       return FloatSerializer
     } else if (typeOf[java.time.LocalDate].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
-      return LocalDateSerializer
+      return (if (config.isoTime) IsoLocalDateSerializer else LocalDateSerializer)
     } else if (typeOf[java.time.LocalTime].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
-      return LocalTimeSerializer
+      return (if (config.isoTime) IsoLocalTimeSerializer else LocalTimeSerializer)
     } else if (typeOf[java.time.LocalDateTime].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
-      return LocalDateTimeSerializer
+      return (if (config.isoTime) IsoLocalDateTimeSerializer else LocalDateTimeSerializer)
     } else if (typeOf[java.time.Duration].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
-      return DurationSerializer
+      return (if (config.isoTime) IsoDurationSerializer else DurationSerializer)
     }
 
 

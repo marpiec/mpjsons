@@ -2,6 +2,9 @@ package io.mpjsons.impl
 
 /**
  * Special container for String that allows easy iteration through String characters.
+ *
+ * Invariant: `currentChar` is the character at index `nextIndex - 1`, or the end marker `'\u0000'`
+ * once the cursor has moved past the last character. Moving past the end marker throws.
  * @author Marcin Pieciukiewicz
  */
 class StringIterator(val stringValue: String) {
@@ -25,6 +28,21 @@ class StringIterator(val stringValue: String) {
       throw new IllegalArgumentException("Unexpected end of Json")
     }
     nextIndex = nextIndex + 1
+  }
+
+  /**
+   * Positions the cursor so that `currentChar` is the character at `index`
+   * (or the end marker when `index == stringLength`). Used by readers that scan ahead on the raw string.
+   */
+  def seek(index: Int): Unit = {
+    currentChar = if (index < stringLength) {
+      stringValue.charAt(index)
+    } else if (index == stringLength) {
+      '\u0000'
+    } else {
+      throw new IllegalArgumentException("Unexpected end of Json")
+    }
+    nextIndex = index + 1
   }
 
   def nextNonWhitespaceChar(): Unit = {

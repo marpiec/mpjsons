@@ -45,9 +45,9 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 
 | Type | Written | Read into |
 |---|---|---|
-| `List, Vector, Seq, Iterable, Stream, immutable.Queue, Set, HashSet, ListSet, Array[T]`, any `scala.` mutable `Seq/Set/Iterable` | JSON array | `List` → `List`; `Seq` → `List` (`Seq.from`); `Iterable` → **`ArrayBuffer`** (mutable, **verified**); `Set` → `Set(...)`; `Stream` via `Stream.fromIterator`; `Array` via reflective `java.lang.reflect.Array.set` per element. Mutable collections: **no deserializer** (falls to bean logic and fails). |
+| `List, Vector, Seq, Iterable, Stream, immutable.Queue, Set, HashSet, ListSet, Array[T]`, any `scala.` mutable `Seq/Set/Iterable` | JSON array | `List` → `List`; `Seq` → `List` (`Seq.from`); `Iterable` → **`ArrayBuffer`** (mutable, **verified**); `Set` → `Set(...)`; `Stream` via `Stream.fromIterator`; `Array` via reflective `java.lang.reflect.Array.set` per element. `mutable.ArrayBuffer/Buffer/Seq/IndexedSeq/Iterable` → `ArrayBuffer`; `mutable.Set/HashSet` → `mutable.HashSet`. Other mutable collections (`ListBuffer` by design) throw. |
 | `BitSet` | array of ints | `immutable.BitSet` |
-| `Map[K,V]` and all `scala.` map types incl. mutable | **array of pairs** `[[k,v],[k,v]]` | `Map` → `toMap`; `HashMap`; `ListMap` (order preserved, pairs reversed back). Mutable → NPE. |
+| `Map[K,V]` and all `scala.` map types incl. mutable | **array of pairs** `[[k,v],[k,v]]` | `Map` → `toMap`; `HashMap`; `ListMap` (order preserved, pairs reversed back); `mutable.Map/HashMap` → `mutable.HashMap`. |
 | `SimpleMapSerializer[T]` (opt-in converter for `Map[String,T]`) | object `{"k":v}`; `null` values skipped | `SimpleMapDeserializer[T]`: object with quoted or bare keys |
 | `SortedSet, TreeSet, SortedMap, TreeMap, ListBuffer` | serialize works for the sorted ones (they are `scala.` collections); deserialize **throws** by design (no `Ordering`) | |
 

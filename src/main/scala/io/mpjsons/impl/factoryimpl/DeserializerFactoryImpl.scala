@@ -3,7 +3,7 @@ package io.mpjsons.impl.factoryimpl
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.DeserializerFactory
 import io.mpjsons.impl.deserializer.immutables._
-import io.mpjsons.impl.deserializer.mutables.ArrayDeserializer
+import io.mpjsons.impl.deserializer.mutables.{ArrayBufferDeserializer, ArrayDeserializer, MutableHashMapDeserializer, MutableHashSetDeserializer}
 import io.mpjsons.impl.deserializer.time.{DurationDeserializer, LocalDateDeserializer, LocalDateTimeDeserializer, LocalTimeDeserializer}
 import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple1Deserializer, Tuple2Deserializer, Tuple3Deserializer, Tuple4Deserializer, Tuple5Deserializer, Tuple6Deserializer}
 import io.mpjsons.impl.deserializer.values._
@@ -167,6 +167,17 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
 
 
 
+    // mutable collections
+    if (typeSymbol == typeOf[mutable.ArrayBuffer[_]].typeSymbol || typeSymbol == typeOf[mutable.Buffer[_]].typeSymbol ||
+      typeSymbol == typeOf[mutable.Seq[_]].typeSymbol || typeSymbol == typeOf[mutable.IndexedSeq[_]].typeSymbol ||
+      typeSymbol == typeOf[mutable.Iterable[_]].typeSymbol) {
+      return new ArrayBufferDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[mutable.Set[_]].typeSymbol || typeSymbol == typeOf[mutable.HashSet[_]].typeSymbol) {
+      return new MutableHashSetDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    } else if (typeSymbol == typeOf[mutable.Map[_, _]].typeSymbol || typeSymbol == typeOf[mutable.HashMap[_, _]].typeSymbol) {
+      return new MutableHashMapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
+    }
+
     if(allowSuperType) {
       additionalSuperclassDeserializers.get(typeSymbol) match {
         case Some(deserializer) => return deserializer(this.asInstanceOf[DeserializerFactory])
@@ -196,6 +207,9 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if (typeSymbol.isModuleClass) {
       new SingletonObjectDeserializer(tpe)
+    } else if (typeSymbol.isAbstract) {
+      throw new IllegalArgumentException("Cannot deserialize abstract type " + tpe + " (trait or abstract class) without a registered converter, " +
+        "use registerConverter, registerSuperclassConverter or markTypedClass. Types: " + context.typesStackMessage)
     } else {
       new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, ignoreNonExistingFields)
     }

@@ -64,10 +64,11 @@ private[reflection] object ReflectionUtilNoCache {
       field
     } catch {
       case e: NoSuchFieldException =>
-        if (clazz.getSuperclass.equals(classOf[Object])) {
+        val superclass = clazz.getSuperclass
+        if (superclass == null || superclass == classOf[Object]) {
           null
         } else {
-          getAccessibleField(clazz.getSuperclass, fieldName)
+          getAccessibleField(superclass, fieldName)
         }
     }
   }

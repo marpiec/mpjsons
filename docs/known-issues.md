@@ -26,17 +26,13 @@ Fixed: the `Array` check is guarded with `isInstanceOf[TypeRefApi]`, singletons 
 `typeSymbol.isModuleClass` in both factories (instead of scanning for a `MODULE$` field), and the singleton reader
 skips whitespace. Round trip returns the same instance; covered by `SingletonObjectSpec`.
 
-### 4. Trait/interface-typed targets NPE in field lookup — BUG (verified)
+### 4. Trait/interface-typed targets NPE in field lookup — FIXED
 
-```scala
-m.deserialize[scala.collection.mutable.Map[Int,String]]("""[[1,"a"]]""")
-// NullPointerException: Class.getSuperclass() is null  (ReflectionUtilNoCache.scala:44)
-```
-
-`getAccessibleField` assumes `clazz.getSuperclass != null`. Separately: there are **no deserializers for any
-mutable collection** (`ArrayBuffer`, `mutable.Map`, `mutable.Set`, ...), although all of them serialize fine
-(`SerializerFactoryImpl.scala:100-125`). Either add them (`mutable.ArrayBuffer`, `mutable.HashMap`,
-`mutable.HashSet`, `ListBuffer` are the obvious set) or fail with a clear "unsupported type" message.
+Fixed: `getAccessibleField` stops at a `null` superclass; deserializers were added for `mutable.ArrayBuffer`
+(also used for `mutable.Buffer/Seq/IndexedSeq/Iterable`), `mutable.HashSet`/`mutable.Set` and
+`mutable.HashMap`/`mutable.Map`; a trait or abstract class without a registered converter now fails at
+(de)serializer build time with a message naming the type and the registration options. `ListBuffer` still
+throws by design. Covered by `MutableCollectionsSpec`.
 
 ### 5. Empty input escapes the error wrapper — FIXED
 

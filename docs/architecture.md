@@ -107,12 +107,14 @@ Three facts that matter:
 7. Seqs: `List`, `Vector`, `Iterable`, `Seq`, `Stream`, `immutable.Queue` (each matched for both the `scala.collection` and `immutable` symbol where both exist).
 8. Sets: `Set`, `immutable.HashSet`, `immutable.ListSet`; `SortedSet`/`TreeSet` → `IllegalStateException`; `BitSet`.
 9. Maps: `immutable.HashMap`; `SortedMap`/`TreeMap` → throw; `immutable.ListMap`.
-10. If `allowSuperType`: registered superclass deserializers (exact symbol, then `baseClasses.contains` over the registry map in map-iteration order).
-11. `ListBuffer` → `IllegalArgumentException`.
-12. Exact-type custom deserializer by `tpe.toString`.
-13. `Nothing` / `Any` / `AnyRef` → `IllegalArgumentException`.
-14. Singleton object detection: `ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")` → `SingletonObjectDeserializer`.
-15. Otherwise `BeanDeserializer`.
+10. Mutable collections: `mutable.ArrayBuffer/Buffer/Seq/IndexedSeq/Iterable` → `ArrayBufferDeserializer`; `mutable.Set/HashSet` → `MutableHashSetDeserializer`; `mutable.Map/HashMap` → `MutableHashMapDeserializer`.
+11. If `allowSuperType`: registered superclass deserializers (exact symbol, then `baseClasses.contains` over the registry map in map-iteration order).
+12. `ListBuffer` → `IllegalArgumentException`.
+13. Exact-type custom deserializer by `tpe.toString`.
+14. `Nothing` / `Any` / `AnyRef` → `IllegalArgumentException`.
+15. Singleton object (`typeSymbol.isModuleClass`) → `SingletonObjectDeserializer`.
+16. Abstract type (trait / abstract class, `typeSymbol.isAbstract`) → `IllegalArgumentException` naming the type and the registration options.
+17. Otherwise `BeanDeserializer`.
 
 Then `getDeserializerNoCache` wraps the result in `PostTransformDeserializer` if a transform is registered for exactly `tpe`.
 
@@ -122,8 +124,8 @@ Then `getDeserializerNoCache` wraps the result in `PostTransformDeserializer` if
 2. `java.time` four types (all four guarded by "no converter registered").
 3. `String`, `mutable.StringBuilder`, `Char`, `java.lang.Character` → `StringSerializer`.
 4. `Array` (guarded with `isInstanceOf[TypeRefApi]`).
-5. **Only if** `typeSymbol.fullName.startsWith("scala.")`: any mutable `Seq/Set/Iterable` → `IterableSerializer`, mutable `Map` → `MapSerializer`; any `collection.Seq`, `BitSet` (exact), `collection.Set`, `collection.Map`, `Iterable` likewise; then `Either`, `Option`, `Tuple1..6` by `baseClasses.contains`. This is why *serializing* mutable collections works but *deserializing* them does not (no mutable deserializers exist).
-6. Superclass serializers (if `allowSuperType`), exact custom serializer by `tpe.toString`, `Nothing/Any/AnyRef` errors, singleton (`MODULE$`) → `SingletonObjectSerializer`.
+5. **Only if** `typeSymbol.fullName.startsWith("scala.")`: any mutable `Seq/Set/Iterable` → `IterableSerializer`, mutable `Map` → `MapSerializer`; any `collection.Seq`, `BitSet` (exact), `collection.Set`, `collection.Map`, `Iterable` likewise; then `Either`, `Option`, `Tuple1..6` by `baseClasses.contains`. Serialization therefore accepts every standard collection, while deserialization supports the explicit list in the chain above.
+6. Superclass serializers (if `allowSuperType`), exact custom serializer by `tpe.toString`, `Nothing/Any/AnyRef` errors, singleton (`typeSymbol.isModuleClass`) → `SingletonObjectSerializer`.
 7. `registerSerializerForAnySubtype` registry by stripped type string, else `BeanSerializer(..., errorOnNulls = !ignoreNullFields)`.
 
 Adding a type means wiring both chains; order matters because later `baseClasses.contains` checks are broad.

@@ -80,6 +80,38 @@ class CompactFormatSpec extends AnyFlatSpec {
     compactOptions.deserialize[Option[Nested]]("""{"v":5}""") mustBe Some(Nested(5))
   }
 
+  val mapsAsObjects = new MPJsons(MPJsonsConfig(mapsAsObjects = true))
+
+  "mapsAsObjects" must "write maps with scalar keys as JSON objects" in {
+    mapsAsObjects.serialize(Map("a" -> 1, "b" -> 2)) mustBe """{"a":1,"b":2}"""
+    mapsAsObjects.serialize(Map(1 -> "x", 2 -> "y")) mustBe """{"1":"x","2":"y"}"""
+    mapsAsObjects.serialize(Map(true -> List(1))) mustBe """{"true":[1]}"""
+    mapsAsObjects.serialize(Map('c' -> 1.5)) mustBe """{"c":1.5}"""
+    mapsAsObjects.serialize(Map("q\"uote" -> (null: String))) mustBe """{"q\"uote":null}"""
+    mapsAsObjects.serialize(Map(Nested(1) -> "bean")) mustBe """[[{"v":1},"bean"]]"""
+    mapsAsObjects.serialize(scala.collection.mutable.Map("m" -> 1)) mustBe """{"m":1}"""
+    legacy.serialize(Map("a" -> 1)) mustBe """[["a",1]]"""
+  }
+
+  "mapsAsObjects" must "round trip and read both forms in both configurations" in {
+    val maps = (Map("a" -> 1, "b" -> 2), Map(1L -> "x"), Map(true -> 1), Map('c' -> 2), Map(Nested(1) -> "bean"))
+    mapsAsObjects.deserialize[(Map[String, Int], Map[Long, String], Map[Boolean, Int], Map[Char, Int], Map[Nested, String])](mapsAsObjects.serialize(maps)) mustBe maps
+    legacy.deserialize[Map[String, Int]]("""{"a":1,"b":2}""") mustBe Map("a" -> 1, "b" -> 2)
+    legacy.deserialize[Map[Int, String]]("""{ 1 : "x", "2":"y" }""") mustBe Map(1 -> "x", 2 -> "y")
+    mapsAsObjects.deserialize[Map[String, Int]]("""[["a",1]]""") mustBe Map("a" -> 1)
+    mapsAsObjects.deserialize[scala.collection.immutable.ListMap[String, Int]]("""{"z":1,"a":2}""").toList mustBe List("z" -> 1, "a" -> 2)
+    mapsAsObjects.deserialize[Map[String, Option[Int]]]("""{"a":null}""") mustBe Map("a" -> None)
+    intercept[JsonInnerException] { legacy.deserialize[Map[Nested, String]]("""{"x":"y"}""") }.getMessage must include("cannot be read from a JSON object")
+    intercept[IllegalArgumentException] { mapsAsObjects.serialize(Map((null: String) -> 1)) }
+  }
+
+  "mapsAsObjects" must "combine with compactOptions for Option[Map]" in {
+    val both = new MPJsons(MPJsonsConfig(compactOptions = true, mapsAsObjects = true))
+    both.serialize(Option(Map("a" -> 1))) mustBe """{"a":1}"""
+    both.deserialize[Option[Map[String, Int]]]("""{"a":1}""") mustBe Some(Map("a" -> 1))
+    both.deserialize[Option[Map[String, Int]]]("null") mustBe None
+  }
+
   "compactOptions" must "keep the historical format for everything else" in {
     val obj = Opts(Some(1), Some("s"), Some(Nested(2)), Some(List(3)), Some(Some(4)))
     compactOptions.serialize(Nested(1)) mustBe legacy.serialize(Nested(1))

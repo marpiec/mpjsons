@@ -1,13 +1,16 @@
 package io.mpjsons.impl.deserializer.jsontypes
 
 import io.mpjsons.JsonTypeDeserializer
-import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
+import io.mpjsons.impl.deserializer.IdentifierDeserializer
+import io.mpjsons.impl.util.{Context, MapKeys, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
 
 /**
+ * Reads both map forms: the historical array of [key,value] pairs and the object form {"key":value,...}
+ * (the object form only for the scalar key types listed in MapKeys).
  * @author Marcin Pieciukiewicz
  */
 
@@ -20,10 +23,16 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
   val valueDeserializer = deserializerFactory.getDeserializer[V](valueType, context)
   private val keyNull = NullValues.forType(keyType)
   private val valueNull = NullValues.forType(valueType)
+  private val keyParser: String => Any = MapKeys.parser(keyType).orNull
 
 
-  /** Reads the [[k,v],...] pair array straight into the given builder, in input order. */
+  /** Reads the map straight into the given builder, in input order. */
   protected def readInto[R](jsonIterator: StringIterator, builder: mutable.Builder[(K, V), R]): R = {
+    jsonIterator.skipWhitespaceChars()
+    if (jsonIterator.currentChar == '{') readObjectInto(jsonIterator, builder) else readPairsInto(jsonIterator, builder)
+  }
+
+  private def readPairsInto[R](jsonIterator: StringIterator, builder: mutable.Builder[(K, V), R]): R = {
 
     jsonIterator.consumeArrayStart()
 
@@ -49,6 +58,37 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
         jsonIterator.skipWhitespaceChars()
       }
 
+    }
+
+    jsonIterator.nextChar()
+    builder.result()
+  }
+
+  private def readObjectInto[R](jsonIterator: StringIterator, builder: mutable.Builder[(K, V), R]): R = {
+
+    if (keyParser == null) {
+      throw new IllegalArgumentException("A map with key type " + keyType + " cannot be read from a JSON object; expected an array of [key,value] pairs")
+    }
+
+    jsonIterator.consumeObjectStart()
+
+    jsonIterator.skipWhitespaceChars()
+
+    while (jsonIterator.currentChar != '}') {
+
+      val key = keyParser(IdentifierDeserializer.deserialize(jsonIterator)).asInstanceOf[K]
+
+      jsonIterator.consumeFieldValueSeparator()
+
+      val value = NullValues.read(jsonIterator, valueNull, valueDeserializer)
+
+      builder += ((key, value))
+
+      jsonIterator.skipWhitespaceChars()
+      if (jsonIterator.currentChar == ',') {
+        jsonIterator.nextChar()
+        jsonIterator.skipWhitespaceChars()
+      }
     }
 
     jsonIterator.nextChar()

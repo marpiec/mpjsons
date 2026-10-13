@@ -1,5 +1,7 @@
 package io.mpjsons.impl.util
 
+import io.mpjsons.MPJsonsConfig
+
 import scala.reflect.runtime.universe._
 
 /**
@@ -24,14 +26,15 @@ object JsonShapes {
   private val mapType = typeOf[scala.collection.Map[_, _]]
 
   /** True when the serialized form of `tpe` is a JSON object (bean, Option, Either, singleton, time type, ...). */
-  def isObjectLike(tpe: Type): Boolean = {
+  def isObjectLike(tpe: Type, config: MPJsonsConfig): Boolean = {
     val symbol = tpe.typeSymbol
     if (scalarTypes.exists(_.typeSymbol == symbol)) {
       false
     } else if (symbol == definitions.ArrayClass) {
       false
     } else if (tpe <:< mapType) {
-      false // written as an array of pairs
+      // written as an array of pairs, unless the object form is on and the key type supports it
+      config.mapsAsObjects && MapKeys.supportsObjectForm(TypesUtil.getDoubleSubElementsType(tpe)._1)
     } else if (arrayLikeTypes.exists(t => tpe <:< t)) {
       false
     } else {

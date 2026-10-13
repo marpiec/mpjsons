@@ -334,6 +334,7 @@ compact.serialize(Profile("Ann", Some("annie"), None))
 |---|---|---|
 | `escapeSlash = false` | `true` | `/` is written unescaped instead of `\/`. Reading is unaffected. |
 | `compactOptions = true` | `false` | `Some(v)` is written as `v`; a `None` field is omitted and a `None` element is `null`. An `Option` directly inside another `Option` keeps the historical form so `Some(None)` survives. On read, the historical `{}` / `{"value":v}` is still recognised unless the element type is itself written as a JSON object (a bean, an `Option`, `Either`, a time type), in which case `{` is the inline element. |
+| `mapsAsObjects = true` | `false` | Maps whose key type is `String`, a number, `Boolean` or `Char` are written as `{"key":value}` instead of `[["key",value]]`; other key types keep the pair form. Both forms are always read. |
 
 Other levers are listed in `docs/roadmap.md`.
 

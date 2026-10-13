@@ -4,7 +4,7 @@ import io.mpjsons.{JsonTypeSerializer, MPJsonsConfig}
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
 import io.mpjsons.impl.serializer.time.{DurationSerializer, LocalDateSerializer, LocalDateTimeSerializer, LocalTimeSerializer}
-import io.mpjsons.impl.util.Context
+import io.mpjsons.impl.util.{Context, MapKeys, TypesUtil}
 
 import scala.collection.immutable._
 import scala.collection.mutable
@@ -105,7 +105,7 @@ class SerializerFactoryImpl(config: MPJsonsConfig) {
       } else if (tpe.baseClasses.contains(typeOf[mutable.Set[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[mutable.Map[_, _]].typeSymbol)) {
-        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config.mapsAsObjects && MapKeys.supportsObjectForm(TypesUtil.getDoubleSubElementsType(tpe)._1))
       } else if (tpe.baseClasses.contains(typeOf[mutable.Iterable[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
@@ -118,7 +118,7 @@ class SerializerFactoryImpl(config: MPJsonsConfig) {
       } else if (tpe.baseClasses.contains(typeOf[collection.Set[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[collection.Map[_, _]].typeSymbol)) {
-        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config.mapsAsObjects && MapKeys.supportsObjectForm(TypesUtil.getDoubleSubElementsType(tpe)._1))
       } else if (tpe.baseClasses.contains(typeOf[Iterable[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }
@@ -129,7 +129,7 @@ class SerializerFactoryImpl(config: MPJsonsConfig) {
       } else if (tpe.baseClasses.contains(typeOf[scala.collection.Set[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[scala.collection.Map[_, _]].typeSymbol)) {
-        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+        return new MapSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config.mapsAsObjects && MapKeys.supportsObjectForm(TypesUtil.getDoubleSubElementsType(tpe)._1))
       } else if (tpe.baseClasses.contains(typeOf[scala.collection.Iterable[_]].typeSymbol)) {
         return new IterableSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       }

@@ -48,7 +48,7 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 |---|---|---|
 | `List, Vector, Seq, Iterable, Stream, immutable.Queue, Set, HashSet, ListSet, Array[T]`, any `scala.` mutable `Seq/Set/Iterable` | JSON array | `List` → `List`; `Seq` → `List` (`Seq.from`); `Iterable` → **`ArrayBuffer`** (mutable, **verified**); `Set` → `Set(...)`; `Stream` via `Stream.fromIterator`; `Array` via reflective `java.lang.reflect.Array.set` per element. `mutable.ArrayBuffer/Buffer/Seq/IndexedSeq/Iterable` → `ArrayBuffer`; `mutable.Set/HashSet` → `mutable.HashSet`. Other mutable collections (`ListBuffer` by design) throw. |
 | `BitSet` | array of ints | `immutable.BitSet` |
-| `Map[K,V]` and all `scala.` map types incl. mutable | **array of pairs** `[[k,v],[k,v]]` | `Map` → `toMap`; `HashMap`; `ListMap` (order preserved, pairs reversed back); `mutable.Map/HashMap` → `mutable.HashMap`. |
+| `Map[K,V]` and all `scala.` map types incl. mutable | **array of pairs** `[[k,v],[k,v]]`; with `MPJsonsConfig(mapsAsObjects = true)` and a `String`/number/`Boolean`/`Char` key type: object `{"k":v}` (key text as JSON key; null key fails) | both forms always accepted (`[` → pairs, `{` → object, keys parsed back from their text; object form rejected for other key types). `Map` → `toMap`; `HashMap`; `ListMap` (input order); `mutable.Map/HashMap` → `mutable.HashMap`. |
 | `SimpleMapSerializer[T]` (opt-in converter for `Map[String,T]`) | object `{"k":v}`; `null` values skipped | `SimpleMapDeserializer[T]`: object with quoted or bare keys |
 | `SortedSet, TreeSet, SortedMap, TreeMap, ListBuffer` | serialize works for the sorted ones (they are `scala.` collections); deserialize **throws** by design (no `Ordering`) | |
 
@@ -99,7 +99,7 @@ fields with a constructor default (absent keeps the default, `null` overwrites i
 |---|---|---|---|
 | `Some(5)` | `{"value":5}` (11) | `5` (1) — **available**: `compactOptions = true` | 10 bytes per present Option |
 | `None` | `{}` (2) + key | omitted key — **available**: `compactOptions = true` | 2 + key length + colon + comma |
-| `Map("k"->1)` | `[["k",1]]` (9) | `{"k":1}` (7) | 2 per entry + 2 |
+| `Map("k"->1)` | `[["k",1]]` (9) | `{"k":1}` (7) — **available**: `mapsAsObjects = true` | 2 per entry + 2 |
 | `"a/b"` | `"a\/b"` | `"a/b"` — **available**: `escapeSlash = false` | 1 per slash |
 | `LocalDate` | 30 bytes | `"2023-07-23"` 12 bytes | 18 |
 | field keys | full Scala field names | annotated short names (`@jsonName("n")`) | depends |

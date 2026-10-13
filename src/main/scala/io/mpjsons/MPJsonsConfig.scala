@@ -11,8 +11,12 @@ package io.mpjsons
  *                                {"value":v} / {}; an Option nested directly in an Option keeps the historical form.
  *                                On read, an inline value is recognised whenever it cannot be the historical object
  *                                form; for element types that are themselves JSON objects the compact setting decides.
+ * @param mapsAsObjects           write maps whose key type is String, a number, Boolean or Char as a JSON object
+ *                                {"key":value} instead of an array of [key,value] pairs; other key types keep the
+ *                                pair form. Both forms are always accepted on read.
  */
 final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                nullPolicy: NullPolicy = NullPolicy.Fail,
                                escapeSlash: Boolean = true,
-                               compactOptions: Boolean = false)
+                               compactOptions: Boolean = false,
+                               mapsAsObjects: Boolean = false)

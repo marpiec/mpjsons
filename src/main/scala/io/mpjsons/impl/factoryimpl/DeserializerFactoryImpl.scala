@@ -94,7 +94,7 @@ class DeserializerFactoryImpl(config: MPJsonsConfig) {
     } else if (tpe.isInstanceOf[TypeRefApi] && tpe.asInstanceOf[TypeRefApi].sym == definitions.ArrayClass) {
       return new ArrayDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Option[_]].typeSymbol) {
-      return new OptionDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, config.compactOptions)
+      return new OptionDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, config)
     } else if (typeSymbol == typeOf[Map[_, _]].typeSymbol || typeSymbol == typeOf[immutable.Map[_, _]].typeSymbol) {
       return new MapDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Either[_, _]].typeSymbol) {

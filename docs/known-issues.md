@@ -39,11 +39,10 @@ throws by design. Covered by `MutableCollectionsSpec`.
 Fixed: `StringIterator` starts at the end-of-input marker for an empty string, so the failure is reported as a
 `JsonInnerException` naming the target type. Covered by `MalformedJsonSpec`.
 
-### 6. `null` inside containers produces raw NPEs — BUG (verified)
+### 6. `null` inside containers produces raw NPEs — FIXED
 
-`m.serialize[Option[String]](Some(null))` and `m.serialize(List[String]("a", null))` throw
-`NullPointerException` from `StringSerializer.serialize` (`obj.toString`). The bean-level null policy
-(`@nullable`, `ignoreNullFields`) does not apply to elements, and no serializer can emit `null`.
+Null elements of collections, maps, tuples, `Either` and `Some` are written as the `null` literal and read back;
+bean fields follow `NullPolicy` (see json-format.md §2). Covered by `NullLiteralSpec`.
 
 ### 7. Non-finite doubles produce invalid JSON — FIXED
 
@@ -88,16 +87,16 @@ all accepted silently; there is no recursion depth limit. Acceptable for trusted
 output), risky for external input. Any rewrite of the hot loops should decide explicitly which of these to keep
 (bare keys and whitespace tolerance are documented features and tested; the rest are accidents).
 
-### 14. No `null` literal support on read — LIMITATION (verified)
+### 14. No `null` literal support on read — FIXED (owner decisions 13/10/2026)
 
-See json-format.md §2 and roadmap.md §3. Today a `null` value for any known field throws; `null` is tolerated only
-while skipping unknown fields in `ignoreNonExistingFields` mode.
+`null` reads as `null` for reference types, `None` for `Option`, and fails with a message naming the field for
+primitives; accepted at top level, for bean fields, collection elements, map keys/values, tuple slots, `Either`
+payloads and inside `Some`. See json-format.md §2 and `NullLiteralSpec`.
 
-### 15. Missing JSON key leaves `Option` fields as `null` — LIMITATION (verified)
+### 15. Missing JSON key leaves `Option` fields as `null` — FIXED
 
-`case class WithOpt(a: Option[String], ...)` from `{"b":"x"}` gives `a == null`. Users work around it with
-`postDeserializationTransform`. Pre-initialising `Option` fields to `None` after instance creation is cheap
-(field list is known at build time).
+`Option` fields that construction left `null` are set to `None` before the key loop, so an absent key reads as
+`None`; defaults set by a no-arg constructor are kept.
 
 ### 16. `java.*` value types fall into bean reflection and fail under JPMS — LIMITATION (verified)
 

@@ -26,7 +26,7 @@ Tests live in `src/test/scala/io/mpjsons/`, one spec per feature area (Collectio
 ## Architecture & request flow
 
 ### Entry point: `MPJsons.scala`
-`class MPJsons(ignoreNonExistingFields = false, ignoreNullFields = false)` is the public facade. It owns one `SerializerFactory` and one `DeserializerFactory`. Key public methods:
+`class MPJsons(ignoreNonExistingFields = false, ignoreNullFields = false, nullPolicy = NullPolicy.Fail)` is the public facade (`ignoreNullFields = true` means `NullPolicy.Omit`). On read, a JSON `null` becomes `null` for reference types, `None` for `Option` and an error for primitives (`impl/util/NullValues.scala`, `StringIterator.tryConsumeNull`); absent `Option` fields read as `None`. It owns one `SerializerFactory` and one `DeserializerFactory`. Key public methods:
 - `serialize[T](obj)` / `deserialize[T](json)` — implicit `TypeTag[T]` drives type resolution. Guards against `Nothing` (unspecified type param).
 - `buildStaticSerializer[T]` / `buildStaticDeserializer[T]` — return reusable `StaticSerializer`/`StaticDeserializer` bound to one type (avoids repeated factory lookup; what `PerformanceSpec` uses).
 - `registerConverter`, `registerSuperclassConverter`, `registerSerializerForAnySubtype` — custom (de)serializers.
@@ -58,7 +58,7 @@ DeserializerFactory            ← thin concrete class
 - `TypesUtil` — memoized `Type`↔`Class` conversions and `typeArgs` extraction. Uses `runtimeMirror(...)` per lookup on cache miss.
 
 ### Bean (de)serialization
-- `BeanSerializer`: iterates `fieldsWithSerializers` (lazy, to survive recursive types), reads each field via reflection, and writes `"name":value`. Skips a `null` field only if `ignoreNullFields`/`@nullable`; otherwise throws. A `null` literal is never written. JSON key order is declaration order, superclass fields first.
+- `BeanSerializer`: iterates `fieldsWithSerializers` (lazy, to survive recursive types), reads each field via reflection, and writes `"name":value`. Skips a `null` field only if `ignoreNullFields`/`@nullable`; otherwise throws. Null reference fields follow the instance `NullPolicy` (`Fail` default / `Omit` / `WriteNull`, `io.mpjsons.NullPolicy`); null elements of collections, maps, tuples, `Either`, `Some` are always written as `null`. JSON key order is declaration order, superclass fields first.
 - `BeanDeserializer`: caches the no-arg `Constructor` if present. `deserialize` reads `{`, builds an instance via `ObjectConstructionUtil`, then loops fields keyed by `fieldsByName: Map[String,(Field, deserializer)]`, mutating the instance via `field.set`. Unknown fields → throw, unless `ignoreNonExistingFields`, in which case `skipValue` walks past the value (`skipObject`/`skipArray`/`skipString`/`skipNumber`/`skipBooleanOrNull`).
 - `ObjectConstructionUtil`: uses the no-arg constructor if available; otherwise allocates via `sun.misc.Unsafe.allocateInstance` (**no constructor runs** — field defaults from the class are not applied; commented-out `ReflectionFactory` alternative is kept deliberately). Beans are therefore mutated in place, which is why deserialization targets `var`/mutable beans and case classes with no-arg-constructible shape.
 

@@ -1,7 +1,7 @@
 package io.mpjsons.impl.deserializer.jsontypes
 
 import io.mpjsons.JsonTypeDeserializer
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.mutable
@@ -18,6 +18,8 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
   val (keyType, valueType): (Type, Type) = TypesUtil.getDoubleSubElementsType(tpe)
   val keyDeserializer = deserializerFactory.getDeserializer[K](keyType, context)
   val valueDeserializer = deserializerFactory.getDeserializer[V](valueType, context)
+  private val keyNull = NullValues.forType(keyType)
+  private val valueNull = NullValues.forType(valueType)
 
 
   /** Reads the [[k,v],...] pair array straight into the given builder, in input order. */
@@ -31,11 +33,11 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
 
       jsonIterator.consumeArrayStart()
 
-      val key = keyDeserializer.deserialize(jsonIterator)
+      val key = NullValues.read(jsonIterator, keyNull, keyDeserializer)
 
       jsonIterator.consumeArrayValuesSeparator()
 
-      val value = valueDeserializer.deserialize(jsonIterator)
+      val value = NullValues.read(jsonIterator, valueNull, valueDeserializer)
 
       builder += ((key, value))
 

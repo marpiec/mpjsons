@@ -7,6 +7,7 @@ import io.mpjsons.impl.util.{Context, TypesUtil}
 import scala.reflect.runtime.universe._
 
 /**
+ * Null keys and values are written as the `null` literal.
  * @author Marcin Pieciukiewicz
  */
 
@@ -31,11 +32,11 @@ class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, conte
       }
       jsonBuilder.append('[')
 
-      keySerializer.serialize(key, jsonBuilder)
+      if (key == null) jsonBuilder.append("null") else keySerializer.serialize(key, jsonBuilder)
 
       jsonBuilder.append(',')
 
-      valueSerializer.serialize(value, jsonBuilder)
+      if (value == null) jsonBuilder.append("null") else valueSerializer.serialize(value, jsonBuilder)
 
       jsonBuilder.append(']')
     }

@@ -1,7 +1,7 @@
 package io.mpjsons
 
 import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerializer}
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
 
 import java.util.concurrent.ConcurrentHashMap
@@ -36,7 +36,8 @@ private object ErrorMessageFormatter {
 private[mpjsons] final class OutputSizeHint {
   @volatile private var length: Int = 64
 
-  def newBuilder(): StringBuilder = new StringBuilder(length + 16)
+  // Margin: StringBuilder.append(double) reserves 24 chars up front (JDK 19+), so a trailing number must not overflow.
+  def newBuilder(): StringBuilder = new StringBuilder(length + 32)
 
   def update(builder: StringBuilder): Unit = {
     length = builder.length
@@ -64,7 +65,7 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T]) {
    */
   def serializeToStringBuilder(obj: T): StringBuilder = {
     val json = sizeHint.newBuilder()
-    innerSerializer.serialize(obj, json)
+    if (obj == null) json.append("null") else innerSerializer.serialize(obj, json)
     sizeHint.update(json)
     json
   }
@@ -81,7 +82,7 @@ class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[
   def deserialize(json: String): T = {
     val jsonIterator = new StringIterator(json)
     try {
-      innerDeserializer.deserialize(jsonIterator)
+      if (jsonIterator.tryConsumeNull()) NullValues.forType(tpe).get().asInstanceOf[T] else innerDeserializer.deserialize(jsonIterator)
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e, tpe), e)
@@ -99,10 +100,10 @@ final class nullable extends StaticAnnotation
  * Main class of json serialization library.
  * @author Marcin Pieciukiewicz
  */
-class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolean = false) {
+class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolean = false, nullPolicy: NullPolicy = NullPolicy.Fail) {
 
   private val deserializerFactory = new DeserializerFactory(ignoreNonExistingFields)
-  private val serializerFactory = new SerializerFactory(ignoreNullFields)
+  private val serializerFactory = new SerializerFactory(if (ignoreNullFields) NullPolicy.Omit else nullPolicy)
 
   private val extractTypeFromNameCache = new ConcurrentHashMap[String, Type]()
   private val outputSizeHints = new ConcurrentHashMap[Type, OutputSizeHint]()
@@ -159,7 +160,11 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
     */
   def deserialize[T](jsonIterator: StringIterator, tpe: Type): T = {
     try {
-      deserializerFactory.getDeserializer(tpe, Context(List.empty, Map.empty)).deserialize(jsonIterator)
+      if (jsonIterator.tryConsumeNull()) {
+        NullValues.forType(tpe).get().asInstanceOf[T]
+      } else {
+        deserializerFactory.getDeserializer(tpe, Context(List.empty, Map.empty)).deserialize(jsonIterator)
+      }
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(jsonIterator.stringValue, jsonIterator, e, tpe), e)
@@ -219,11 +224,15 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
    * @return JSON representation of given object
    */
   def serialize[T](obj: T, tpe: Type): String = {
-    val hint = outputSizeHint(tpe)
-    val json = hint.newBuilder()
-    serializerFactory.getSerializer(tpe, Context(List.empty, Map.empty)).serialize(obj, json)
-    hint.update(json)
-    json.toString()
+    if (obj == null) {
+      "null"
+    } else {
+      val hint = outputSizeHint(tpe)
+      val json = hint.newBuilder()
+      serializerFactory.getSerializer(tpe, Context(List.empty, Map.empty)).serialize(obj, json)
+      hint.update(json)
+      json.toString()
+    }
   }
 
   /**

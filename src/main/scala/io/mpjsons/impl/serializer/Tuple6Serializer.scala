@@ -2,7 +2,7 @@ package io.mpjsons.impl.serializer
 
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 
 import scala.reflect.runtime.universe._
 
@@ -14,12 +14,12 @@ class Tuple6Serializer[T1, T2, T3, T4, T5, T6](serializerFactory: SerializerFact
   extends JsonTypeSerializer[scala.Tuple6[T1, T2, T3, T4, T5, T6]] {
 
   private val subtypes = TypesUtil.getMultipleSubElementsType(tpe)
-  private val t1Serializer = serializerFactory.getSerializer(subtypes.head, context).asInstanceOf[JsonTypeSerializer[T1]]
-  private val t2Serializer = serializerFactory.getSerializer(subtypes(1), context).asInstanceOf[JsonTypeSerializer[T2]]
-  private val t3Serializer = serializerFactory.getSerializer(subtypes(2), context).asInstanceOf[JsonTypeSerializer[T3]]
-  private val t4Serializer = serializerFactory.getSerializer(subtypes(3), context).asInstanceOf[JsonTypeSerializer[T4]]
-  private val t5Serializer = serializerFactory.getSerializer(subtypes(4), context).asInstanceOf[JsonTypeSerializer[T5]]
-  private val t6Serializer = serializerFactory.getSerializer(subtypes(5), context).asInstanceOf[JsonTypeSerializer[T6]]
+  private val t1Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes.head, context).asInstanceOf[JsonTypeSerializer[T1]])
+  private val t2Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(1), context).asInstanceOf[JsonTypeSerializer[T2]])
+  private val t3Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(2), context).asInstanceOf[JsonTypeSerializer[T3]])
+  private val t4Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(3), context).asInstanceOf[JsonTypeSerializer[T4]])
+  private val t5Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(4), context).asInstanceOf[JsonTypeSerializer[T5]])
+  private val t6Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(5), context).asInstanceOf[JsonTypeSerializer[T6]])
 
   override def serialize(tuple: scala.Tuple6[T1, T2, T3, T4, T5, T6], jsonBuilder: StringBuilder): Unit = {
     jsonBuilder.append('[')

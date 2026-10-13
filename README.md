@@ -265,6 +265,34 @@ mpjsons.serialize(PrimitiveHolder(null, null))     // {}
 mpjsons.deserialize[PrimitiveHolder]("{}")          // PrimitiveHolder(null, null)
 ```
 
+#### The `null` literal
+
+On read, `null` is accepted wherever a value can appear: it becomes `null` for reference
+types (`String`, beans, collections, boxed `java.lang` numbers), `None` for `Option`, and is
+rejected with a clear error for primitives such as `Int` or `Boolean`. A missing `Option`
+field also reads as `None`.
+
+```scala
+case class Profile(name: String, nickname: Option[String], age: Int)
+
+mpjsons.deserialize[Profile]("""{"name":null,"nickname":null,"age":3}""") // Profile(null, None, 3)
+mpjsons.deserialize[Profile]("""{"name":"Ann","age":3}""")                // Profile("Ann", None, 3)
+mpjsons.deserialize[Profile]("""{"name":"Ann","nickname":null,"age":null}""") // throws: null not allowed for primitive field 'age'
+```
+
+On write, bean fields follow the instance's `NullPolicy`:
+
+```scala
+import io.mpjsons.NullPolicy
+
+new MPJsons().serialize(Profile(null, None, 3))                                  // throws (default: NullPolicy.Fail)
+new MPJsons(nullPolicy = NullPolicy.Omit).serialize(Profile(null, None, 3))      // {"nickname":{},"age":3}
+new MPJsons(nullPolicy = NullPolicy.WriteNull).serialize(Profile(null, None, 3)) // {"name":null,"nickname":{},"age":3}
+```
+
+`ignoreNullFields = true` is the same as `NullPolicy.Omit`. Null elements of collections, maps,
+tuples, `Either` and `Some` are always written as `null`, and `serialize(null)` writes `null`.
+
 ### Post-deserialization transform
 
 Register a function to run on each instance of a type after deserialization — handy for

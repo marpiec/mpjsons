@@ -7,6 +7,7 @@ import io.mpjsons.impl.util.{Context, TypesUtil}
 import scala.reflect.runtime.universe._
 
 /**
+ * Null elements are written as the `null` literal.
  * @author Marcin Pieciukiewicz
  */
 
@@ -27,7 +28,7 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
       } else {
         isNotFirstField = true
       }
-      subTypeSerializer.serialize(iterator.next(), jsonBuilder)
+      serializeElement(iterator.next(), jsonBuilder)
     }
 
     jsonBuilder.append(']')
@@ -47,10 +48,18 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
       } else {
         isNotFirstField = true
       }
-      subTypeSerializer.serialize(remaining.head, jsonBuilder)
+      serializeElement(remaining.head, jsonBuilder)
       remaining = remaining.tail
     }
 
     jsonBuilder.append(']')
+  }
+
+  private def serializeElement(element: T, jsonBuilder: StringBuilder): Unit = {
+    if (element == null) {
+      jsonBuilder.append("null")
+    } else {
+      subTypeSerializer.serialize(element, jsonBuilder)
+    }
   }
 }

@@ -2,7 +2,7 @@ package io.mpjsons.impl.serializer
 
 import io.mpjsons.JsonTypeSerializer
 import io.mpjsons.impl.SerializerFactory
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 
 import scala.reflect.runtime.universe._
 
@@ -14,7 +14,7 @@ class Tuple1Serializer[T1](serializerFactory: SerializerFactory, tpe: Type, cont
   extends JsonTypeSerializer[scala.Tuple1[T1]] {
 
   private val subtype = TypesUtil.getSubElementsType(tpe)
-  private val t1Serializer = serializerFactory.getSerializer(subtype, context).asInstanceOf[JsonTypeSerializer[T1]]
+  private val t1Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtype, context).asInstanceOf[JsonTypeSerializer[T1]])
 
   override def serialize(tuple: scala.Tuple1[T1], jsonBuilder: StringBuilder): Unit = {
     jsonBuilder.append('[')

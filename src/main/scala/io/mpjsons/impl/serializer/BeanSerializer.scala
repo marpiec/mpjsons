@@ -2,7 +2,7 @@ package io.mpjsons.impl.serializer
 
 import java.lang.reflect.Field
 
-import io.mpjsons.JsonTypeSerializer
+import io.mpjsons.{JsonTypeSerializer, NullPolicy}
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.util.reflection.ReflectionUtil
@@ -17,8 +17,8 @@ case class FieldInfo[T](field: Field, name: String, jsonTypeSerializer: JsonType
 
 /**
  * Writes one bean field. `write` appends `"name":value` (with the leading comma when `notFirst`) and returns
- * true, or appends nothing and returns false when the value is null and nulls are allowed for the field.
- * Primitive fields are read without boxing when the built-in serializer is in use.
+ * true, or appends nothing and returns false when the field is omitted (null value under Omit, or a nullable
+ * field under Fail). Primitive fields are read without boxing when the built-in serializer is in use.
  */
 abstract class BeanFieldWriter(val name: String, val field: Field, val nullable: Boolean) {
 
@@ -34,7 +34,11 @@ abstract class BeanFieldWriter(val name: String, val field: Field, val nullable:
 
 object BeanFieldWriter {
 
-  def apply(info: FieldInfo[AnyRef], errorOnNulls: Boolean, typeName: String): BeanFieldWriter = {
+  private final val NullFails = 0
+  private final val NullOmitted = 1
+  private final val NullWritten = 2
+
+  def apply(info: FieldInfo[AnyRef], nullPolicy: NullPolicy, typeName: String): BeanFieldWriter = {
     val field = info.field
     val fieldType = field.getType
     val serializer = info.jsonTypeSerializer
@@ -53,21 +57,31 @@ object BeanFieldWriter {
     } else if (fieldType == java.lang.Byte.TYPE && (serializer eq ByteSerializer)) {
       new ByteWriter(info.name, field)
     } else {
-      new ObjectWriter(info.name, field, info.nullable, serializer, errorOnNulls, typeName)
+      val nullMode = nullPolicy match {
+        case NullPolicy.WriteNull => NullWritten
+        case NullPolicy.Omit => NullOmitted
+        case NullPolicy.Fail => if (info.nullable) NullOmitted else NullFails
+      }
+      new ObjectWriter(info.name, field, info.nullable, serializer, nullMode, typeName)
     }
   }
 
   final class ObjectWriter(name: String, field: Field, nullable: Boolean, serializer: JsonTypeSerializer[AnyRef],
-                           errorOnNulls: Boolean, typeName: String) extends BeanFieldWriter(name, field, nullable) {
-    private val failOnNull = errorOnNulls && !nullable
+                           nullMode: Int, typeName: String) extends BeanFieldWriter(name, field, nullable) {
 
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
       val value = field.get(obj)
       if (value == null) {
-        if (failOnNull) {
+        if (nullMode == NullWritten) {
+          val builder = jsonBuilder.underlying
+          appendPrefix(builder, notFirst)
+          builder.append("null")
+          true
+        } else if (nullMode == NullOmitted) {
+          false
+        } else {
           throw new IllegalArgumentException("Null value is not allowed for field " + name + " in type " + typeName)
         }
-        false
       } else {
         appendPrefix(jsonBuilder.underlying, notFirst)
         serializer.serialize(value, jsonBuilder)
@@ -148,7 +162,11 @@ object BeanFieldWriter {
   }
 }
 
-class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, errorOnNulls: Boolean = true) extends JsonTypeSerializer[AnyRef] {
+class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, nullPolicy: NullPolicy = NullPolicy.Fail) extends JsonTypeSerializer[AnyRef] {
+
+  /** Backward compatible constructor: `errorOnNulls = false` omits null fields. */
+  def this(serializerFactory: SerializerFactory, tpe: Type, context: Context, errorOnNulls: Boolean) =
+    this(serializerFactory, tpe, context, if (errorOnNulls) NullPolicy.Fail else NullPolicy.Omit)
 
   private val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type serializer */
@@ -158,7 +176,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
   }
   private lazy val writers: Array[BeanFieldWriter] = {
     val typeName = tpe.typeSymbol.fullName
-    fieldsWithSerializers.map(info => BeanFieldWriter(info, errorOnNulls, typeName))
+    fieldsWithSerializers.map(info => BeanFieldWriter(info, nullPolicy, typeName))
   }
 
 

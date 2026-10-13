@@ -25,10 +25,10 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 ```
 
 - Key = Java field name (Scala backing-field name). Order = **declaration order**, with fields inherited from a superclass first (`case class Flat(a,b,c,d,e)` → `{"a":..,"b":..,"c":..,"d":..,"e":..}`; `class Derived extends Base` → base fields, then derived fields). Versions up to 0.6.51 wrote reverse declaration order; readers never depended on order.
-- `null` field: default throws `IllegalArgumentException("Null value is not allowed for field ...")`; with `@(nullable @field)` or `MPJsons(ignoreNullFields = true)` the key is **omitted**. A `null` literal is never written.
-- Only fields found by the reflection scan participate: own `var`/`val` backing fields; **inherited fields are excluded** (bug, known-issues §2); `lazy val` backing fields are excluded (**verified**).
-- Read: keys may be unquoted (`{ a : 1 }`), whitespace is allowed anywhere, unknown keys throw unless `ignoreNonExistingFields`, missing keys leave the field as constructed (null / 0 / false / `None`-less `null` for `Option`), duplicate keys: last wins (**verified**).
-- A `null` **value** for a known field is **not accepted** for any type (**verified**: String → `String value should start with '"', but was [n]`, Option → `Object should start with '{' symbol but was 'n'`, Int → `NumberFormatException: For input string: ""`). It is accepted only while *skipping* an unknown field.
+- `null` field on write follows the instance's `NullPolicy` (`new MPJsons(nullPolicy = ...)`): `Fail` (default) throws `IllegalArgumentException("Null value is not allowed for field ...")` unless the field is `@(nullable @field)`, in which case the key is omitted; `Omit` (also `ignoreNullFields = true`) omits the key; `WriteNull` writes `"field":null`. `None` is always written as `{}` (not affected by the policy).
+- Fields found by the reflection scan participate: own and inherited `var`/`val` backing fields; `lazy val` backing fields are excluded.
+- Read: keys may be unquoted (`{ a : 1 }`), whitespace is allowed anywhere, unknown keys throw unless `ignoreNonExistingFields`, duplicate keys: last wins. Missing keys leave the field as constructed (null / 0 / false, or the initialiser value when a no-arg constructor ran), except `Option` fields, which read as `None`.
+- A `null` **value** reads as `null` for reference fields (including `java.lang.Integer` and friends), `None` for `Option` fields, and fails with `JSON null is not allowed for primitive field 'x' of type Int in ...` for primitives.
 
 ## 3. Option / Either / tuples
 
@@ -39,7 +39,7 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 | `Tuple1..Tuple6` | JSON array `[a,b,...]` | `("x",2)` → `["x",2]` |
 | `Tuple7+` | falls into bean handling → `{"_7":..,"_6":..,...,"_1":..}` (**verified** serialize; deserialize unverified) | |
 
-`Option` read: `{}` → `None`; `{"value":...}` → `Some`; any other key → error; `null` → error. `Some(null)` on write → raw `NullPointerException` (**verified**).
+`Option` read: `{}` → `None`; `{"value":...}` → `Some`; `null` → `None`; `{"value":null}` → `Some(null)` (or `Some(None)` for `Option[Option[_]]`); any other key → error. `Some(null)` writes `{"value":null}`. Tuple slots and `Either` payloads accept and write `null` the same way.
 
 ## 4. Collections
 
@@ -51,7 +51,7 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 | `SimpleMapSerializer[T]` (opt-in converter for `Map[String,T]`) | object `{"k":v}`; `null` values skipped | `SimpleMapDeserializer[T]`: object with quoted or bare keys |
 | `SortedSet, TreeSet, SortedMap, TreeMap, ListBuffer` | serialize works for the sorted ones (they are `scala.` collections); deserialize **throws** by design (no `Ordering`) | |
 
-Array/Map read loops accept missing and trailing commas (`[1 2 3]` → `List(1,2,3)`, **verified**). A `null` element is not accepted; `null` elements on write → raw NPE (**verified** `List("a", null)`).
+Array/Map read loops accept missing and trailing commas (`[1 2 3]` → `List(1,2,3)`). A `null` element, key or value reads as `null` (`None` for `Option` elements) and fails for primitive element types; null elements are written as `null`.
 
 ## 5. Singleton objects
 
@@ -85,11 +85,12 @@ Sizes: a `LocalDateTime` is ~90 bytes vs 19-29 for ISO-8601 `"2023-08-23T14:30:1
 | `{"a":1,"a":2}` | last wins |
 | `""` (empty) | `StringIndexOutOfBoundsException`, not `JsonInnerException` |
 | `"   "` | `JsonInnerException` (`Object should start with '{' symbol but was ''`) |
-| `null` at top level for a bean | error |
+| `null` at top level | `null` for reference types, `None` for `Option`, error for primitives; `serialize(null)` writes `null` |
 | deep nesting | recursive descent, no depth limit → `StackOverflowError` possible on hostile input |
 
-There is no validation that the whole input was consumed, and no distinction between "absent" and
-"present as `null`" on read; both of those are design inputs for the `null` work in roadmap.md.
+There is no validation that the whole input was consumed. "Absent" and "present as `null`" differ only for
+fields with a constructor default (absent keeps the default, `null` overwrites it) and for `Option` fields
+(both give `None`).
 
 ## 9. Size inventory for a typical bean (what a "compact mode" could remove)
 

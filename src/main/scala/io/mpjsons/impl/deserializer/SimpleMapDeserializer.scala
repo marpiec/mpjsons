@@ -3,7 +3,7 @@ package io.mpjsons.impl.deserializer
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.deserializer.jsontypes.{AbstractFloatingPointDeserializer, AbstractStringDeserializer}
 import io.mpjsons.impl.util.reflection.ReflectionUtil
-import io.mpjsons.impl.util.{Context, ObjectConstructionUtil, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, ObjectConstructionUtil, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import java.lang.reflect.Field
@@ -18,6 +18,7 @@ class SimpleMapDeserializer[T](deserializerFactory: DeserializerFactory, private
 
 
   val valueDeserializer = deserializerFactory.getDeserializer(tag.tpe, context).asInstanceOf[JsonTypeDeserializer[T]]
+  private val valueNull = NullValues.forType(tag.tpe)
 
   override def deserialize(jsonIterator: StringIterator): Map[String, T] = {
 
@@ -37,7 +38,7 @@ class SimpleMapDeserializer[T](deserializerFactory: DeserializerFactory, private
 
       jsonIterator.skipWhitespaceChars()
 
-      val value = valueDeserializer.deserialize(jsonIterator)
+      val value = NullValues.read(jsonIterator, valueNull, valueDeserializer)
 
       instance.put(identifier, value)
 

@@ -1,7 +1,7 @@
 package io.mpjsons.impl.deserializer.jsontypes
 
 import io.mpjsons.JsonTypeDeserializer
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.mutable
@@ -17,6 +17,7 @@ abstract class AbstractJsonArrayDeserializer[T, C]
 
   val elementsType: Type = getSubElementsType(tpe)
   val deserializer = deserializerFactory.getDeserializer[T](elementsType, context)
+  private val elementNull = NullValues.forType(elementsType)
 
   /** Reads a JSON array straight into the given builder, so no intermediate collection is created. */
   protected def deserializeInto[R](jsonIterator: StringIterator, builder: mutable.Builder[T, R]): R = {
@@ -26,7 +27,7 @@ abstract class AbstractJsonArrayDeserializer[T, C]
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
 
-      builder += deserializer.deserialize(jsonIterator)
+      builder += (if (jsonIterator.tryConsumeNull()) elementNull.get().asInstanceOf[T] else deserializer.deserialize(jsonIterator))
 
       jsonIterator.skipWhitespaceChars()
       if (jsonIterator.currentChar == ',') {

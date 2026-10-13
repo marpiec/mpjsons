@@ -1,6 +1,6 @@
 package io.mpjsons.impl.factoryimpl
 
-import io.mpjsons.JsonTypeSerializer
+import io.mpjsons.{JsonTypeSerializer, NullPolicy}
 import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
 import io.mpjsons.impl.serializer.time.{DurationSerializer, LocalDateSerializer, LocalDateTimeSerializer, LocalTimeSerializer}
@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class SerializerFactoryImpl(ignoreNullFields: Boolean) {
+class SerializerFactoryImpl(nullPolicy: NullPolicy) {
 
   private var additionalSerializers: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
   private var additionalSerializersAnySubType: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
@@ -185,7 +185,7 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
       val additionalOption = additionalSerializersAnySubType.get(stripTypes(tpe.toString))
       additionalOption match {
         case Some(serializer) => serializer(this.asInstanceOf[SerializerFactory])
-        case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, !ignoreNullFields)
+        case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, nullPolicy)
       }
 
     }

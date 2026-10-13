@@ -1,7 +1,7 @@
 package io.mpjsons.impl.deserializer.utiltypes
 
 import io.mpjsons.JsonTypeDeserializer
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.reflect.runtime.universe._
@@ -14,8 +14,8 @@ class Tuple2Deserializer[T1, T2](val deserializerFactory: DeserializerFactory, v
   extends JsonTypeDeserializer[(T1, T2)] {
 
   private val (firstType, secondType): (Type, Type) = TypesUtil.getDoubleSubElementsType(tpe)
-  private val firstDeserializer = deserializerFactory.getDeserializer[T1](firstType, context)
-  private val secondDeserializer = deserializerFactory.getDeserializer[T2](secondType, context)
+  private val firstDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T1](firstType, context), firstType)
+  private val secondDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T2](secondType, context), secondType)
 
 
   def deserialize(jsonIterator: StringIterator): (T1, T2) = {

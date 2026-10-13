@@ -6,6 +6,7 @@ import io.mpjsons.impl.util.reflection.ReflectionUtil
 import io.mpjsons.impl.util.{Context, ObjectConstructionUtil, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
+import java.lang.reflect.Field
 import scala.reflect.runtime.universe._
 
 /**
@@ -25,8 +26,10 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   lazy val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type deserializer */
   lazy val fieldTable: BeanFieldTable = new BeanFieldTable(fields.map { field =>
-    BeanField(field.field.getName, field.field, deserializerFactory.getDeserializer(field.tpe, context))
+    BeanField(field.field.getName, field.field, field.tpe, tpe.toString, deserializerFactory.getDeserializer(field.tpe, context))
   })
+  /** Option fields are initialised to None when construction left them null, so an absent key reads as None. */
+  private lazy val optionFields: Array[Field] = fields.filter(_.tpe <:< BeanDeserializer.optionType).map(_.field)
 
 
   override def deserialize(jsonIterator: StringIterator): T = {
@@ -34,6 +37,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     jsonIterator.consumeObjectStart()
     val instance = ObjectConstructionUtil.createInstance[T](clazz, constructor, context)
     val table = fieldTable
+    initialiseOptions(instance.asInstanceOf[AnyRef])
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
@@ -63,6 +67,18 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     jsonIterator.nextCharOrNullIfLast
 
     instance
+  }
+
+  private def initialiseOptions(instance: AnyRef): Unit = {
+    val options = optionFields
+    var index = 0
+    while (index < options.length) {
+      val field = options(index)
+      if (field.get(instance) == null) {
+        field.set(instance, None)
+      }
+      index += 1
+    }
   }
 
 
@@ -134,4 +150,8 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     }
   }
 
+}
+
+object BeanDeserializer {
+  private val optionType = typeOf[Option[_]]
 }

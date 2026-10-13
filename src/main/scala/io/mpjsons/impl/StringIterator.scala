@@ -45,6 +45,25 @@ class StringIterator(val stringValue: String) {
     nextIndex = index + 1
   }
 
+  /**
+   * If the next token (after whitespace) is the literal `null`, consumes it and returns true;
+   * otherwise leaves the cursor on the first non-whitespace character and returns false.
+   */
+  def tryConsumeNull(): Boolean = {
+    skipWhitespaceChars()
+    if (currentChar == 'n') {
+      val start = nextIndex - 1
+      if (stringValue.startsWith("null", start)) {
+        seek(start + 4)
+        true
+      } else {
+        throw new IllegalArgumentException("Unexpected token starting with 'n', expected null")
+      }
+    } else {
+      false
+    }
+  }
+
   def nextNonWhitespaceChar(): Unit = {
     do {
       nextChar()

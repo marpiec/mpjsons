@@ -45,9 +45,10 @@ Fixed: `StringIterator` starts at the end-of-input marker for an empty string, s
 `NullPointerException` from `StringSerializer.serialize` (`obj.toString`). The bean-level null policy
 (`@nullable`, `ignoreNullFields`) does not apply to elements, and no serializer can emit `null`.
 
-### 7. Non-finite doubles produce invalid JSON — BUG (verified)
+### 7. Non-finite doubles produce invalid JSON — FIXED
 
-`m.serialize(Double.NaN)` → `NaN`, `m.serialize(Double.PositiveInfinity)` → `Infinity`. Decide: throw, or write `null`/a string.
+Fixed: `DoubleSerializer`/`FloatSerializer` (also used for the boxed Java types) throw `IllegalArgumentException`
+for `NaN` and infinities instead of emitting text no JSON parser accepts. Covered by `FloatingPointSpec`.
 
 ### 8. `java.time.Duration` deserializer cannot be overridden — BUG (by inspection)
 

@@ -52,9 +52,9 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
     } else if (typeOf[Boolean].typeSymbol == typeSymbol) {
       return SimpleToStringSerializer
     } else if (typeOf[Double].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return DoubleSerializer
     } else if (typeOf[Float].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return FloatSerializer
     } else if (typeOf[java.lang.Long].typeSymbol == typeSymbol) {
       return SimpleToStringSerializer
     } else if (typeOf[java.lang.Integer].typeSymbol == typeSymbol) {
@@ -66,9 +66,9 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
     } else if (typeOf[java.lang.Boolean].typeSymbol == typeSymbol) {
       return SimpleToStringSerializer
     } else if (typeOf[java.lang.Double].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return DoubleSerializer
     } else if (typeOf[java.lang.Float].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return FloatSerializer
     } else if (typeOf[java.time.LocalDate].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {
       return LocalDateSerializer
     } else if (typeOf[java.time.LocalTime].typeSymbol == typeSymbol && !additionalSerializers.contains(tpe.toString)) {

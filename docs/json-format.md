@@ -9,7 +9,7 @@ any size-minimisation or `null`-support change must stay compatible with (see ro
 | Scala type | Written | Accepted on read | Notes |
 |---|---|---|---|
 | `Int, Long, Short, Byte` and boxed `java.lang.*` | `obj.toString` → `123`, `-5` | digits and `-` only (`isCurrentCharADigitPart`); then JVM `toInt`/`toLong` | `1.5` into an `Int` field stops at `.` and fails later with a misleading "Unexpected end of Json" (**verified**). Overflow → `NumberFormatException`. |
-| `Double, Float` (+ boxed) | `obj.toString` → `0.75`, `1.0E10`, `NaN`, `Infinity` | digits `- + . e E` then `toDouble`/`toFloat` | `NaN`/`Infinity` are **not valid JSON** but are emitted (**verified**). |
+| `Double, Float` (+ boxed) | JVM text form → `0.75`, `1.0E10` | digits `- + . e E` then `toDouble`/`toFloat` | `NaN`/`Infinity` throw `IllegalArgumentException` on write (JSON cannot represent them). |
 | `Boolean` (+ boxed) | `true` / `false` | lowercase letters collected, must equal `true`/`false` | |
 | `Char`, `java.lang.Character` | one-char JSON string `"M"` | string of length 1 | |
 | `String`, `mutable.StringBuilder` | JSON string, see escaping | JSON string | |

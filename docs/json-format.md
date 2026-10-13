@@ -94,7 +94,7 @@ Default (lenient) behaviour; with `MPJsonsConfig(strict = true)` the first three
 | `""` (empty) | `StringIndexOutOfBoundsException`, not `JsonInnerException` |
 | `"   "` | `JsonInnerException` (`Object should start with '{' symbol but was ''`) |
 | `null` at top level | `None` for `Option`; under `Fail` an error for every other type; under `Omit` / `WriteNull` `null` for reference types. `serialize(null)` throws under `Fail` and writes `null` otherwise |
-| deep nesting | recursive descent, no depth limit → `StackOverflowError` possible on hostile input |
+| deep nesting | recursive descent; unlimited by default (`StackOverflowError` possible on hostile input); with `MPJsonsConfig(maxDepth = n)` deeper input fails with `JSON nesting is deeper than maxDepth = n` |
 
 There is no validation that the whole input was consumed. "Absent" and "present as `null`" differ only for
 fields with a constructor default (absent keeps the default, `null` overwrites it) and for `Option` fields

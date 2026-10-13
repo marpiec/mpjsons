@@ -2,6 +2,7 @@ package io.mpjsons.impl.factoryimpl
 
 
 import io.mpjsons.{JsonTypeDeserializer, MPJsonsConfig}
+import io.mpjsons.impl.deserializer.DepthLimit
 import io.mpjsons.impl.util.Context
 
 import java.util.concurrent.ConcurrentHashMap
@@ -42,7 +43,8 @@ class DeserializerFactoryMemoizer(config: MPJsonsConfig) extends DeserializerFac
     } else {
       val newContext = Context(tpe :: context.typesStack,
         context.typeParams ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap)
-      val created = super.getDeserializerNoCache(tpe, newContext, allowSuperType)
+      val built = super.getDeserializerNoCache(tpe, newContext, allowSuperType)
+      val created = if (config.maxDepth > 0) DepthLimit.limit(built, config.maxDepth) else built
       val previous = map.putIfAbsent(tpe, created)
       (if (previous == null) created else previous).asInstanceOf[JsonTypeDeserializer[T]]
     }

@@ -20,6 +20,9 @@ package io.mpjsons
  * @param strict                  on read, reject missing commas between members or elements, trailing commas and
  *                                any content after the root value. Bare (unquoted) keys and whitespace are always
  *                                accepted. Off by default (historical, lenient parsing).
+ * @param maxDepth                on read, the maximum nesting of values that contain other values (objects, collections,
+ *                                maps, Options, tuples, Either), including skipped unknown fields; deeper input fails
+ *                                with an error instead of a StackOverflowError. 0 (default) means unlimited.
  * @param caseClassesViaConstructor on read, build case classes by calling their primary constructor with the parsed
  *                                values instead of allocating an instance and writing its final fields reflectively
  *                                (future JDKs restrict final-field mutation). Absent keys still yield zero / false /
@@ -37,4 +40,5 @@ final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                isoTime: Boolean = false,
                                strict: Boolean = false,
                                omitDefaults: Boolean = false,
-                               caseClassesViaConstructor: Boolean = false)
+                               caseClassesViaConstructor: Boolean = false,
+                               maxDepth: Int = 0)

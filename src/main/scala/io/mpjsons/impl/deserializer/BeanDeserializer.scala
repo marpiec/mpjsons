@@ -175,8 +175,8 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   private def skipValue(jsonIterator: StringIterator): Unit = {
     jsonIterator.skipWhitespaceChars()
     jsonIterator.currentChar match {
-      case '{' => skipObject(jsonIterator)
-      case '[' => skipArray(jsonIterator)
+      case '{' => DepthLimit.nested(jsonIterator, config.maxDepth)(skipObject(jsonIterator))
+      case '[' => DepthLimit.nested(jsonIterator, config.maxDepth)(skipArray(jsonIterator))
       case '"' => skipString(jsonIterator)
       case '-' | '0' | '1' | '2'| '3'| '4'| '5'| '6'| '7'| '8'| '9' => skipNumber(jsonIterator)
       case 'f' | 't' | 'n'  => skipBooleanOrNull(jsonIterator)

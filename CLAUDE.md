@@ -88,7 +88,7 @@ Still plain `var Map`s, written only at registration time: `DeserializerFactoryI
 ## Performance-sensitive hot paths
 
 When evaluating perf changes, these are the paths exercised per call (after warm-up the factory lookups are cached, so the real cost is the inner loops). All of them are now allocation-conscious; measure with the JMH module (`sbt "Jmh/run -f1 -wi 3 -w 1 -i 5 -r 1 -prof gc .*MpjsonsBenchmark.*"`) before and after any change:
-- `BeanSerializer.serialize` — `while` loop over per-field `BeanFieldWriter`s: typed `Field.getInt/getLong/...` + direct primitive append, precomputed `"name":` prefixes; reference fields delegate to the field's serializer.
+- `BeanSerializer.serialize` — one thread-local depth counter per bean for cycle detection (identity tracking only beyond 100 nested beans), then a `while` loop over per-field `BeanFieldWriter`s: typed `Field.getInt/getLong/...` + direct primitive append, precomputed `"name":` prefixes; reference fields delegate to the field's serializer.
 - `BeanDeserializer.deserialize` — `BeanFieldTable.find` matches keys in place on the raw input (no `String` per key), then typed `BeanField.set` (`Field.setInt` etc.).
 - `StringIterator` — readers scan the raw `stringValue` with a local index and `seek` back; `skipWhitespaceChars` is still called at every separator.
 - `StringSerializer` / `readString` — bulk runs, escape table, single `substring` when no escapes.

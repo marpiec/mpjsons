@@ -210,6 +210,10 @@ val obj = RecursiveType(List(RecursiveType(List(RecursiveType(Nil))), RecursiveT
 mpjsons.deserialize[RecursiveType](mpjsons.serialize(obj)) == obj  // true
 ```
 
+A cyclic object graph, where an object refers back to itself through its fields, cannot be
+written as JSON: serializing one fails with an `IllegalArgumentException` naming the type. For
+untrusted input, set `MPJsonsConfig(maxDepth = ...)` to bound how deeply nested a document may be.
+
 ### Numbers
 
 Standard integer and floating-point formats are parsed, including scientific notation:
@@ -348,6 +352,7 @@ compact.serialize(Profile("Ann", Some("annie"), None))
 | `strict = true` | `false` | Reading rejects missing commas, trailing commas and content after the root value instead of tolerating them. Bare keys and whitespace are still accepted. |
 | `omitDefaults = true` | `false` | Bean fields whose value equals what reading `{}` would produce (the no-arg constructor initialisers, or zero / false / null / None) are left out. Lossless for round trips through this library; such nulls are omitted regardless of `nullPolicy`. |
 | `caseClassesViaConstructor = true` | `false` | Case classes are built by calling their primary constructor with the parsed values (constructor bodies such as `require` run; no final field is written reflectively, which future JDKs restrict). Absent keys still give zero / false / null / None. Costs some boxing per value. |
+| `maxDepth = n` | `0` (unlimited) | Reading fails with a clear error once values (objects, collections, maps, Options, tuples) nest deeper than `n`, including unknown fields being skipped. Use it for untrusted input, which could otherwise end in a `StackOverflowError`. |
 
 Other levers are listed in `docs/roadmap.md`.
 

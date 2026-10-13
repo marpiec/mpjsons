@@ -267,6 +267,29 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
 
 
   override def serialize(obj: AnyRef, jsonBuilder: StringBuilder): Unit = {
+    val path = BeanSerializer.currentPath.get()
+    path.depth += 1
+    try {
+      if (path.depth > BeanSerializer.CycleCheckDepth) {
+        // Deep enough to be a reference cycle: track the beans on the current path by identity.
+        if (!path.onPath.add(obj)) {
+          throw new IllegalArgumentException("Cyclic reference detected while serializing " + tpe +
+            ": an object of this type refers back to itself through its fields")
+        }
+        try {
+          writeFields(obj, jsonBuilder)
+        } finally {
+          path.onPath.remove(obj)
+        }
+      } else {
+        writeFields(obj, jsonBuilder)
+      }
+    } finally {
+      path.depth -= 1
+    }
+  }
+
+  private def writeFields(obj: AnyRef, jsonBuilder: StringBuilder): Unit = {
 
     val fieldWriters = writers
 
@@ -287,6 +310,20 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
 }
 
 object BeanSerializer {
+
+  /**
+   * Beans nested deeper than this on one serialize call are tracked by identity, so a reference cycle is reported as
+   * an IllegalArgumentException instead of a StackOverflowError. Shallower beans pay only a depth counter.
+   */
+  private[serializer] final val CycleCheckDepth = 100
+
+  /** The beans being serialized on the current thread, from the root to the innermost one. */
+  private[serializer] final class Path {
+    var depth: Int = 0
+    val onPath: java.util.Set[AnyRef] = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[AnyRef, java.lang.Boolean]())
+  }
+
+  private[serializer] val currentPath: ThreadLocal[Path] = ThreadLocal.withInitial(() => new Path)
 
   private val optionType = typeOf[Option[_]]
 

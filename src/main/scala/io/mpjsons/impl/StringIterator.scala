@@ -18,6 +18,21 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
   var nextIndex = 1
   var currentChar: Char = if (stringLength == 0) '\u0000' else stringValue.charAt(0)
 
+  /** Current nesting level, counted only when `MPJsonsConfig.maxDepth` is set (see DepthLimit). */
+  var depth: Int = 0
+
+  /** Enters one nesting level; fails when that would exceed `maxDepth`. */
+  def enterNested(maxDepth: Int): Unit = {
+    if (depth >= maxDepth) {
+      throw new IllegalArgumentException("JSON nesting is deeper than maxDepth = " + maxDepth)
+    }
+    depth += 1
+  }
+
+  def exitNested(): Unit = {
+    depth -= 1
+  }
+
   def skipWhitespaceChars(): Unit = {
     while (currentChar.isWhitespace) {
       nextChar()

@@ -85,7 +85,8 @@ field still stops after `1` and fails on the following `.5` with a separator err
 
 `MPJsonsConfig(strict = true)` rejects missing commas, trailing commas and content after the root value
 (`StringIterator.afterValue` / `expectEnd`, `StrictParsingSpec`). Bare keys, whitespace and duplicate keys (last
-wins) are accepted in both modes; there is still no recursion depth limit. The default stays lenient (owner
+wins) are accepted in both modes. Nesting depth on read is bounded only with the opt-in `MPJsonsConfig(maxDepth = n)`; cyclic object graphs on write
+are reported as `IllegalArgumentException` (`RecursionLimitsSpec`). The default stays lenient (owner
 decision 6 in roadmap.md §6 is about the default only).
 
 ### 14. No `null` literal support on read — FIXED (owner decisions 13/10/2026)

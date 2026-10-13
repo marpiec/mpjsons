@@ -313,6 +313,30 @@ new MPJsons(nullPolicy = NullPolicy.WriteNull).serialize(Profile(null, None, 3))
 `ignoreNullFields = true` is the same as `NullPolicy.Omit`. Null elements of collections, maps,
 tuples, `Either` and `Some` are always written as `null`, and `serialize(null)` writes `null`.
 
+### Compact output
+
+`MPJsonsConfig` holds opt-in format levers. The defaults reproduce the historical format, and
+the reader accepts both forms wherever they can be told apart, so an instance with a lever on can
+still read data written with it off.
+
+```scala
+import io.mpjsons.{MPJsons, MPJsonsConfig}
+
+val compact = new MPJsons(MPJsonsConfig(escapeSlash = false, compactOptions = true))
+
+case class Profile(name: String, nickname: Option[String], homepage: Option[String])
+
+compact.serialize(Profile("Ann", Some("annie"), None))
+// {"name":"Ann","nickname":"annie"}      (historical: {"name":"Ann","nickname":{"value":"annie"},"homepage":{}})
+```
+
+| Lever | Default | Effect when changed |
+|---|---|---|
+| `escapeSlash = false` | `true` | `/` is written unescaped instead of `\/`. Reading is unaffected. |
+| `compactOptions = true` | `false` | `Some(v)` is written as `v`; a `None` field is omitted and a `None` element is `null`. An `Option` directly inside another `Option` keeps the historical form so `Some(None)` survives. On read, the historical `{}` / `{"value":v}` is still recognised unless the element type is itself written as a JSON object (a bean, an `Option`, `Either`, a time type), in which case `{` is the inline element. |
+
+Other levers are listed in `docs/roadmap.md`.
+
 ### Post-deserialization transform
 
 Register a function to run on each instance of a type after deserialization — handy for

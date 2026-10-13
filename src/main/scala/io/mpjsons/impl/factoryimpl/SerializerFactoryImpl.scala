@@ -138,7 +138,7 @@ class SerializerFactoryImpl(config: MPJsonsConfig) {
       if (tpe.baseClasses.contains(typeOf[Either[_, _]].typeSymbol)) {
         return new EitherSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[Option[_]].typeSymbol)) {
-        return new OptionSerializer(this.asInstanceOf[SerializerFactory], tpe, context)
+        return new OptionSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config.compactOptions)
       } else if (tpe.baseClasses.contains(typeOf[Tuple1[_]].typeSymbol)) {
         return new Tuple1Serializer(this.asInstanceOf[SerializerFactory], tpe, context)
       } else if (tpe.baseClasses.contains(typeOf[Tuple2[_, _]].typeSymbol)) {
@@ -185,7 +185,7 @@ class SerializerFactoryImpl(config: MPJsonsConfig) {
       val additionalOption = additionalSerializersAnySubType.get(stripTypes(tpe.toString))
       additionalOption match {
         case Some(serializer) => serializer(this.asInstanceOf[SerializerFactory])
-        case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config.nullPolicy)
+        case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config)
       }
 
     }

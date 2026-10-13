@@ -35,11 +35,12 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 | Type | Written | Example |
 |---|---|---|
 | `Option[T]` | `None` → `{}`; `Some(v)` → `{"value":<v>}` | `Some(1)` → `{"value":1}` (11 chars for one digit) |
+| `Option[T]` with `MPJsonsConfig(compactOptions = true)` | bean field: `Some(v)` → `"f":<v>`, `None` → key omitted; elsewhere `Some(v)` → `<v>`, `None` → `null`; an Option directly inside an Option keeps the historical form | `Some(1)` → `1` |
 | `Either[L,R]` | `{"left":<l>}` / `{"right":<r>}` | |
 | `Tuple1..Tuple6` | JSON array `[a,b,...]` | `("x",2)` → `["x",2]` |
 | `Tuple7+` | falls into bean handling → `{"_7":..,"_6":..,...,"_1":..}` (**verified** serialize; deserialize unverified) | |
 
-`Option` read: `{}` → `None`; `{"value":...}` → `Some`; `null` → `None`; `{"value":null}` → `Some(null)` (or `Some(None)` for `Option[Option[_]]`); any other key → error. `Some(null)` writes `{"value":null}`. Tuple slots and `Either` payloads accept and write `null` the same way.
+`Option` read (both configurations): `null` → `None`; a value not starting with `{` → `Some(inline value)`; `{` → the historical `{}` / `{"value":v}` form, except that with `compactOptions = true` and an element type that is itself written as a JSON object (bean, `Option`, `Either`, singleton, time type) `{` is the inline element. `{"value":null}` → `Some(null)` (or `Some(None)` for `Option[Option[_]]`). `Some(null)` writes `{"value":null}` historically and `null` compactly (read back as `None`). Tuple slots and `Either` payloads accept and write `null` the same way.
 
 ## 4. Collections
 
@@ -96,10 +97,10 @@ fields with a constructor default (absent keeps the default, `null` overwrites i
 
 | Construct | Today | Possible compact form | Saving |
 |---|---|---|---|
-| `Some(5)` | `{"value":5}` (11) | `5` (1) | 10 bytes per present Option |
-| `None` | `{}` (2) + key | omitted key | 2 + key length + colon + comma |
+| `Some(5)` | `{"value":5}` (11) | `5` (1) — **available**: `compactOptions = true` | 10 bytes per present Option |
+| `None` | `{}` (2) + key | omitted key — **available**: `compactOptions = true` | 2 + key length + colon + comma |
 | `Map("k"->1)` | `[["k",1]]` (9) | `{"k":1}` (7) | 2 per entry + 2 |
-| `"a/b"` | `"a\/b"` | `"a/b"` | 1 per slash |
+| `"a/b"` | `"a\/b"` | `"a/b"` — **available**: `escapeSlash = false` | 1 per slash |
 | `LocalDate` | 30 bytes | `"2023-07-23"` 12 bytes | 18 |
 | field keys | full Scala field names | annotated short names (`@jsonName("n")`) | depends |
 | default-valued fields (`0`, `false`, `""`, empty collections) | always written | omitted when equal to a known default | depends |

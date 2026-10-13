@@ -6,27 +6,52 @@ import io.mpjsons.impl.util.{Context, TypesUtil}
 
 import scala.reflect.runtime.universe._
 
+/**
+ * Historical form: None -> {}, Some(v) -> {"value":v}.
+ * Compact form (`compactOptions`): None -> null, Some(v) -> v. An Option nested directly inside another Option
+ * always keeps the historical form so that Some(None) stays distinguishable from None.
+ */
+class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, compact: Boolean)
+  extends JsonTypeSerializer[Option[T]] {
 
-class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context) extends JsonTypeSerializer[Option[T]] {
+  def this(serializerFactory: SerializerFactory, tpe: Type, context: Context) = this(serializerFactory, tpe, context, false)
 
-  private val subTypeSerializer = serializerFactory.getSerializer(TypesUtil.getSubElementsType(tpe), context).asInstanceOf[JsonTypeSerializer[T]]
+  private val subType = TypesUtil.getSubElementsType(tpe)
+  private val subTypeSerializer: JsonTypeSerializer[T] =
+    OptionSerializer.elementSerializer(serializerFactory, subType, context, compact).asInstanceOf[JsonTypeSerializer[T]]
 
   override def serialize(obj: Option[T], jsonBuilder: StringBuilder): Unit = {
-
-    jsonBuilder.append('{')
-
-    obj match {
-      case Some(value) =>
-        jsonBuilder.append("\"value\":")
-        if (value == null) {
-          jsonBuilder.append("null")
-        } else {
-          subTypeSerializer.serialize(value, jsonBuilder)
-        }
-      case None => ()
+    if (compact) {
+      obj match {
+        case Some(value) => if (value == null) jsonBuilder.append("null") else subTypeSerializer.serialize(value, jsonBuilder)
+        case None => jsonBuilder.append("null")
+      }
+    } else {
+      jsonBuilder.append('{')
+      obj match {
+        case Some(value) =>
+          jsonBuilder.append("\"value\":")
+          if (value == null) {
+            jsonBuilder.append("null")
+          } else {
+            subTypeSerializer.serialize(value, jsonBuilder)
+          }
+        case None => ()
+      }
+      jsonBuilder.append('}')
     }
+  }
+}
 
-    jsonBuilder.append('}')
+object OptionSerializer {
+  private val optionType = typeOf[Option[_]]
 
+  /** The serializer for an Option's element: a nested Option keeps the historical form when `compact` is on. */
+  def elementSerializer(serializerFactory: SerializerFactory, elementType: Type, context: Context, compact: Boolean): JsonTypeSerializer[AnyRef] = {
+    if (compact && elementType <:< optionType) {
+      new OptionSerializer[Any](serializerFactory, elementType, context, false).asInstanceOf[JsonTypeSerializer[AnyRef]]
+    } else {
+      serializerFactory.getSerializer(elementType, context).asInstanceOf[JsonTypeSerializer[AnyRef]]
+    }
   }
 }

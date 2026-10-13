@@ -13,8 +13,8 @@ because output or accepted input changes.
 | **Inherited fields** (*fix*) | fields declared in a superclass were silently dropped | written (and read) like own fields, placed before the subclass fields | types with class inheritance: their output gains keys |
 | **Generic beans** (*fix*) | a second instantiation of `Box[T]` on the same instance reused the first one's element (de)serializers, e.g. `Box[String]` after `Box[Int]` wrote unquoted strings | correct per instantiation | anyone who worked around it with separate `MPJsons` instances can drop the workaround |
 | **`NaN` / `Infinity`** | written as `NaN` / `Infinity` (not JSON; could not be read back) | `IllegalArgumentException` | code that serialized non-finite doubles |
-| **null elements** | `NullPointerException` for `Some(null)`, `List("a", null)`, null map values, null tuple slots | written as `null` | code relying on the exception |
-| **`serialize(null)`** | `NullPointerException` | writes `null` | |
+| **null elements** | `NullPointerException` for `Some(null)`, `List("a", null)`, null map values, null tuple slots | `IllegalArgumentException` naming the place under the default `NullPolicy.Fail`; written as `null` under `Omit` / `WriteNull` | code relying on the exception type |
+| **`serialize(null)`** | `NullPointerException` | `IllegalArgumentException` under `Fail`; writes `null` under `Omit` / `WriteNull` | |
 | **`@nullable` on case class parameters** | ignored unless written as `@(nullable @field)` | effective directly on the parameter (any annotation whose name contains "nullable", e.g. `javax.annotation.Nullable`, counts) | null fields that used to throw are now omitted |
 | **`java.*` types without a converter** | bean reflection: `InaccessibleObjectException` on JDK 9+ (worked on JDK 8 for some types) | `IllegalArgumentException` at build time naming the type and `registerConverter`; `BigDecimal`, `BigInt`, `java.math.*`, `UUID`, `Instant`, `OffsetDateTime`, `ZonedDateTime` now have built-in formats | JDK 8 users serializing JDK types through reflection must register converters |
 | **Classes extending JDK classes** | JDK superclass fields ignored | unchanged (JDK superclasses are skipped explicitly) | |
@@ -23,7 +23,7 @@ because output or accepted input changes.
 
 | Change | Before | Now | Who is affected |
 |---|---|---|---|
-| **`null` literal** | error for every known field | `null` for reference types, `None` for `Option`, error naming the field for primitives; also for elements, map keys/values, tuples, `Either`, inside `Some`, and at top level | code that relied on `null` being rejected |
+| **`null` literal** | error for every known field | accepted only where declared: `None` for `Option` values, `null` for `@nullable` reference fields; everything else is still rejected (with a clearer message) under the default `NullPolicy.Fail`; `Omit` / `WriteNull` accept `null` for any reference type | code that relied on `null` being rejected for `@nullable` fields or `Option` values |
 | **Absent `Option` field** | left as `null` | `None` (defaults set by a no-arg constructor are kept) | code testing `optionField == null`; `postDeserializationTransform` workarounds keep working |
 | **Keys of inherited fields** (*fix*) | "No field" error (or skipped in lenient mode) | populated | |
 | **`Foo.type` fields, mutable collections, nested/sealed typed subclasses, `LazyList`** (*fix*) | crash / unsupported | supported | |

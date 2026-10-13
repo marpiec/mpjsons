@@ -1,17 +1,18 @@
 package io.mpjsons.impl.util
 
 import io.mpjsons.impl.StringIterator
-import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer}
+import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer, MPJsonsConfig, NullPolicy}
 
 import scala.reflect.runtime.universe._
 
 /**
- * What a JSON `null` means for one Scala type: `None` for Option, `null` for any other reference type,
- * and an error for primitives (Int, Boolean, ...), which cannot hold it.
+ * What a JSON `null` means for one value: `None` for Option, `null` for a reference type that is declared
+ * nullable (a field annotated with `@nullable`, or any reference type when the NullPolicy is not Fail), and an
+ * error otherwise (primitives cannot hold it; undeclared references are rejected under NullPolicy.Fail).
  */
 final class NullValue private[util] (val allowed: Boolean, val value: AnyRef, description: String) {
 
-  /** The Scala value for a JSON null, or an IllegalArgumentException naming the type when null is not allowed. */
+  /** The Scala value for a JSON null, or an IllegalArgumentException when null is not allowed here. */
   def get(): AnyRef = {
     if (allowed) {
       value
@@ -26,18 +27,23 @@ object NullValues {
   private val optionType = typeOf[Option[_]]
   private val anyRefType = typeOf[AnyRef]
 
-  def forType(tpe: Type): NullValue = make(tpe, tpe.toString)
+  /** Nullability of a standalone value: an element, map key or value, tuple slot, Either payload, Some payload, root. */
+  def forType(tpe: Type, config: MPJsonsConfig): NullValue =
+    make(tpe, "a value of type " + tpe, declaredNullable = false, config)
 
-  def forField(tpe: Type, fieldName: String, ownerTypeName: String): NullValue =
-    make(tpe, "field '" + fieldName + "' of type " + tpe + " in " + ownerTypeName)
+  /** Nullability of a bean field: `@nullable` declares it. */
+  def forField(tpe: Type, fieldName: String, ownerTypeName: String, declaredNullable: Boolean, config: MPJsonsConfig): NullValue =
+    make(tpe, "field '" + fieldName + "' of type " + tpe + " in " + ownerTypeName, declaredNullable, config)
 
-  private def make(tpe: Type, description: String): NullValue = {
+  private def make(tpe: Type, description: String, declaredNullable: Boolean, config: MPJsonsConfig): NullValue = {
     if (tpe <:< optionType) {
       new NullValue(true, None, description)
-    } else if (tpe <:< anyRefType) {
+    } else if (!(tpe <:< anyRefType)) {
+      new NullValue(false, null, "primitive " + description)
+    } else if (declaredNullable || config.nullPolicy != NullPolicy.Fail) {
       new NullValue(true, null, description)
     } else {
-      new NullValue(false, null, "primitive " + description)
+      new NullValue(false, null, description + " (declare it with @nullable or Option, or use a NullPolicy other than Fail)")
     }
   }
 
@@ -50,22 +56,32 @@ object NullValues {
     }
   }
 
-  /** Wraps a deserializer so that the `null` literal maps to the type's null value. */
-  def nullable[T](deserializer: JsonTypeDeserializer[T], tpe: Type): JsonTypeDeserializer[T] =
-    new NullableDeserializer[T](deserializer, forType(tpe))
+  /** Wraps a deserializer so that the `null` literal maps to the type's null value (or fails). */
+  def nullable[T](deserializer: JsonTypeDeserializer[T], tpe: Type, config: MPJsonsConfig): JsonTypeDeserializer[T] =
+    new NullableDeserializer[T](deserializer, forType(tpe, config))
 
-  /** Wraps a serializer so that a null value is written as the `null` literal. */
-  def nullSafe[T](serializer: JsonTypeSerializer[T]): JsonTypeSerializer[T] = new NullSafeSerializer[T](serializer)
+  /** Wraps a serializer so that a null value is written as `null`, or rejected under NullPolicy.Fail. */
+  def nullSafe[T](serializer: JsonTypeSerializer[T], config: MPJsonsConfig, where: String): JsonTypeSerializer[T] =
+    new NullSafeSerializer[T](serializer, config.nullPolicy != NullPolicy.Fail, where)
+
+  /** Writes `null`, or fails under NullPolicy.Fail; `where` names the place for the error message. */
+  def writeNull(jsonBuilder: StringBuilder, nullsAllowed: Boolean, where: String): Unit = {
+    if (nullsAllowed) {
+      jsonBuilder.append("null")
+    } else {
+      throw new IllegalArgumentException("Null value is not allowed in " + where + " (NullPolicy.Fail); use NullPolicy.Omit or WriteNull to allow nulls")
+    }
+  }
 }
 
 final class NullableDeserializer[T](inner: JsonTypeDeserializer[T], nullValue: NullValue) extends JsonTypeDeserializer[T] {
   override def deserialize(jsonIterator: StringIterator): T = NullValues.read(jsonIterator, nullValue, inner)
 }
 
-final class NullSafeSerializer[T](inner: JsonTypeSerializer[T]) extends JsonTypeSerializer[T] {
+final class NullSafeSerializer[T](inner: JsonTypeSerializer[T], nullsAllowed: Boolean, where: String) extends JsonTypeSerializer[T] {
   override def serialize(obj: T, jsonBuilder: StringBuilder): Unit = {
     if (obj == null) {
-      jsonBuilder.append("null")
+      NullValues.writeNull(jsonBuilder, nullsAllowed, where)
     } else {
       inner.serialize(obj, jsonBuilder)
     }

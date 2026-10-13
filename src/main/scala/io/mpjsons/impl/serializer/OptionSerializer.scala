@@ -1,8 +1,8 @@
 package io.mpjsons.impl.serializer
 
-import io.mpjsons.JsonTypeSerializer
+import io.mpjsons.{JsonTypeSerializer, NullPolicy}
 import io.mpjsons.impl.SerializerFactory
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 
 import scala.reflect.runtime.universe._
 
@@ -10,6 +10,7 @@ import scala.reflect.runtime.universe._
  * Historical form: None -> {}, Some(v) -> {"value":v}.
  * Compact form (`compactOptions`): None -> null, Some(v) -> v. An Option nested directly inside another Option
  * always keeps the historical form so that Some(None) stays distinguishable from None.
+ * Some(null) is written with a null payload only when the NullPolicy allows nulls; under Fail it is rejected.
  */
 class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, compact: Boolean)
   extends JsonTypeSerializer[Option[T]] {
@@ -19,11 +20,12 @@ class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe:
   private val subType = TypesUtil.getSubElementsType(tpe)
   private val subTypeSerializer: JsonTypeSerializer[T] =
     OptionSerializer.elementSerializer(serializerFactory, subType, context, compact).asInstanceOf[JsonTypeSerializer[T]]
+  private val nullsAllowed = serializerFactory.config.nullPolicy != NullPolicy.Fail
 
   override def serialize(obj: Option[T], jsonBuilder: StringBuilder): Unit = {
     if (compact) {
       obj match {
-        case Some(value) => if (value == null) jsonBuilder.append("null") else subTypeSerializer.serialize(value, jsonBuilder)
+        case Some(value) => if (value == null) NullValues.writeNull(jsonBuilder, nullsAllowed, "Some of " + tpe) else subTypeSerializer.serialize(value, jsonBuilder)
         case None => jsonBuilder.append("null")
       }
     } else {
@@ -32,7 +34,7 @@ class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe:
         case Some(value) =>
           jsonBuilder.append("\"value\":")
           if (value == null) {
-            jsonBuilder.append("null")
+            NullValues.writeNull(jsonBuilder, nullsAllowed, "Some of " + tpe)
           } else {
             subTypeSerializer.serialize(value, jsonBuilder)
           }

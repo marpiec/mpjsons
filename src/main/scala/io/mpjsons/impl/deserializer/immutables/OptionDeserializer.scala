@@ -31,7 +31,7 @@ class OptionDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type,
       deserializerFactory.getDeserializer(subType, context).asInstanceOf[JsonTypeDeserializer[E]]
     }
   }
-  private val subTypeNull = NullValues.forType(subType)
+  private val subTypeNull = NullValues.forType(subType, config)
   private val braceStartsInlineValue = compact && JsonShapes.isObjectLike(subType, config)
 
   override def deserialize(jsonIterator: StringIterator): Option[E] = {

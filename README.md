@@ -288,60 +288,39 @@ mpjsons.deserialize[PrimitiveHolder]("{}")          // PrimitiveHolder(null, nul
 
 #### The `null` literal
 
-On read, `null` is accepted wherever a value can appear: it becomes `null` for reference
-types (`String`, beans, collections, boxed `java.lang` numbers), `None` for `Option`, and is
-rejected with a clear error for primitives such as `Int` or `Boolean`. A missing `Option`
-field also reads as `None`.
+Nulls are accepted only where they are declared. A field declares that it may be null with
+`@nullable`; an `Option` declares absence by its type. With the default `NullPolicy.Fail` this
+holds in both directions:
+
+- **Write**: a null `@nullable` field is omitted; any other null (a field, a collection element,
+  a map key or value, a tuple slot, an `Either` or `Some` payload, the top-level value) throws.
+- **Read**: `null` gives `null` for a `@nullable` reference field and `None` for an `Option`;
+  anywhere else it is rejected with a message naming the field or type. A missing `Option` field
+  also reads as `None`. Primitives (`Int`, `Boolean`, ...) never accept `null`.
 
 ```scala
-case class Profile(name: String, nickname: Option[String], age: Int)
+import io.mpjsons.nullable
 
-mpjsons.deserialize[Profile]("""{"name":null,"nickname":null,"age":3}""") // Profile(null, None, 3)
-mpjsons.deserialize[Profile]("""{"name":"Ann","age":3}""")                // Profile("Ann", None, 3)
-mpjsons.deserialize[Profile]("""{"name":"Ann","nickname":null,"age":null}""") // throws: null not allowed for primitive field 'age'
+case class Profile(@nullable name: String, nickname: Option[String], city: String, age: Int)
+
+mpjsons.deserialize[Profile]("""{"name":null,"nickname":null,"city":"Oslo","age":3}""") // Profile(null, None, "Oslo", 3)
+mpjsons.deserialize[Profile]("""{"name":"Ann","city":"Oslo","age":3}""")              // nickname = None
+mpjsons.deserialize[Profile]("""{"name":"Ann","city":null,"age":3}""")                // throws: city is not @nullable
+mpjsons.serialize(Profile(null, None, "Oslo", 3))                                      // {"nickname":{},"city":"Oslo","age":3}
+mpjsons.serialize(List("a", null))                                                    // throws
 ```
 
-On write, bean fields follow the instance's `NullPolicy`:
+To tolerate nulls everywhere, choose another policy explicitly; it then applies to reading as well:
 
 ```scala
 import io.mpjsons.NullPolicy
 
-new MPJsons().serialize(Profile(null, None, 3))                                  // throws (default: NullPolicy.Fail)
-new MPJsons(nullPolicy = NullPolicy.Omit).serialize(Profile(null, None, 3))      // {"nickname":{},"age":3}
-new MPJsons(nullPolicy = NullPolicy.WriteNull).serialize(Profile(null, None, 3)) // {"name":null,"nickname":{},"age":3}
+new MPJsons(nullPolicy = NullPolicy.Omit).serialize(Profile("Ann", None, null, 3))      // {"name":"Ann","nickname":{},"age":3}
+new MPJsons(nullPolicy = NullPolicy.WriteNull).serialize(Profile("Ann", None, null, 3)) // {"name":"Ann","nickname":{},"city":null,"age":3}
+new MPJsons(nullPolicy = NullPolicy.WriteNull).serialize(List("a", null))               // ["a",null]
 ```
 
-`ignoreNullFields = true` is the same as `NullPolicy.Omit`. Null elements of collections, maps,
-tuples, `Either` and `Some` are always written as `null`, and `serialize(null)` writes `null`.
-
-### Compact output
-
-`MPJsonsConfig` holds opt-in format levers. The defaults reproduce the historical format, and
-the reader accepts both forms wherever they can be told apart, so an instance with a lever on can
-still read data written with it off.
-
-```scala
-import io.mpjsons.{MPJsons, MPJsonsConfig}
-
-val compact = new MPJsons(MPJsonsConfig(escapeSlash = false, compactOptions = true))
-
-case class Profile(name: String, nickname: Option[String], homepage: Option[String])
-
-compact.serialize(Profile("Ann", Some("annie"), None))
-// {"name":"Ann","nickname":"annie"}      (historical: {"name":"Ann","nickname":{"value":"annie"},"homepage":{}})
-```
-
-| Lever | Default | Effect when changed |
-|---|---|---|
-| `escapeSlash = false` | `true` | `/` is written unescaped instead of `\/`. Reading is unaffected. |
-| `compactOptions = true` | `false` | `Some(v)` is written as `v`; a `None` field is omitted and a `None` element is `null`. An `Option` directly inside another `Option` keeps the historical form so `Some(None)` survives. On read, the historical `{}` / `{"value":v}` is still recognised unless the element type is itself written as a JSON object (a bean, an `Option`, `Either`, a time type), in which case `{` is the inline element. |
-| `mapsAsObjects = true` | `false` | Maps whose key type is `String`, a number, `Boolean` or `Char` are written as `{"key":value}` instead of `[["key",value]]`; other key types keep the pair form. Both forms are always read. |
-| `isoTime = true` | `false` | `LocalDate`, `LocalTime`, `LocalDateTime` and `Duration` are written as ISO-8601 strings (`"2023-07-23"`, `"PT1M"`) instead of objects. Both forms are always read. |
-| `strict = true` | `false` | Reading rejects missing commas, trailing commas and content after the root value instead of tolerating them. Bare keys and whitespace are still accepted. |
-| `omitDefaults = true` | `false` | Bean fields whose value equals what reading `{}` would produce (the no-arg constructor initialisers, or zero / false / null / None) are left out. Lossless for round trips through this library; such nulls are omitted regardless of `nullPolicy`. |
-| `caseClassesViaConstructor = true` | `false` | Case classes are built by calling their primary constructor with the parsed values (constructor bodies such as `require` run; no final field is written reflectively, which future JDKs restrict). Absent keys still give zero / false / null / None. Costs some boxing per value. |
-
-Other levers are listed in `docs/roadmap.md`.
+`ignoreNullFields = true` is the same as `NullPolicy.Omit`.
 
 ### Post-deserialization transform
 

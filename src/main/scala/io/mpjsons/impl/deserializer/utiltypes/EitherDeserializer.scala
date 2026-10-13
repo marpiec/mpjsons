@@ -15,8 +15,8 @@ class EitherDeserializer[L, R](val deserializerFactory: DeserializerFactory, tpe
   extends JsonTypeDeserializer[Either[L, R]] {
 
   private val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
-  private val leftDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[L](leftType, context), leftType)
-  private val rightDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[R](rightType, context), rightType)
+  private val leftDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[L](leftType, context), leftType, deserializerFactory.config)
+  private val rightDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[R](rightType, context), rightType, deserializerFactory.config)
 
 
   override def deserialize(jsonIterator: StringIterator): Either[L, R] = {

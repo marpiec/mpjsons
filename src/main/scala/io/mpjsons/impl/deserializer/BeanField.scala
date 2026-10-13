@@ -1,6 +1,6 @@
 package io.mpjsons.impl.deserializer
 
-import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.{JsonTypeDeserializer, MPJsonsConfig}
 import io.mpjsons.impl.StringIterator
 import io.mpjsons.impl.deserializer.values._
 import io.mpjsons.impl.util.{NullValue, NullValues}
@@ -11,7 +11,8 @@ import scala.reflect.runtime.universe._
 /**
  * One bean field: its JSON key, the reflective field and how to read its value into an instance.
  * Primitive fields read and store the value without boxing when the built-in deserializer is in use.
- * A JSON null stores the type's null value (None for Option, null for references) or fails for primitives.
+ * A JSON null stores None for Option fields and null for fields declared nullable (`@nullable`, or any
+ * reference field when the NullPolicy is not Fail); otherwise it fails naming the field.
  *
  * `argIndex` is the position of the field in the primary constructor's parameter list when the bean is built
  * through its constructor (see BeanDeserializer), or -1 when the field is written after construction.
@@ -32,9 +33,10 @@ abstract class BeanField(val name: String, val field: Field, nullValue: NullValu
 
 object BeanField {
 
-  def apply(name: String, field: Field, fieldType: Type, ownerTypeName: String, deserializer: JsonTypeDeserializer[_], argIndex: Int = -1): BeanField = {
+  def apply(name: String, field: Field, fieldType: Type, ownerTypeName: String, deserializer: JsonTypeDeserializer[_],
+            argIndex: Int, declaredNullable: Boolean, config: MPJsonsConfig): BeanField = {
     val javaType = field.getType
-    val nullValue = NullValues.forField(fieldType, name, ownerTypeName)
+    val nullValue = NullValues.forField(fieldType, name, ownerTypeName, declaredNullable, config)
     if (javaType == java.lang.Integer.TYPE && (deserializer eq IntDeserializer)) {
       new IntField(name, field, nullValue, argIndex)
     } else if (javaType == java.lang.Long.TYPE && (deserializer eq LongDeserializer)) {

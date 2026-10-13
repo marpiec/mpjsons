@@ -14,7 +14,7 @@ class Tuple1Deserializer[T1](val deserializerFactory: DeserializerFactory, val t
   extends JsonTypeDeserializer[Tuple1[T1]] {
 
   private val firstType: Type = TypesUtil.getSubElementsType(tpe)
-  private val firstDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T1](firstType, context), firstType)
+  private val firstDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T1](firstType, context), firstType, deserializerFactory.config)
 
 
   def deserialize(jsonIterator: StringIterator): Tuple1[T1] = {

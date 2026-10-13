@@ -47,7 +47,9 @@ private[mpjsons] final class OutputSizeHint {
 /**
  * Serializer for a single type.
  */
-class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T]) {
+class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], config: MPJsonsConfig) {
+
+  def this(innerSerializer: JsonTypeSerializer[T]) = this(innerSerializer, MPJsonsConfig())
 
   private val sizeHint = new OutputSizeHint
 
@@ -65,7 +67,7 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T]) {
    */
   def serializeToStringBuilder(obj: T): StringBuilder = {
     val json = sizeHint.newBuilder()
-    if (obj == null) json.append("null") else innerSerializer.serialize(obj, json)
+    if (obj == null) NullValues.writeNull(json, config.nullPolicy != NullPolicy.Fail, "the top-level value") else innerSerializer.serialize(obj, json)
     sizeHint.update(json)
     json
   }
@@ -74,17 +76,17 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T]) {
 /**
  * Deserializer for a single type.
  */
-class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[T], tpe: Type, strict: Boolean) {
+class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[T], tpe: Type, config: MPJsonsConfig) {
 
-  def this(innerDeserializer: JsonTypeDeserializer[T], tpe: Type) = this(innerDeserializer, tpe, false)
+  def this(innerDeserializer: JsonTypeDeserializer[T], tpe: Type) = this(innerDeserializer, tpe, MPJsonsConfig())
 
   /**
    * Takes a String containing JSON representation of objects and returns an instance of given object.
    */
   def deserialize(json: String): T = {
-    val jsonIterator = new StringIterator(json, strict)
+    val jsonIterator = new StringIterator(json, config.strict)
     try {
-      val result = if (jsonIterator.tryConsumeNull()) NullValues.forType(tpe).get().asInstanceOf[T] else innerDeserializer.deserialize(jsonIterator)
+      val result = if (jsonIterator.tryConsumeNull()) NullValues.forType(tpe, config).get().asInstanceOf[T] else innerDeserializer.deserialize(jsonIterator)
       jsonIterator.expectEnd()
       result
     } catch {
@@ -169,7 +171,7 @@ class MPJsons(val config: MPJsonsConfig) {
   def deserialize[T](jsonIterator: StringIterator, tpe: Type): T = {
     try {
       val result = if (jsonIterator.tryConsumeNull()) {
-        NullValues.forType(tpe).get().asInstanceOf[T]
+        NullValues.forType(tpe, config).get().asInstanceOf[T]
       } else {
         deserializerFactory.getDeserializer(tpe, Context(List.empty, Map.empty)).deserialize(jsonIterator)
       }
@@ -204,7 +206,7 @@ class MPJsons(val config: MPJsonsConfig) {
    * Creates a specialized deserializer for a passed type.
    */
   def buildStaticDeserializer[T](tpe: Type): StaticDeserializer[T] = {
-    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe, Context(List.empty, Map.empty)), tpe, config.strict)
+    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe, Context(List.empty, Map.empty)), tpe, config)
   }
 
   /**
@@ -235,6 +237,9 @@ class MPJsons(val config: MPJsonsConfig) {
    */
   def serialize[T](obj: T, tpe: Type): String = {
     if (obj == null) {
+      if (config.nullPolicy == NullPolicy.Fail) {
+        throw new IllegalArgumentException("Null value is not allowed as the top-level value (NullPolicy.Fail); use NullPolicy.Omit or WriteNull to allow nulls")
+      }
       "null"
     } else {
       val hint = outputSizeHint(tpe)
@@ -270,7 +275,7 @@ class MPJsons(val config: MPJsonsConfig) {
    * Creates a specialized serializer for a passed type name (class name).
    */
   def buildStaticSerializer[T](tpe: Type): StaticSerializer[T] = {
-    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Context(List.empty, Map.empty)))
+    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Context(List.empty, Map.empty)), config)
   }
 
   /**

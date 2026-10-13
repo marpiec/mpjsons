@@ -31,7 +31,7 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 - `null` field on write follows the instance's `NullPolicy` (`new MPJsons(nullPolicy = ...)`): `Fail` (default) throws `IllegalArgumentException("Null value is not allowed for field ...")` unless the field is `@(nullable @field)`, in which case the key is omitted; `Omit` (also `ignoreNullFields = true`) omits the key; `WriteNull` writes `"field":null`. `None` is always written as `{}` (not affected by the policy).
 - Fields found by the reflection scan participate: own and inherited `var`/`val` backing fields; `lazy val` backing fields are excluded.
 - Read: keys may be unquoted (`{ a : 1 }`), whitespace is allowed anywhere, unknown keys throw unless `ignoreNonExistingFields`, duplicate keys: last wins. Missing keys leave the field as constructed (null / 0 / false, or the initialiser value when a no-arg constructor ran), except `Option` fields, which read as `None`.
-- A `null` **value** reads as `null` for reference fields (including `java.lang.Integer` and friends), `None` for `Option` fields, and fails with `JSON null is not allowed for primitive field 'x' of type Int in ...` for primitives.
+- A `null` **value** is accepted only where it is declared: `None` for `Option` fields, `null` for reference fields annotated `@nullable` (including `java.lang.Integer` and friends). Under the default `NullPolicy.Fail` any other field rejects it with `JSON null is not allowed for field 'x' ... (declare it with @nullable or Option, ...)`; under `Omit` / `WriteNull` every reference field accepts it. Primitive fields never do.
 
 ## 3. Option / Either / tuples
 
@@ -43,7 +43,7 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 | `Tuple1..Tuple6` | JSON array `[a,b,...]` | `("x",2)` → `["x",2]` |
 | `Tuple7+` | falls into bean handling → `{"_7":..,"_6":..,...,"_1":..}` (**verified** serialize; deserialize unverified) | |
 
-`Option` read (both configurations): `null` → `None`; a value not starting with `{` → `Some(inline value)`; `{` → the historical `{}` / `{"value":v}` form, except that with `compactOptions = true` and an element type that is itself written as a JSON object (bean, `Option`, `Either`, singleton, time type) `{` is the inline element. `{"value":null}` → `Some(null)` (or `Some(None)` for `Option[Option[_]]`). `Some(null)` writes `{"value":null}` historically and `null` compactly (read back as `None`). Tuple slots and `Either` payloads accept and write `null` the same way.
+`Option` read (both configurations): `null` → `None`; a value not starting with `{` → `Some(inline value)`; `{` → the historical `{}` / `{"value":v}` form, except that with `compactOptions = true` and an element type that is itself written as a JSON object (bean, `Option`, `Either`, singleton, time type) `{` is the inline element. `{"value":null}` → `Some(None)` for `Option[Option[_]]`; for other element types it is `Some(null)` only under `NullPolicy.Omit` / `WriteNull` and an error under `Fail`. `Some(null)` throws on write under `Fail`, and writes `{"value":null}` (historical) or `null` (compact, read back as `None`) otherwise. Tuple slots and `Either` payloads follow the same rule.
 
 ## 4. Collections
 
@@ -55,7 +55,7 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 | `SimpleMapSerializer[T]` (opt-in converter for `Map[String,T]`) | object `{"k":v}`; `null` values skipped | `SimpleMapDeserializer[T]`: object with quoted or bare keys |
 | `SortedSet, TreeSet, SortedMap, TreeMap, ListBuffer` | serialize works for the sorted ones (they are `scala.` collections); deserialize **throws** by design (no `Ordering`) | |
 
-Array/Map read loops accept missing and trailing commas (`[1 2 3]` → `List(1,2,3)`). A `null` element, key or value reads as `null` (`None` for `Option` elements) and fails for primitive element types; null elements are written as `null`.
+Array/Map read loops accept missing and trailing commas (`[1 2 3]` → `List(1,2,3)`). A `null` element, key or value reads as `None` for `Option` element types; for other reference types it reads as `null` only under `NullPolicy.Omit` / `WriteNull` (error under `Fail`); primitives never accept it. On write, null elements, keys and values throw under `Fail` and are written as `null` otherwise.
 
 ## 5. Singleton objects
 
@@ -93,7 +93,7 @@ Default (lenient) behaviour; with `MPJsonsConfig(strict = true)` the first three
 | `{"a":1,"a":2}` | last wins |
 | `""` (empty) | `StringIndexOutOfBoundsException`, not `JsonInnerException` |
 | `"   "` | `JsonInnerException` (`Object should start with '{' symbol but was ''`) |
-| `null` at top level | `null` for reference types, `None` for `Option`, error for primitives; `serialize(null)` writes `null` |
+| `null` at top level | `None` for `Option`; under `Fail` an error for every other type; under `Omit` / `WriteNull` `null` for reference types. `serialize(null)` throws under `Fail` and writes `null` otherwise |
 | deep nesting | recursive descent, no depth limit → `StackOverflowError` possible on hostile input |
 
 There is no validation that the whole input was consumed. "Absent" and "present as `null`" differ only for

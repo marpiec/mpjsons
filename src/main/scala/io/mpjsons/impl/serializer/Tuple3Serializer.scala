@@ -14,9 +14,9 @@ class Tuple3Serializer[T1, T2, T3](serializerFactory: SerializerFactory, tpe: Ty
   extends JsonTypeSerializer[scala.Tuple3[T1, T2, T3]] {
 
   private val subtypes = TypesUtil.getMultipleSubElementsType(tpe)
-  private val t1Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(0), context).asInstanceOf[JsonTypeSerializer[T1]])
-  private val t2Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(1), context).asInstanceOf[JsonTypeSerializer[T2]])
-  private val t3Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(2), context).asInstanceOf[JsonTypeSerializer[T3]])
+  private val t1Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(0), context).asInstanceOf[JsonTypeSerializer[T1]], serializerFactory.config, "a value of " + tpe)
+  private val t2Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(1), context).asInstanceOf[JsonTypeSerializer[T2]], serializerFactory.config, "a value of " + tpe)
+  private val t3Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(2), context).asInstanceOf[JsonTypeSerializer[T3]], serializerFactory.config, "a value of " + tpe)
 
   override def serialize(tuple: scala.Tuple3[T1, T2, T3], jsonBuilder: StringBuilder): Unit = {
     jsonBuilder.append('[')

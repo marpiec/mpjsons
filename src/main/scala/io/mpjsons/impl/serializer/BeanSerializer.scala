@@ -118,6 +118,10 @@ object BeanFieldWriter {
       }
       value match {
         case Some(element) =>
+          if (element == null && nullMode != NullWritten) {
+            if (nullMode == NullOmitted) return false
+            throw new IllegalArgumentException("Null value is not allowed in Some of field " + name + " in type " + typeName + " (NullPolicy.Fail)")
+          }
           val builder = jsonBuilder.underlying
           appendPrefix(builder, notFirst)
           if (element == null) builder.append("null") else elementSerializer.serialize(element.asInstanceOf[AnyRef], jsonBuilder)

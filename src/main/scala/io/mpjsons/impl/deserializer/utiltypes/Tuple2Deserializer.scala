@@ -14,8 +14,8 @@ class Tuple2Deserializer[T1, T2](val deserializerFactory: DeserializerFactory, v
   extends JsonTypeDeserializer[(T1, T2)] {
 
   private val (firstType, secondType): (Type, Type) = TypesUtil.getDoubleSubElementsType(tpe)
-  private val firstDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T1](firstType, context), firstType)
-  private val secondDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T2](secondType, context), secondType)
+  private val firstDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T1](firstType, context), firstType, deserializerFactory.config)
+  private val secondDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T2](secondType, context), secondType, deserializerFactory.config)
 
 
   def deserialize(jsonIterator: StringIterator): (T1, T2) = {

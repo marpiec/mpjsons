@@ -14,12 +14,12 @@ class Tuple6Serializer[T1, T2, T3, T4, T5, T6](serializerFactory: SerializerFact
   extends JsonTypeSerializer[scala.Tuple6[T1, T2, T3, T4, T5, T6]] {
 
   private val subtypes = TypesUtil.getMultipleSubElementsType(tpe)
-  private val t1Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes.head, context).asInstanceOf[JsonTypeSerializer[T1]])
-  private val t2Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(1), context).asInstanceOf[JsonTypeSerializer[T2]])
-  private val t3Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(2), context).asInstanceOf[JsonTypeSerializer[T3]])
-  private val t4Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(3), context).asInstanceOf[JsonTypeSerializer[T4]])
-  private val t5Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(4), context).asInstanceOf[JsonTypeSerializer[T5]])
-  private val t6Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(5), context).asInstanceOf[JsonTypeSerializer[T6]])
+  private val t1Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes.head, context).asInstanceOf[JsonTypeSerializer[T1]], serializerFactory.config, "a value of " + tpe)
+  private val t2Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(1), context).asInstanceOf[JsonTypeSerializer[T2]], serializerFactory.config, "a value of " + tpe)
+  private val t3Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(2), context).asInstanceOf[JsonTypeSerializer[T3]], serializerFactory.config, "a value of " + tpe)
+  private val t4Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(3), context).asInstanceOf[JsonTypeSerializer[T4]], serializerFactory.config, "a value of " + tpe)
+  private val t5Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(4), context).asInstanceOf[JsonTypeSerializer[T5]], serializerFactory.config, "a value of " + tpe)
+  private val t6Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes(5), context).asInstanceOf[JsonTypeSerializer[T6]], serializerFactory.config, "a value of " + tpe)
 
   override def serialize(tuple: scala.Tuple6[T1, T2, T3, T4, T5, T6], jsonBuilder: StringBuilder): Unit = {
     jsonBuilder.append('[')

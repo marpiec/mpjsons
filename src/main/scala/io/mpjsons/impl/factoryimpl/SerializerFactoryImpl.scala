@@ -14,7 +14,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class SerializerFactoryImpl(config: MPJsonsConfig) {
+class SerializerFactoryImpl(val config: MPJsonsConfig) {
 
   private var additionalSerializers: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
   private var additionalSerializersAnySubType: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty

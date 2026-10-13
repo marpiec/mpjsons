@@ -1,13 +1,13 @@
 package io.mpjsons.impl.serializer.common
 
-import io.mpjsons.JsonTypeSerializer
+import io.mpjsons.{JsonTypeSerializer, NullPolicy}
 import io.mpjsons.impl.SerializerFactory
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 
 import scala.reflect.runtime.universe._
 
 /**
- * Null elements are written as the `null` literal.
+ * Null elements are written as the `null` literal when the NullPolicy allows nulls, and rejected under Fail.
  * @author Marcin Pieciukiewicz
  */
 
@@ -15,6 +15,7 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
   extends JsonTypeSerializer[C] {
 
   protected val subTypeSerializer: JsonTypeSerializer[T] = serializerFactory.getSerializer(TypesUtil.getSubElementsType(tpe), context).asInstanceOf[JsonTypeSerializer[T]]
+  private val nullsAllowed = serializerFactory.config.nullPolicy != NullPolicy.Fail
 
   protected def serializeIterator(iterator: Iterator[T], jsonBuilder: StringBuilder): Unit = {
 
@@ -57,7 +58,7 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
 
   private def serializeElement(element: T, jsonBuilder: StringBuilder): Unit = {
     if (element == null) {
-      jsonBuilder.append("null")
+      NullValues.writeNull(jsonBuilder, nullsAllowed, "an element of " + tpe)
     } else {
       subTypeSerializer.serialize(element, jsonBuilder)
     }

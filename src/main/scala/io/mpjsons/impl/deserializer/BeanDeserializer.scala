@@ -57,10 +57,10 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     val entries = fields.flatMap { field =>
       val deserializer = deserializerFactory.getDeserializer(field.tpe, context)
       val argIndex = if (useConstructor) constructorParams.indexOf(field.field.getName) else -1
-      val primary = BeanField(field.jsonName, field.field, field.tpe, typeName, deserializer, argIndex)
+      val primary = BeanField(field.jsonName, field.field, field.tpe, typeName, deserializer, argIndex, field.nullable, config)
       val scalaName = field.field.getName
       if (scalaName != field.jsonName && !jsonNames.contains(scalaName)) {
-        Array(primary, BeanField(scalaName, field.field, field.tpe, typeName, deserializer, argIndex))
+        Array(primary, BeanField(scalaName, field.field, field.tpe, typeName, deserializer, argIndex, field.nullable, config))
       } else {
         Array(primary)
       }

@@ -41,8 +41,9 @@ Fixed: `StringIterator` starts at the end-of-input marker for an empty string, s
 
 ### 6. `null` inside containers produces raw NPEs — FIXED
 
-Null elements of collections, maps, tuples, `Either` and `Some` are written as the `null` literal and read back;
-bean fields follow `NullPolicy` (see json-format.md §2). Covered by `NullLiteralSpec`.
+Null elements of collections, maps, tuples, `Either` and `Some` raise `IllegalArgumentException` naming the place
+under the default `NullPolicy.Fail` and are written as `null` under `Omit` / `WriteNull`; bean fields follow
+`NullPolicy` (see json-format.md §2). Covered by `NullLiteralSpec`.
 
 ### 7. Non-finite doubles produce invalid JSON — FIXED
 
@@ -89,9 +90,9 @@ decision 6 in roadmap.md §6 is about the default only).
 
 ### 14. No `null` literal support on read — FIXED (owner decisions 13/10/2026)
 
-`null` reads as `null` for reference types, `None` for `Option`, and fails with a message naming the field for
-primitives; accepted at top level, for bean fields, collection elements, map keys/values, tuple slots, `Either`
-payloads and inside `Some`. See json-format.md §2 and `NullLiteralSpec`.
+`null` is accepted only where declared: `None` for `Option` values, `null` for `@nullable` reference fields; under
+the default `NullPolicy.Fail` everything else is rejected with a message naming the field or type, while `Omit` /
+`WriteNull` accept it for any reference type. Primitives never accept it. See json-format.md §2 and `NullLiteralSpec`.
 
 ### 15. Missing JSON key leaves `Option` fields as `null` — FIXED
 

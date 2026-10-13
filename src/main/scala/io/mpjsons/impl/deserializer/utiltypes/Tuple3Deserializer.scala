@@ -15,9 +15,9 @@ class Tuple3Deserializer[T1, T2, T3](val deserializerFactory: DeserializerFactor
 
   private val types = TypesUtil.getMultipleSubElementsType(tpe)
 
-  private val firstDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T1](types.head, context), types.head)
-  private val secondDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T2](types(1), context), types(1))
-  private val thirdDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T3](types(2), context), types(2))
+  private val firstDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T1](types.head, context), types.head, deserializerFactory.config)
+  private val secondDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T2](types(1), context), types(1), deserializerFactory.config)
+  private val thirdDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[T3](types(2), context), types(2), deserializerFactory.config)
 
 
   def deserialize(jsonIterator: StringIterator): (T1, T2, T3) = {

@@ -18,7 +18,7 @@ class SimpleMapDeserializer[T](deserializerFactory: DeserializerFactory, private
 
 
   val valueDeserializer = deserializerFactory.getDeserializer(tag.tpe, context).asInstanceOf[JsonTypeDeserializer[T]]
-  private val valueNull = NullValues.forType(tag.tpe)
+  private val valueNull = NullValues.forType(tag.tpe, deserializerFactory.config)
 
   override def deserialize(jsonIterator: StringIterator): Map[String, T] = {
 

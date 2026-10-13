@@ -9,8 +9,8 @@ import scala.reflect.runtime.universe._
 class EitherSerializer[L, R](serializerFactory: SerializerFactory, tpe: Type, context: Context) extends JsonTypeSerializer[Either[L, R]] {
 
   private val subtypes = TypesUtil.getDoubleSubElementsType(tpe)
-  private val leftSerializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes._1, context).asInstanceOf[JsonTypeSerializer[L]])
-  private val rightSerializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes._2, context).asInstanceOf[JsonTypeSerializer[R]])
+  private val leftSerializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes._1, context).asInstanceOf[JsonTypeSerializer[L]], serializerFactory.config, "a value of " + tpe)
+  private val rightSerializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes._2, context).asInstanceOf[JsonTypeSerializer[R]], serializerFactory.config, "a value of " + tpe)
 
   override def serialize(obj: Either[L, R], jsonBuilder: StringBuilder): Unit = {
 

@@ -19,7 +19,7 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-class DeserializerFactoryImpl(config: MPJsonsConfig) {
+class DeserializerFactoryImpl(val config: MPJsonsConfig) {
 
   private var additionalDeserializers: Map[String, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty
   private var additionalSuperclassDeserializers: Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty

@@ -90,7 +90,8 @@ class CompactFormatSpec extends AnyFlatSpec {
     mapsAsObjects.serialize(Map(1 -> "x", 2 -> "y")) mustBe """{"1":"x","2":"y"}"""
     mapsAsObjects.serialize(Map(true -> List(1))) mustBe """{"true":[1]}"""
     mapsAsObjects.serialize(Map('c' -> 1.5)) mustBe """{"c":1.5}"""
-    mapsAsObjects.serialize(Map("q\"uote" -> (null: String))) mustBe """{"q\"uote":null}"""
+    new MPJsons(MPJsonsConfig(mapsAsObjects = true, nullPolicy = NullPolicy.WriteNull)).serialize(Map("q\"uote" -> (null: String))) mustBe """{"q\"uote":null}"""
+    intercept[IllegalArgumentException] { mapsAsObjects.serialize(Map("k" -> (null: String))) }
     mapsAsObjects.serialize(Map(Nested(1) -> "bean")) mustBe """[[{"v":1},"bean"]]"""
     mapsAsObjects.serialize(scala.collection.mutable.Map("m" -> 1)) mustBe """{"m":1}"""
     legacy.serialize(Map("a" -> 1)) mustBe """[["a",1]]"""

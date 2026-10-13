@@ -1,13 +1,17 @@
 package io.mpjsons
 
 /**
- * What the serializer does with a bean field whose value is null.
+ * How nulls are treated, in both directions.
  *
- *  - [[NullPolicy.Fail]]: throw IllegalArgumentException, unless the field is annotated with [[nullable]] (then omit it). Default.
- *  - [[NullPolicy.Omit]]: leave the field out of the JSON object (what `ignoreNullFields = true` does).
- *  - [[NullPolicy.WriteNull]]: write `"field":null`.
+ *  - [[NullPolicy.Fail]] (default): a null is accepted only where it is declared. On write, a null bean field
+ *    throws unless the field is annotated with [[nullable]] (then it is omitted), and a null element of a
+ *    collection, map, tuple, Either or Some, or a null top-level value, throws. On read, the JSON `null` literal
+ *    is accepted only for `@nullable` reference fields (giving null) and for Option values (giving None).
+ *  - [[NullPolicy.Omit]]: null bean fields are left out of the JSON object (what `ignoreNullFields = true` does);
+ *    null elements are written as `null`; `null` is read into any reference type.
+ *  - [[NullPolicy.WriteNull]]: null bean fields are written as `"field":null`; otherwise like Omit.
  *
- * Null elements of collections, maps, tuples, Either and Some are always written as the `null` literal.
+ * Primitive fields and elements (Int, Boolean, ...) never accept a JSON null.
  */
 sealed trait NullPolicy
 

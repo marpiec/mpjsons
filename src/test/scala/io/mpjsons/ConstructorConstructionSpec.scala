@@ -38,7 +38,9 @@ class ConstructorConstructionSpec extends AnyFlatSpec {
     val person = constructing.deserialize[Person]("{}")
     person mustBe Person(null, 0, 0.0, active = false, None, null)
     person.visits mustBe 0
-    constructing.deserialize[Person]("""{"name":null,"nick":null,"tags":null,"age":2}""") mustBe Person(null, 2, 0.0, active = false, None, null)
+    constructing.deserialize[Person]("""{"nick":null,"age":2}""") mustBe Person(null, 2, 0.0, active = false, None, null)
+    new MPJsons(MPJsonsConfig(caseClassesViaConstructor = true, nullPolicy = NullPolicy.Omit)).deserialize[Person]("""{"name":null,"nick":null,"tags":null,"age":2}""") mustBe Person(null, 2, 0.0, active = false, None, null)
+    intercept[JsonInnerException] { constructing.deserialize[Person]("""{"name":null}""") }.getMessage must include("null is not allowed")
     intercept[JsonInnerException] { constructing.deserialize[Person]("""{"age":null}""") }.getMessage must include("null is not allowed")
   }
 

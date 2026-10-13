@@ -338,6 +338,7 @@ compact.serialize(Profile("Ann", Some("annie"), None))
 | `mapsAsObjects = true` | `false` | Maps whose key type is `String`, a number, `Boolean` or `Char` are written as `{"key":value}` instead of `[["key",value]]`; other key types keep the pair form. Both forms are always read. |
 | `isoTime = true` | `false` | `LocalDate`, `LocalTime`, `LocalDateTime` and `Duration` are written as ISO-8601 strings (`"2023-07-23"`, `"PT1M"`) instead of objects. Both forms are always read. |
 | `strict = true` | `false` | Reading rejects missing commas, trailing commas and content after the root value instead of tolerating them. Bare keys and whitespace are still accepted. |
+| `omitDefaults = true` | `false` | Bean fields whose value equals what reading `{}` would produce (the no-arg constructor initialisers, or zero / false / null / None) are left out. Lossless for round trips through this library; such nulls are omitted regardless of `nullPolicy`. |
 
 Other levers are listed in `docs/roadmap.md`.
 

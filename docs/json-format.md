@@ -110,4 +110,4 @@ fields with a constructor default (absent keeps the default, `null` overwrites i
 | `"a/b"` | `"a\/b"` | `"a/b"` — **available**: `escapeSlash = false` | 1 per slash |
 | `LocalDate` | 30 bytes | `"2023-07-23"` 12 bytes — **available**: `isoTime = true` | 18 |
 | field keys | full Scala field names | annotated short names (`@jsonName("n")`) | depends |
-| default-valued fields (`0`, `false`, `""`, empty collections) | always written | omitted when equal to a known default | depends |
+| default-valued fields (`0`, `false`, `null`, `None`, constructor initialisers) | always written | omitted when equal to what reading `{}` yields — **available**: `omitDefaults = true` | depends |

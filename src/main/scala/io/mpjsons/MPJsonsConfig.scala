@@ -20,6 +20,10 @@ package io.mpjsons
  * @param strict                  on read, reject missing commas between members or elements, trailing commas and
  *                                any content after the root value. Bare (unquoted) keys and whitespace are always
  *                                accepted. Off by default (historical, lenient parsing).
+ * @param omitDefaults            on write, leave out every bean field whose value equals what reading `{}` would
+ *                                produce for that type (the no-arg constructor's initialisers, or zero / false /
+ *                                null / None for types constructed without a constructor). Lossless for round
+ *                                trips through this library; takes precedence over `nullPolicy` for such fields.
  */
 final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                nullPolicy: NullPolicy = NullPolicy.Fail,
@@ -27,4 +31,5 @@ final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                compactOptions: Boolean = false,
                                mapsAsObjects: Boolean = false,
                                isoTime: Boolean = false,
-                               strict: Boolean = false)
+                               strict: Boolean = false,
+                               omitDefaults: Boolean = false)

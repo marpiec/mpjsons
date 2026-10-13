@@ -25,8 +25,8 @@ class GenericTypeParamsSpec extends AnyFlatSpec {
   "Serializer" must "not reuse type parameter bindings between instantiations of a generic type" in {
     val mpjsons = new MPJsons
 
-    mpjsons.serialize(Box(List(1), 2, Some(List(3)))) mustBe """{"nested":{"value":[3]},"single":2,"items":[1]}"""
-    mpjsons.serialize(Box(List("x"), "y", Some(List("z")))) mustBe """{"nested":{"value":["z"]},"single":"y","items":["x"]}"""
+    mpjsons.serialize(Box(List(1), 2, Some(List(3)))) mustBe """{"items":[1],"single":2,"nested":{"value":[3]}}"""
+    mpjsons.serialize(Box(List("x"), "y", Some(List("z")))) mustBe """{"items":["x"],"single":"y","nested":{"value":["z"]}}"""
   }
 
   "Serializer" must "handle two instantiations of the same generic type inside one object" in {
@@ -34,7 +34,7 @@ class GenericTypeParamsSpec extends AnyFlatSpec {
 
     val outer = Outer(Box(List(1), 2, None), Box(List("a"), "b", None))
     val json = mpjsons.serialize(outer)
-    json mustBe """{"strings":{"nested":{},"single":"b","items":["a"]},"ints":{"nested":{},"single":2,"items":[1]}}"""
+    json mustBe """{"ints":{"items":[1],"single":2,"nested":{}},"strings":{"items":["a"],"single":"b","nested":{}}}"""
     mpjsons.deserialize[Outer](json) mustBe outer
   }
 

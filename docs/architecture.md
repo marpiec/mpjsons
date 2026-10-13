@@ -143,17 +143,19 @@ always start with `Context(List.empty, Map.empty)`.
 `ReflectionUtilNoCache.getAllAccessibleFields(tpe)`:
 
 ```scala
-for (baseClass <- tpe.baseClasses)                       // linearization: the class itself first, then supertypes
-  for (m <- tpe.baseType(baseClass).decls.toList.reverse  // reverse declaration order (historical `members` order)
+for ((baseClass, classIndex) <- tpe.baseClasses.zipWithIndex)   // linearization: the class itself first, then supertypes
+  for ((m, declIndex) <- tpe.baseType(baseClass).decls.toList.zipWithIndex   // declaration order
          if m.isTerm && !m.isMethod && !m.isSynthetic && !m.isModule; if seenNames.add(name))
-    FieldWithTypeInfo(getAccessibleField(clazz, name),    // Java Field (walks superclasses) or null → skipped
-                      m.typeSignatureIn(tpe),             // field type as seen from tpe (generic bases resolved)
-                      m.annotations.exists(_.toString.toLowerCase.contains("nullable")))
+    collected += ((classCount - classIndex, declIndex,
+      FieldWithTypeInfo(getAccessibleField(clazz, name),    // Java Field (walks superclasses) or null → skipped
+                        m.typeSignatureIn(tpe),             // field type as seen from tpe (generic bases resolved)
+                        m.annotations.exists(_.toString.toLowerCase.contains("nullable")))))
+collected.sortBy(e => (e._1, e._2))   // least derived class first, declaration order within a class
 ```
 
-Verified properties of this scan:
+Properties of this scan:
 
-- Own fields come first in **reverse declaration order** (`Ordered(zeta, alpha, mid, beta)` serializes as `{"beta":..,"mid":..,"alpha":..,"zeta":..}`), then each superclass's fields in the same order. Switching to declaration order is `decls` without the `.reverse` (roadmap §2.3, owner decision).
+- Key order is **declaration order**, superclass fields first (`Ordered(zeta, alpha, mid, beta)` serializes as `{"zeta":..,"alpha":..,"mid":..,"beta":..}`). Up to 0.6.51 the order was reversed (an artefact of `Type.members`).
 - A field name declared in both a class and its superclass is taken once, from the most-derived class.
 - Local field names carry a trailing space in Scala reflection, hence `.trim`.
 - Non-field members that survive the filter (nested classes, type members, modules) resolve to `null` via `NoSuchFieldException` and are filtered out; cold-path cost only.

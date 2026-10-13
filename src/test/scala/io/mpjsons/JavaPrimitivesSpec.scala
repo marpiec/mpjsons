@@ -26,7 +26,7 @@ class JavaPrimitivesSpec extends AnyFlatSpec {
 
     val serialized = mpjsons.serialize(o)
 
-    serialized must be ("""{"h":"g","g":0.75,"f":0.45,"e":true,"d":65,"c":5,"b":21,"a":123}""")
+    serialized must be ("""{"a":123,"b":21,"c":5,"d":65,"e":true,"f":0.45,"g":0.75,"h":"g"}""")
 
     val deserialized = mpjsons.deserialize[PrimitiveHolder](serialized)
 

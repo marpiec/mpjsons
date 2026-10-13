@@ -44,7 +44,7 @@ class InheritanceSpec extends AnyFlatSpec {
     derived.derivedField = 20
 
     val json = mpjsons.serialize(derived)
-    json mustBe """{"derivedField":20,"baseField":10}"""
+    json mustBe """{"baseField":10,"derivedField":20}"""
 
     val deserialized = mpjsons.deserialize[Derived](json)
     deserialized.baseField mustBe 10
@@ -58,7 +58,7 @@ class InheritanceSpec extends AnyFlatSpec {
     obj.count = 3
 
     val json = mpjsons.serialize(obj)
-    json mustBe """{"count":3,"tags":["x","y"],"payload":"hello"}"""
+    json mustBe """{"payload":"hello","tags":["x","y"],"count":3}"""
 
     val deserialized = mpjsons.deserialize[StringDerived](json)
     deserialized.payload mustBe "hello"
@@ -71,7 +71,7 @@ class InheritanceSpec extends AnyFlatSpec {
     user.id = 42L
 
     val json = mpjsons.serialize(user)
-    json mustBe """{"name":"Ann","id":42}"""
+    json mustBe """{"id":42,"name":"Ann"}"""
 
     val deserialized = mpjsons.deserialize[User](json)
     deserialized mustBe user
@@ -83,7 +83,7 @@ class InheritanceSpec extends AnyFlatSpec {
     obj.a = 1; obj.b = 2; obj.c = 3
 
     val json = mpjsons.serialize(obj)
-    json mustBe """{"c":3,"b":2,"a":1}"""
+    json mustBe """{"a":1,"b":2,"c":3}"""
 
     val deserialized = mpjsons.deserialize[Level3](json)
     (deserialized.a, deserialized.b, deserialized.c) mustBe ((1, 2, 3))

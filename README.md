@@ -16,7 +16,7 @@ val mpjsons = new MPJsons
 case class User(firstName: String, lastName: String)
 
 val json = mpjsons.serialize(User("John", "Doe"))
-// {"lastName":"Doe","firstName":"John"}
+// {"firstName":"John","lastName":"Doe"}
 
 val user = mpjsons.deserialize[User](json)
 // User(John,Doe)
@@ -119,7 +119,7 @@ or without quotes.
 mpjsons.deserialize[InnerObject](""" {  intValue : 10 , stringValue : "Hello" } """)
 ```
 
-> **Note:** JSON key order in the output follows reflection member order, not declaration order.
+> **Note:** JSON keys follow declaration order; fields inherited from a superclass come first.
 
 ### Collections
 

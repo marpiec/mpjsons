@@ -16,39 +16,43 @@ private[reflection] object ReflectionUtilNoCache {
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
    *
-   * Classes are visited in linearization order (the class itself first, then its superclasses),
-   * and within one class fields are listed in reverse declaration order, which is the order
-   * `Type.members` has always produced for this library (so the JSON key order of existing
-   * types is unchanged). Field types are resolved as seen from `tpe`, so a field `payload: T`
-   * declared in `Base[T]` is reported as `String` for `Derived extends Base[String]`.
+   * Order: fields of the least derived class first (so superclass fields precede subclass fields), and within one
+   * class in declaration order. A field name declared in both a class and its superclass is taken once, from the
+   * most derived class. Field types are resolved as seen from `tpe`, so a field `payload: T` declared in
+   * `Base[T]` is reported as `String` for `Derived extends Base[String]`.
    *
    * @param tpe type from which the fields should be retrieved
    * @return array containing all defined fields in class
    */
   def getAllAccessibleFields(tpe: Type): Array[FieldWithTypeInfo] = {
     val clazz = TypesUtil.getClassFromType(tpe)
-    val result = mutable.ArrayBuffer[FieldWithTypeInfo]()
     val seenNames = mutable.HashSet[String]()
+    // (position of the declaring class counted from the root of the hierarchy, declaration index, field)
+    val collected = mutable.ArrayBuffer[(Int, Int, FieldWithTypeInfo)]()
 
-    for (baseClass <- tpe.baseClasses) {
-      val declaredFields = tpe.baseType(baseClass).decls.toList.reverse.filter { member =>
+    val baseClasses = tpe.baseClasses // linearization: the class itself first
+    val classCount = baseClasses.length
+
+    for ((baseClass, classIndex) <- baseClasses.zipWithIndex) {
+      val declaredFields = tpe.baseType(baseClass).decls.toList.filter { member =>
         member.isTerm && !member.isMethod && !member.isSynthetic && !member.isModule
       }
-      for (member <- declaredFields) {
+      for ((member, declarationIndex) <- declaredFields.zipWithIndex) {
         val fieldName = member.name.toString.trim
         if (seenNames.add(fieldName)) {
           val field = getAccessibleField(clazz, fieldName)
           if (field != null) {
-            result += FieldWithTypeInfo(
+            val info = FieldWithTypeInfo(
               field,
               member.typeSignatureIn(tpe),
               member.annotations.exists(_.toString.toLowerCase().contains("nullable")))
+            collected += ((classCount - classIndex, declarationIndex, info))
           }
         }
       }
     }
 
-    result.toArray
+    collected.sortBy(entry => (entry._1, entry._2)).map(_._3).toArray
   }
 
   /**

@@ -106,11 +106,10 @@ while skipping unknown fields in `ignoreNonExistingFields` mode.
 JDK 9+. Options: dedicated converters for the common ones (`BigDecimal`, `BigInt`, `UUID`, `Instant`, `ZonedDateTime`,
 `java.util.Date`), and a fail-fast check in the bean fallback for `typeSymbol.fullName.startsWith("java.")`.
 
-### 17. Field order is reverse declaration order — LIMITATION (verified)
+### 17. Field order is reverse declaration order — FIXED (owner decision 13/10/2026)
 
-Output key order follows `tpe.members` (reverse). `members.sorted` or `decls` give declaration order
-(**verified**). Changing it alters output strings (only `JavaPrimitivesSpec` asserts a multi-field order), which
-matters for anyone diffing or hashing serialized JSON; see roadmap.md §2.3.
+Keys are written in declaration order, superclass fields first. Output strings of multi-field types changed
+accordingly (readers never depended on order).
 
 ### 18. Thread-safety — FIXED for caches, registries remain registration-time only
 

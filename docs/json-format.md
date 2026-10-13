@@ -24,7 +24,7 @@ On read (`AbstractStringDeserializer.readString`): the eight short escapes plus 
 {"<fieldName>":<value>,...}
 ```
 
-- Key = Java field name (Scala backing-field name). Order = **reverse declaration order** (**verified**: `case class Flat(a,b,c,d,e)` → `{"e":..,"d":..,"c":..,"b":..,"a":..}`). The JavaPrimitivesSpec expectation string encodes this order.
+- Key = Java field name (Scala backing-field name). Order = **declaration order**, with fields inherited from a superclass first (`case class Flat(a,b,c,d,e)` → `{"a":..,"b":..,"c":..,"d":..,"e":..}`; `class Derived extends Base` → base fields, then derived fields). Versions up to 0.6.51 wrote reverse declaration order; readers never depended on order.
 - `null` field: default throws `IllegalArgumentException("Null value is not allowed for field ...")`; with `@(nullable @field)` or `MPJsons(ignoreNullFields = true)` the key is **omitted**. A `null` literal is never written.
 - Only fields found by the reflection scan participate: own `var`/`val` backing fields; **inherited fields are excluded** (bug, known-issues §2); `lazy val` backing fields are excluded (**verified**).
 - Read: keys may be unquoted (`{ a : 1 }`), whitespace is allowed anywhere, unknown keys throw unless `ignoreNonExistingFields`, missing keys leave the field as constructed (null / 0 / false / `None`-less `null` for `Option`), duplicate keys: last wins (**verified**).

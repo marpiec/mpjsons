@@ -169,7 +169,7 @@ Commit history (`a2edb13`, PostgreSQL `jsonb`) shows the output is stored. There
 
 | Milestone | Contents | Status (13/10/2026) |
 |---|---|---|
-| M1 Correctness | §2.1-2.4 | **Done** except §2.3 (field order, owner decision) and the registries (still registration-time `var Map`s). Known-issues §1-§5, §7-§9, §12 (numbers), §18, §19 fixed with specs. |
+| M1 Correctness | §2.1-2.4 | **Done** (field order switched to declaration order on 13/10/2026); the converter registries remain registration-time `var Map`s. Known-issues §1-§5, §7-§12 (numbers), §17-§19 fixed with specs. |
 | M2 Bench + hot loops | performance.md rows 0-7 | **Done**: JMH module, memoizer/caches, strings, numbers, key matching, typed field access, collection builders, primitive serializers, output pre-sizing. Output byte-identical. |
 | M3 Null | §3 | Open: needs decisions 1-3 in §6. |
 | M4 Naming + compact | §4.1, §4.2, §4.3, §4.4 | Open: needs decisions 4-6 in §6. |

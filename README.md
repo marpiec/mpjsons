@@ -70,7 +70,7 @@ and add the dependency to your project:
 libraryDependencies += "io.mpjsons" %% "mpjsons" % "0.6.51"
 ```
 
-(Current version: `0.6.51`, Scala `2.13.16`. Runtime dependencies: `scala-reflect`, `slf4j-api`.)
+(Current version: `0.6.51`, Scala `2.13.16`. Runtime dependency: `scala-reflect`.)
 
 ---
 

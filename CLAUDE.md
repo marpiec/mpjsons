@@ -10,7 +10,7 @@ Guidance for working in this repository. This is a deep, factual map of the code
 
 - Build tool: sbt `1.11.7` (`project/build.properties`), Scala `2.13.16`.
 - Current branch is `scala_2.13`; main/PR branch is `master`.
-- Runtime deps: `scala-reflect`, `slf4j-api`. Test: `scalatest 3.2.15` (FlatSpec + MustMatchers).
+- Runtime deps: `scala-reflect` only. Test: `scalatest 3.2.15` (FlatSpec + MustMatchers). Benchmarks: `sbt-jmh` (`src/jmh`).
 
 ## Build & test commands
 

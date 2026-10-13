@@ -7,7 +7,7 @@ then on each call is a tree walk over those cached objects. There is no intermed
 (no AST, no token stream): serializers append directly to a `StringBuilder`, deserializers pull
 characters directly from a `StringIterator`.
 
-Dependencies: `scala-reflect` (essential) and `slf4j-api` (**verified unused** in `src/main`, can be dropped).
+Runtime dependency: `scala-reflect` only (the unused `slf4j-api` dependency was removed).
 
 ## 1. Public API surface (`src/main/scala/io/mpjsons/MPJsons.scala`)
 

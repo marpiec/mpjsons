@@ -30,7 +30,7 @@ Tests live in `src/test/scala/io/mpjsons/`, one spec per feature area (Collectio
 - `serialize[T](obj)` / `deserialize[T](json)` — implicit `TypeTag[T]` drives type resolution. Guards against `Nothing` (unspecified type param).
 - `buildStaticSerializer[T]` / `buildStaticDeserializer[T]` — return reusable `StaticSerializer`/`StaticDeserializer` bound to one type (avoids repeated factory lookup; what `PerformanceSpec` uses).
 - `registerConverter`, `registerSuperclassConverter`, `registerSerializerForAnySubtype` — custom (de)serializers.
-- `markTypedClass[T]` / `markTypedSuperClass[T]` — emit/parse a type tag wrapper `{"TypeName":{...}}` so collections of subtypes round-trip (see `TypedConverter`).
+- `markTypedClass[T]` / `markTypedSuperClass[T]` — emit/parse a type tag wrapper `{"TypeName":{...}}` so collections of subtypes round-trip (see `TypedConverter`). `@typeName("x")` on a subclass of a sealed typed class replaces the simple name in the wrapper (simple name still accepted on read; see `TypeNames`).
 - `postDeserializationTransform[T](f)` — post-process the deserialized object.
 - `@nullable` annotation (`final class nullable extends StaticAnnotation`) — marks a bean field allowed to be null (skipped instead of throwing on serialize). `@jsonName("key")` (`jsonName.scala`) overrides the JSON key; on read the Scala field name is still accepted as a fallback unless another field owns it as its JSON name. Both are found on the field, the constructor parameter or the getter, so case class parameters need no `@field` meta-annotation.
 

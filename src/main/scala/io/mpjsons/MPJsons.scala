@@ -1,5 +1,6 @@
 package io.mpjsons
 
+import io.mpjsons.impl.special.TypeNames
 import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerializer}
 import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
@@ -341,22 +342,10 @@ class MPJsons(val config: MPJsonsConfig) {
 
 
   /** Builds the typed deserializer for a marked type: subtypes resolve via the sealed hierarchy or as siblings of the marked type. */
-  private def typedDeserializerFor[T <: AnyRef](tpe: Type, deserializerFactory: DeserializerFactory): TypedDeserializer[T] = {
+  private def typedDeserializerFor[T <: AnyRef](tpe: Type, readTable: Map[String, Class[_]], deserializerFactory: DeserializerFactory): TypedDeserializer[T] = {
     val binaryName = TypesUtil.getClassFromType(tpe).getName
     val prefix = binaryName.substring(0, Math.max(binaryName.lastIndexOf('$'), binaryName.lastIndexOf('.')) + 1)
-    new TypedDeserializer[T](prefix, knownSubclasses(tpe.typeSymbol), tpe.toString, deserializerFactory)
-  }
-
-  /** Simple class name -> class for every (transitive) known subclass of a sealed type; empty otherwise. */
-  private def knownSubclasses(symbol: Symbol): Map[String, Class[_]] = {
-    if (symbol.isClass && symbol.asClass.isSealed) {
-      symbol.asClass.knownDirectSubclasses.toList.flatMap { sub =>
-        val clazz = TypesUtil.getClassFromType(sub.asClass.toType)
-        (clazz.getSimpleName -> clazz) :: knownSubclasses(sub).toList
-      }.toMap
-    } else {
-      Map.empty
-    }
+    new TypedDeserializer[T](prefix, readTable, tpe.toString, deserializerFactory)
   }
 
   /**
@@ -368,9 +357,10 @@ class MPJsons(val config: MPJsonsConfig) {
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {
       val tpe = extractType(tag)
+      val readTable = TypeNames.readTable(tpe.typeSymbol)
       registerConverter[T](
-        sf => new TypedSerializer[T](sf),
-        df => typedDeserializerFor[T](tpe, df))
+        sf => new TypedSerializer[T](sf, readTable, tpe.toString),
+        df => typedDeserializerFor[T](tpe, readTable, df))
     }
   }
 
@@ -385,9 +375,10 @@ class MPJsons(val config: MPJsonsConfig) {
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {
       val tpe = extractType(tag)
+      val readTable = TypeNames.readTable(tpe.typeSymbol)
       registerSuperclassConverter[T](
-        sf => new TypedSerializer[T](sf),
-        df => typedDeserializerFor[T](tpe, df))
+        sf => new TypedSerializer[T](sf, readTable, tpe.toString),
+        df => typedDeserializerFor[T](tpe, readTable, df))
     }
   }
 

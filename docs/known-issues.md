@@ -66,7 +66,7 @@ Resolution order is now: known subclasses of a sealed marked type (wherever they
 `<binary name prefix of the marked type> + SimpleName` (same package for top-level types, same enclosing object for
 nested types); an unknown name fails with a message listing the known subclasses. Covered by `TypedNestedSpec`.
 Remaining limitation: subtypes of a **non-sealed** trait must be siblings of the trait, and two subtypes with the
-same simple name cannot be told apart (the wire format carries only the simple name; see roadmap.md §4.1 for aliases).
+same simple name cannot be told apart unless one of them gets a `@typeName` alias (sealed hierarchies; `TypeNameSpec`).
 
 ### 11. Superclass-converter matching is nondeterministic — FIXED
 

@@ -446,6 +446,27 @@ mpjsons.serialize(A("Hello"): CommonType)     // {"A":{"a":"Hello"}}
 > `markTypedSuperClass[T]` behaves the same but applies to every subclass of `T`. It is
 > kept for backward compatibility and generally should not be needed.
 
+#### Type name aliases
+
+By default the wrapper key is the subclass's simple name. `@typeName` sets a different one:
+shorter output, and a renamed class can keep its old name on the wire. The simple class name is
+still accepted when reading, so data written before the alias was added keeps loading.
+
+```scala
+import io.mpjsons.typeName
+
+sealed trait Shape
+@typeName("c") case class Circle(r: Double) extends Shape
+@typeName("Square") case class Box(side: Int) extends Shape   // class renamed from Square
+
+mpjsons.markTypedClass[Shape]
+mpjsons.serialize(List[Shape](Circle(1.5), Box(2)))   // [{"c":{"r":1.5}},{"Square":{"side":2}}]
+```
+
+Aliases are resolved through the known subclasses of a **sealed** typed class. Writing an aliased
+subclass of a non-sealed typed class fails with an explanation, because the reader could not
+find it. Two subclasses that would write the same name are rejected by `markTypedClass`.
+
 ### Performance: static (de)serializers
 
 `serialize`/`deserialize` look the (de)serializer up per call (cached after the first

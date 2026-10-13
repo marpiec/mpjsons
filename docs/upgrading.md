@@ -44,9 +44,9 @@ recompiled.
 | Member | Change |
 |---|---|
 | `MPJsons` constructor | primary is now `new MPJsons(config: MPJsonsConfig)`; `new MPJsons(ignoreNonExistingFields = false, ignoreNullFields = false, nullPolicy = NullPolicy.Fail)` is an auxiliary constructor with defaults. The 2-argument constructor no longer exists as a binary signature; Java callers must pass three arguments or a config. New: `mpjsons.config`. |
-| `NullPolicy`, `MPJsonsConfig`, `jsonName` | new public types in `io.mpjsons` |
+| `NullPolicy`, `MPJsonsConfig`, `jsonName`, `typeName` | new public types in `io.mpjsons` |
 | `SerializerFactory` / `DeserializerFactory` | primary constructors take `MPJsonsConfig`; the `Boolean` constructors remain |
-| `BeanSerializer`, `BeanDeserializer`, `OptionSerializer`, `OptionDeserializer`, `MapSerializer`, `TypedDeserializer` | gained config-aware primary constructors; the previous overloads remain |
+| `BeanSerializer`, `BeanDeserializer`, `OptionSerializer`, `OptionDeserializer`, `MapSerializer`, `TypedSerializer`, `TypedDeserializer` | gained new primary constructors (config, or the typed-name table); the previous overloads remain |
 | `StringIterator` | 1-argument constructor remains (lenient); `nextCharOrNullIfLast` now returns `Unit` and always advances; new `seek`, `tryConsumeNull`, `afterValue`, `isAtEnd`, `expectEnd` |
 | `AbstractStringDeserializer.readString` | returns `String` (was `StringBuilder`) |
 | `AbstractIntegerDeserializer` / `AbstractFloatingPointDeserializer` | the protected `readNumberString` is replaced by `readLong` / `readInt` / `readShort` / `readByte` and `readDouble` / `readFloat`; the companion's `readNumberString` is replaced by `scanNumber` / `skipNumber` / `readDouble` / `readFloat`. **Custom deserializers extending these classes need updating.** |

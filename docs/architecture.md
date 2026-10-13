@@ -226,8 +226,8 @@ Value readers (`impl/deserializer/jsontypes/`) all work on the raw input and `se
 
 ## 9. Special converters (`impl/special/TypedConverter.scala`)
 
-- `TypedSerializer`: `obj.getClass.getSimpleName` as key; per-class serializer cache (`var Map`); writes `{"SimpleName":` + inner + `}`; inner serializer resolved with `allowSuperType = false`.
-- `TypedDeserializer(binaryNamePrefix, knownSubclasses, markedTypeName, ...)`: reads the key as a JSON string and resolves it first among the known subclasses of a sealed marked type (collected transitively with `knownDirectSubclasses` at `markTypedClass` time), then as `binaryNamePrefix + typeName` where the prefix is the marked type's binary class name up to the last `.` or `$` (siblings in the same package or enclosing object). Resolved deserializers are cached per name. Two subtypes with the same simple name cannot be distinguished.
+- `TypedSerializer`: writes `{"Name":` + inner + `}` where Name is the class's `@typeName` alias or its simple name (`TypeNames`); the escaped prefix and the inner serializer (resolved with `allowSuperType = false`) are cached per class. An alias missing from the read table (non-sealed typed class) fails on first write.
+- `TypedDeserializer(binaryNamePrefix, knownSubclasses, markedTypeName, ...)`: reads the key as a JSON string and resolves it first among the known subclasses of a sealed marked type (collected transitively with `knownDirectSubclasses` at `markTypedClass` time), a table built by `TypeNames.readTable` holding each subclass's written name (alias or simple name) plus the simple names of aliased subclasses as fallbacks; alias clashes fail at `markTypedClass`, then as `binaryNamePrefix + typeName` where the prefix is the marked type's binary class name up to the last `.` or `$` (siblings in the same package or enclosing object). Resolved deserializers are cached per name. Two subtypes with the same simple name cannot be distinguished.
 
 `SimpleMapSerializer[T]` / `SimpleMapDeserializer[T]` (object form `{"k":v}`) are **not** wired into the
 dispatch; the user instantiates them with a `TypeTag[T]` and registers them as a converter. Both follow the

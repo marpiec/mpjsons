@@ -9,9 +9,9 @@ import io.mpjsons.impl.deserializer.jsontypes.AbstractFloatingPointDeserializer
  */
 
 object DoubleDeserializer extends AbstractFloatingPointDeserializer[Double] {
-  override def deserialize(jsonIterator: StringIterator) = readNumberString(jsonIterator).toDouble
+  override def deserialize(jsonIterator: StringIterator): Double = readDouble(jsonIterator)
 }
 
 object JavaDoubleDeserializer extends AbstractFloatingPointDeserializer[java.lang.Double] {
-  override def deserialize(jsonIterator: StringIterator): java.lang.Double = readNumberString(jsonIterator).toDouble
+  override def deserialize(jsonIterator: StringIterator): java.lang.Double = readDouble(jsonIterator)
 }

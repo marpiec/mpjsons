@@ -100,7 +100,7 @@ class SimpleMapDeserializer[T](deserializerFactory: DeserializerFactory, private
   }
 
   def skipNumber(jsonIterator: StringIterator): Unit = {
-    AbstractFloatingPointDeserializer.readNumberString(jsonIterator)
+    AbstractFloatingPointDeserializer.skipNumber(jsonIterator)
   }
 
   def skipBooleanOrNull(jsonIterator: StringIterator): Unit = {

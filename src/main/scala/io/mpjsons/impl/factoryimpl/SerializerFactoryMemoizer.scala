@@ -16,11 +16,9 @@ class SerializerFactoryMemoizer(ignoreNullFields: Boolean) extends SerializerFac
 
   def getSerializer[T](orgtpe: Type, context: Context, allowSuperType: Boolean = true): JsonTypeSerializer[T] = {
 
-    val tpe = if (orgtpe.typeSymbol.isParameter) {
-      context.typeParams(orgtpe.typeSymbol)
-    } else {
-      orgtpe
-    }
+    // Replace every type parameter (e.g. the T in List[T]) with its binding from the context,
+    // so that the cache key is always a fully concrete type (List[Int] vs List[String]).
+    val tpe = TypeParamsResolver.resolve(orgtpe, context)
 
     val newContext = Context(tpe :: context.typesStack,
       context.typeParams ++ tpe.typeSymbol.typeSignature.typeParams.zip(tpe.typeArgs).toMap)

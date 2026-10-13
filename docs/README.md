@@ -23,4 +23,4 @@ Conventions used in these documents:
 - "Cold path" = code that runs once per type (factory dispatch, reflection). "Hot path" = code that runs for every value on every call.
 - Timing numbers come from in-process micro-benchmarks run inside ScalaTest on JDK 25 / Windows 11 (see `performance.md` for the harness). They are good for ratios and order of magnitude, not for absolute claims; use JMH before accepting or rejecting an optimisation.
 
-Keeping these docs useful: when a bug listed in `known-issues.md` is fixed, delete its entry (do not mark it "fixed"); when a format decision from `roadmap.md` is taken, move the result into `json-format.md`.
+Keeping these docs useful: when a bug listed in `known-issues.md` is fixed, replace its body with a one-line "FIXED: ... covered by `XSpec`" note so the numbering other documents refer to stays stable; when a format decision from `roadmap.md` is taken, move the result into `json-format.md`.

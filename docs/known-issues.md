@@ -8,25 +8,11 @@ Repro snippets assume `val m = new MPJsons`.
 
 ## Confirmed bugs
 
-### 1. Generic beans: type-parameter bindings leak between instantiations — BUG (verified)
+### 1. Generic beans: type-parameter bindings leak between instantiations — FIXED
 
-```scala
-case class Box[T](items: List[T], single: T)
-m.deserialize[Box[Int]]("""{"items":[1,2],"single":3}""")          // Box(List(1, 2),3)
-m.deserialize[Box[String]]("""{"items":["a","b"],"single":"c"}""") // JsonInnerException ← NumberFormatException: ""
-m.serialize(Box(List(1), 2)); m.serialize(Box(List("x"), "y"))     // {"single":"y","items":[x]}   ← x unquoted
-```
-
-Root cause: `DeserializerFactoryMemoizer.scala:20-31` / `SerializerFactoryMemoizer.scala:19-32`. The cache key is
-`(tpe, allowSuperType)`; `tpe` for the field `items: List[T]` is the unsubstituted `List[T]` (its head symbol
-`List` is not a parameter, so no substitution happens), and the `ListDeserializer` built for it captured the
-`Int` element deserializer from the first `Context`. The `single: T` field works because `T` itself is a
-parameter and is substituted before the lookup.
-
-Fix direction: substitute all type parameters in `tpe` before using it as a key, e.g.
-`tpe.map(t => if (t.typeSymbol.isParameter) context.typeParams.getOrElse(t.typeSymbol, t) else t)` (or
-`tpe.substituteTypes(params, args)`), so the key is the fully concrete `List[Int]`. Add a spec with the three
-lines above. `InnerParamsSpec` passes today only because it instantiates `SomeType[T]` with a single `T`.
+Fixed: `TypeParamsResolver` substitutes all type parameters before the memoizer cache lookup; covered by
+`GenericTypeParamsSpec`. (Was: `Box[Int]` then `Box[String]` on one instance failed because `List[T]` was
+cached under the unsubstituted type.)
 
 ### 2. Inherited fields are silently ignored — BUG (verified)
 

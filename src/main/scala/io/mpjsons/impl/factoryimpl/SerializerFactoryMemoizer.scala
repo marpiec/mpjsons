@@ -19,6 +19,15 @@ class SerializerFactoryMemoizer(config: MPJsonsConfig) extends SerializerFactory
   private val cache = new ConcurrentHashMap[Type, JsonTypeSerializer[_]]()
   private val cacheWithoutSuperTypes = new ConcurrentHashMap[Type, JsonTypeSerializer[_]]()
 
+  /**
+   * A registration can change how any type is handled, including types nested in ones already built, so every
+   * cached instance is dropped. Static (de)serializers built earlier keep the behaviour they were built with.
+   */
+  override protected def registrationsChanged(): Unit = {
+    cache.clear()
+    cacheWithoutSuperTypes.clear()
+  }
+
   def getSerializer[T](orgtpe: Type, context: Context, allowSuperType: Boolean = true): JsonTypeSerializer[T] = {
 
     // Replace every type parameter (e.g. the T in List[T]) with its binding from the context,

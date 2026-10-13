@@ -83,7 +83,7 @@ Caches are `ConcurrentHashMap`s filled with get-then-`putIfAbsent` (never `compu
 - `ReflectionUtil.getAllAccessibleFieldsCache`, the three caches in `TypesUtil`
 - `TypedConverter.TypedSerializer.serializers` / `TypedDeserializer.deserializers`
 
-Still plain `var Map`s, written only at registration time: `DeserializerFactoryImpl.additionalDeserializers` / `additionalSuperclassDeserializers` / `postTransform` and the serializer equivalents. Register converters before sharing an instance across threads. `ConcurrencySpec` covers cold first-time use from 8 threads. Scala runtime reflection is thread-safe (lock-based) since 2.11.
+Still plain `var Map`s, written only at registration time: `DeserializerFactoryImpl.additionalDeserializers` / `additionalSuperclassDeserializers` / `postTransform` and the serializer equivalents. Register converters before sharing an instance across threads. Each registration clears the memoizer caches (`registrationsChanged()`), so late registrations take effect; static (de)serializers built earlier do not change. `ConcurrencySpec` covers cold first-time use from 8 threads. Scala runtime reflection is thread-safe (lock-based) since 2.11.
 
 ## Performance-sensitive hot paths
 

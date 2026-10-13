@@ -20,16 +20,22 @@ class SerializerFactoryImpl(val config: MPJsonsConfig) {
   private var additionalSerializersAnySubType: Map[String, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
   private var additionalSuperclassSerializers: Map[Symbol, SerializerFactory => JsonTypeSerializer[_]] = Map.empty
 
+  /** Called after every registration; the caching layer overrides it to drop (de)serializers built earlier. */
+  protected def registrationsChanged(): Unit = ()
+
   def registerSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]): Unit = {
     additionalSerializers += tpe.toString -> serializer
+    registrationsChanged()
   }
 
   def registerSuperclassSerializer[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]): Unit = {
     additionalSuperclassSerializers += tpe.typeSymbol -> serializer
+    registrationsChanged()
   }
 
   def registerSerializerAllSubTypes[T](tpe: Type, serializer: SerializerFactory => JsonTypeSerializer[T]): Unit = {
     additionalSerializersAnySubType += stripTypes(tpe.toString) -> serializer
+    registrationsChanged()
   }
 
   private def stripTypes(typeName: String): String = {

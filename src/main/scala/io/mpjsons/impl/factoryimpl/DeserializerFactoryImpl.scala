@@ -25,16 +25,22 @@ class DeserializerFactoryImpl(val config: MPJsonsConfig) {
   private var additionalSuperclassDeserializers: Map[Symbol, DeserializerFactory => JsonTypeDeserializer[_]] = Map.empty
   private var postTransform: Map[Type, _ => _] = Map.empty
 
+  /** Called after every registration; the caching layer overrides it to drop (de)serializers built earlier. */
+  protected def registrationsChanged(): Unit = ()
+
   def registerPostTransform[T](tpe: Type, transform: T => T): Unit = {
     postTransform += tpe -> transform
+    registrationsChanged()
   }
 
   def registerDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]): Unit = {
     additionalDeserializers += tpe.toString -> deserializer
+    registrationsChanged()
   }
 
   def registerSuperclassDeserializer[T](tpe: Type, deserializer: DeserializerFactory => JsonTypeDeserializer[T]): Unit = {
     additionalSuperclassDeserializers += tpe.typeSymbol -> deserializer
+    registrationsChanged()
   }
 
   protected def getDeserializerNoCache(tpe: Type, context: Context, allowSuperType: Boolean): JsonTypeDeserializer[_ <: Any] = {

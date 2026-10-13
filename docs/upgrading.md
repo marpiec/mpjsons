@@ -33,6 +33,7 @@ because output or accepted input changes.
 | **Error message content** | the message repeated the whole input up to three times, plus the full text of long tokens | a window of about 80 characters around the failing position, its position and the input length; long tokens (keys, numbers, strings) are cut after 60 characters with their length | log parsers or tests matching the old `Json: ...` line or the full input |
 | **Superclass converters** (*fix*) | when several registered supertypes matched, the winner depended on `Map` iteration order | the most specific supertype wins | |
 | **Duration converter** (*fix*) | `registerConverter[Duration]` was ignored on read | honoured | |
+| **Late registrations** (*fix*) | `registerConverter`, `registerSuperclassConverter`, `registerSerializerForAnySubtype`, `markTypedClass` and `postDeserializationTransform` were silently ignored for types already (de)serialized by the instance | they drop the cached (de)serializers and take effect immediately; static (de)serializers built earlier keep their behaviour | code that registered converters lazily |
 
 ## API
 

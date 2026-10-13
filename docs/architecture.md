@@ -243,7 +243,9 @@ the three maps in `TypesUtil` (global, shared across `MPJsons` instances); `Type
 `ConcurrencySpec` runs cold first-time use of a dozen types from 8 threads.
 
 Still plain `var Map`s, written only by the registration methods: `*FactoryImpl.additional*` registries and
-`postTransform`. Register converters and typed classes before sharing an instance across threads. Scala runtime
+`postTransform`. Every registration calls `registrationsChanged()`, which the memoizers override to clear both caches, so a
+converter registered after a type was first used still takes effect (nested types are rebuilt too); `StaticSerializer` /
+`StaticDeserializer` instances built earlier keep their behaviour. Register converters and typed classes before sharing an instance across threads. Scala runtime
 reflection is documented thread-safe since 2.11 but is lock-based, so cold-start work from many threads
 serialises on that lock.
 

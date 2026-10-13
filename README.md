@@ -400,6 +400,11 @@ mpjsons.registerSerializerForAnySubtype[Wrapper[_]](sf => new WrapperSerializer)
 mpjsons.serialize(Wrapper(123))  // {"someValue":123}
 ```
 
+Registrations take effect immediately, also for types that were already serialized or
+deserialized: every registration drops the cached (de)serializers. Static serializers and
+deserializers built earlier keep the behaviour they were built with, so build them after
+registering. Register converters before sharing an instance between threads.
+
 ### Polymorphic / typed JSON
 
 When a collection holds subtypes of a common trait, plain JSON loses the concrete type.

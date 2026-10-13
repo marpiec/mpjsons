@@ -4,6 +4,7 @@ import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
@@ -17,26 +18,29 @@ abstract class AbstractJsonArrayDeserializer[T, C]
   val elementsType: Type = getSubElementsType(tpe)
   val deserializer = deserializerFactory.getDeserializer[T](elementsType, context)
 
-  protected def deserializeArray(jsonIterator: StringIterator, tpe: Type): ArrayBuffer[T] = {
+  /** Reads a JSON array straight into the given builder, so no intermediate collection is created. */
+  protected def deserializeInto[R](jsonIterator: StringIterator, builder: mutable.Builder[T, R]): R = {
 
     jsonIterator.consumeArrayStart()
-
-    val buffer = ArrayBuffer[T]()
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
 
-      val value = deserializer.deserialize(jsonIterator)
-      buffer += value
+      builder += deserializer.deserialize(jsonIterator)
 
       jsonIterator.skipWhitespaceChars()
       if (jsonIterator.currentChar == ',') {
         jsonIterator.nextChar()
+        jsonIterator.skipWhitespaceChars()
       }
     }
 
     jsonIterator.nextChar()
-    buffer
+    builder.result()
+  }
+
+  protected def deserializeArray(jsonIterator: StringIterator, tpe: Type): ArrayBuffer[T] = {
+    deserializeInto(jsonIterator, ArrayBuffer.newBuilder[T])
   }
 
 

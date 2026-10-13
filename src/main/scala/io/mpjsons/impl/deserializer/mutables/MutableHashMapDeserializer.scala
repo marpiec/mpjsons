@@ -14,7 +14,7 @@ class MutableHashMapDeserializer[K, V](deserializerFactory: DeserializerFactory,
   extends AbstractJsonMapDeserializer[K, V, HashMap[K, V]](deserializerFactory, tpe, context) {
 
   override def deserialize(jsonIterator: StringIterator): HashMap[K, V] = {
-    HashMap.from(readBuffer(jsonIterator))
+    readInto(jsonIterator, HashMap.newBuilder[K, V])
   }
 
 }

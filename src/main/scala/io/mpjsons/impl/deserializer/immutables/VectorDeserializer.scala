@@ -14,7 +14,7 @@ class VectorDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type,
   extends AbstractJsonArrayDeserializer[E, Vector[E]](deserializerFactory, tpe, context) {
 
   override def deserialize(jsonIterator: StringIterator): Vector[E] = {
-    Vector.from(deserializeArray(jsonIterator, tpe))
+    deserializeInto(jsonIterator, Vector.newBuilder[E])
   }
 
 }

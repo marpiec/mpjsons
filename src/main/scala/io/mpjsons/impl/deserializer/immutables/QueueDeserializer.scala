@@ -15,7 +15,7 @@ class QueueDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type, 
   extends AbstractJsonArrayDeserializer[E, Queue[E]](deserializerFactory, tpe, context) {
 
   override def deserialize(jsonIterator: StringIterator): Queue[E] = {
-    Queue.from(deserializeArray(jsonIterator, tpe).toSeq)
+    deserializeInto(jsonIterator, Queue.newBuilder[E])
   }
 
 }

@@ -4,7 +4,7 @@ import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
-import scala.collection.immutable.ListMap
+import scala.collection.mutable
 import scala.reflect.runtime.universe._
 
 /**
@@ -20,11 +20,10 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
   val valueDeserializer = deserializerFactory.getDeserializer[V](valueType, context)
 
 
-  protected def readBuffer(jsonIterator: StringIterator): List[(K, V)] = {
+  /** Reads the [[k,v],...] pair array straight into the given builder, in input order. */
+  protected def readInto[R](jsonIterator: StringIterator, builder: mutable.Builder[(K, V), R]): R = {
 
     jsonIterator.consumeArrayStart()
-
-    var map: List[(K, V)] = List.empty
 
     jsonIterator.skipWhitespaceChars()
 
@@ -36,23 +35,27 @@ abstract class AbstractJsonMapDeserializer[K, V, M]
 
       jsonIterator.consumeArrayValuesSeparator()
 
-
       val value = valueDeserializer.deserialize(jsonIterator)
 
-      map ::= (key -> value)
-
+      builder += ((key, value))
 
       jsonIterator.consumeArrayEnd() // ]
       jsonIterator.skipWhitespaceChars()
 
       if (jsonIterator.currentChar == ',') {
         jsonIterator.nextChar()
+        jsonIterator.skipWhitespaceChars()
       }
 
     }
 
     jsonIterator.nextChar()
-    map
+    builder.result()
+  }
+
+  /** Pairs in reverse input order (kept for compatibility with earlier subclasses). */
+  protected def readBuffer(jsonIterator: StringIterator): List[(K, V)] = {
+    readInto(jsonIterator, List.newBuilder[(K, V)]).reverse
   }
 
 

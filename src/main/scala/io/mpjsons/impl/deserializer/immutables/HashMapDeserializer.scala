@@ -19,8 +19,7 @@ class HashMapDeserializer[K, V](private val deserializerFactory: DeserializerFac
    * @return created object
    */
   override def deserialize(jsonIterator: StringIterator): HashMap[K, V] = {
-    val buffer = readBuffer(jsonIterator)
-    HashMap.from(buffer)
+    readInto(jsonIterator, HashMap.newBuilder[K, V])
   }
 
 }

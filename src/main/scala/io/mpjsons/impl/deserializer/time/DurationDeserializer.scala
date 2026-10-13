@@ -3,10 +3,11 @@ package io.mpjsons.impl.deserializer.time
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.StringIterator
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
-import io.mpjsons.impl.deserializer.values.{ByteDeserializer, IntDeserializer, LongDeserializer}
+import io.mpjsons.impl.deserializer.values.{IntDeserializer, LongDeserializer}
 
 import java.time.Duration
 
+/** Reads {"seconds":s,"nanos":n}; fields may come in any order, both are required. */
 object DurationDeserializer extends JsonTypeDeserializer[Duration] {
 
   override def deserialize(jsonIterator: StringIterator): Duration = {
@@ -14,41 +15,33 @@ object DurationDeserializer extends JsonTypeDeserializer[Duration] {
     jsonIterator.consumeObjectStart()
     jsonIterator.skipWhitespaceChars()
 
-    var secondsEmpty = true
-    var nanosEmpty = true
-    var seconds: Long = -1
-    var nanos: Int = -1
+    var seconds: Long = 0
+    var nanos: Int = 0
+    var hasSeconds = false
+    var hasNanos = false
 
-    for(i <- 0 until 2) {
-
-      if(i > 0) {
-        jsonIterator.skipWhitespaceChars()
-        jsonIterator.consumeArrayValuesSeparator()
-      }
-
+    while (jsonIterator.currentChar != '}') {
       val identifier = IdentifierDeserializer.deserialize(jsonIterator)
-      jsonIterator.skipWhitespaceChars()
       jsonIterator.consumeFieldValueSeparator()
       identifier match {
-        case "seconds" =>
-          seconds = LongDeserializer.deserialize(jsonIterator)
-          secondsEmpty = false
-        case "nanos" =>
-          nanos = IntDeserializer.deserialize(jsonIterator)
-          nanosEmpty = false
-        case _ => throw new RuntimeException("Incorrect identifier in Duration '" + identifier + "'")
+        case "seconds" => seconds = LongDeserializer.deserialize(jsonIterator); hasSeconds = true
+        case "nanos" => nanos = IntDeserializer.deserialize(jsonIterator); hasNanos = true
+        case _ => throw new IllegalArgumentException("Incorrect identifier in Duration '" + identifier + "'")
+      }
+      jsonIterator.skipWhitespaceChars()
+      if (jsonIterator.currentChar == ',') {
+        jsonIterator.nextChar()
+        jsonIterator.skipWhitespaceChars()
       }
     }
+    jsonIterator.consumeObjectEnd()
 
-    if(secondsEmpty) {
-      throw new RuntimeException("Cannot deserialize Duration due to missing 'seconds' field")
-    } else if(nanosEmpty) {
-      throw new RuntimeException("Cannot deserialize Duration due to missing 'nanos' field")
+    if (!hasSeconds) {
+      throw new IllegalArgumentException("Cannot deserialize Duration due to missing 'seconds' field")
+    } else if (!hasNanos) {
+      throw new IllegalArgumentException("Cannot deserialize Duration due to missing 'nanos' field")
     } else {
-      jsonIterator.skipWhitespaceChars()
-      jsonIterator.consumeObjectEnd()
       Duration.ofSeconds(seconds, nanos)
     }
-
   }
 }

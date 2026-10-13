@@ -65,10 +65,12 @@ After `markTypedClass[Base]`, a value whose **static** type is `Base` is written
 
 | Type | Written (fixed key order) | Read |
 |---|---|---|
-| `LocalTime` | `{"hour":12,"minute":30,"second":17,"nano":125}` | exactly 4 keys, any order, any whitespace; missing-key checks are dead code (`< -1`), so a missing key surfaces as `DateTimeException` |
-| `LocalDate` | `{"year":2023,"month":7,"day":23}` | exactly 3 keys |
-| `LocalDateTime` | `{"date":{...},"time":{...}}` | exactly 2 keys |
-| `Duration` | `{"seconds":123,"nanos":456}` | exactly 2 keys; negative seconds OK |
+| `LocalTime` | `{"hour":12,"minute":30,"second":17,"nano":125}` | keys in any order, any whitespace; all 4 required (missing key reported by name); unknown keys rejected |
+| `LocalDate` | `{"year":2023,"month":7,"day":23}` | all 3 required, same rules |
+| `LocalDateTime` | `{"date":{...},"time":{...}}` | both required, same rules |
+| `Duration` | `{"seconds":123,"nanos":456}` | both required; negative seconds OK |
+
+All four can be replaced with `registerConverter` (e.g. ISO-8601 strings), in which case the built-in format is bypassed.
 
 Sizes: a `LocalDateTime` is ~90 bytes vs 19-29 for ISO-8601 `"2023-08-23T14:30:17.000000125"`.
 

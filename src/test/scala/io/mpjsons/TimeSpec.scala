@@ -1,10 +1,12 @@
 package io.mpjsons
 
 
+import io.mpjsons.impl.JsonInnerException
+import io.mpjsons.impl.StringIterator
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers._
 
-import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.time.{Duration, LocalDate, LocalDateTime, LocalTime}
 
 class TimeSpec extends AnyFlatSpec {
 
@@ -92,5 +94,35 @@ class TimeSpec extends AnyFlatSpec {
     val deserialized = mpjsons.deserialize[java.time.Duration](json)
 
     deserialized mustBe java.time.Duration.ofSeconds(-125, 457)
+  }
+
+  "Deserializer" must "accept time fields in any order" in {
+    mpjsons.deserialize[LocalDate]("""{"day":23,"year":2023,"month":7}""") mustBe LocalDate.of(2023, 7, 23)
+    mpjsons.deserialize[LocalTime]("""{"nano":1,"second":2,"minute":3,"hour":4}""") mustBe LocalTime.of(4, 3, 2, 1)
+    mpjsons.deserialize[LocalDateTime]("""{"time":{"hour":4,"minute":3,"second":2,"nano":1},"date":{"year":2023,"month":7,"day":23}}""") mustBe
+      LocalDateTime.of(2023, 7, 23, 4, 3, 2, 1)
+    mpjsons.deserialize[Duration]("""{"nanos":2,"seconds":1}""") mustBe Duration.ofSeconds(1, 2)
+  }
+
+  "Deserializer" must "report which time field is missing" in {
+    intercept[JsonInnerException] { mpjsons.deserialize[LocalDate]("""{"year":2023,"month":7}""") }.getMessage must include("day")
+    intercept[JsonInnerException] { mpjsons.deserialize[LocalTime]("""{"hour":1,"minute":2,"second":3}""") }.getMessage must include("nano")
+    intercept[JsonInnerException] { mpjsons.deserialize[LocalDateTime]("""{"date":{"year":2023,"month":7,"day":23}}""") }.getMessage must include("time")
+    intercept[JsonInnerException] { mpjsons.deserialize[Duration]("""{"seconds":1}""") }.getMessage must include("nanos")
+    intercept[JsonInnerException] { mpjsons.deserialize[LocalDate]("{}") }.getMessage must include("year")
+  }
+
+  "Deserializer" must "reject unknown time fields" in {
+    intercept[JsonInnerException] { mpjsons.deserialize[LocalDate]("""{"year":2023,"month":7,"day":23,"hour":1}""") }.getMessage must include("hour")
+  }
+
+  "Converter registration" must "override the built-in Duration format like the other time types" in {
+    val custom = new MPJsons
+    custom.registerConverter[Duration](
+      sf => (obj: Duration, jsonBuilder: StringBuilder) => { jsonBuilder.append('"').append(obj.toString).append('"') },
+      df => (jsonIterator: StringIterator) => Duration.parse(impl.deserializer.values.StringDeserializer.deserialize(jsonIterator)))
+
+    custom.serialize(Duration.ofMinutes(2)) mustBe "\"PT2M\""
+    custom.deserialize[Duration]("\"PT2M\"") mustBe Duration.ofMinutes(2)
   }
 }

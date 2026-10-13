@@ -50,18 +50,15 @@ Fixed: `StringIterator` starts at the end-of-input marker for an empty string, s
 Fixed: `DoubleSerializer`/`FloatSerializer` (also used for the boxed Java types) throw `IllegalArgumentException`
 for `NaN` and infinities instead of emitting text no JSON parser accepts. Covered by `FloatingPointSpec`.
 
-### 8. `java.time.Duration` deserializer cannot be overridden — BUG (by inspection)
+### 8. `java.time.Duration` deserializer cannot be overridden — FIXED
 
-`DeserializerFactoryImpl.scala:91` lacks the `&& !additionalDeserializers.contains(tpe.toString)` guard that
-`LocalTime/LocalDate/LocalDateTime` (`:85-89`) and all four serializers (`SerializerFactoryImpl.scala:73-80`) have.
-(The reverted commit `2bfcbb2` had fixed exactly this line.)
+Fixed: the `Duration` branch has the same "no converter registered" guard as the other time types. Covered by
+`TimeSpec` ("override the built-in Duration format").
 
-### 9. Dead "missing field" checks in time deserializers — BUG (by inspection)
+### 9. Dead "missing field" checks in time deserializers — FIXED
 
-`LocalDateDeserializer.scala:40-44` and `LocalTimeDeserializer.scala:41-47` test `< -1` against sentinels initialised
-to `-1`, so they never fire; a missing key surfaces as `DateTimeException` from `LocalDate.of`. Also every time
-deserializer requires *exactly* N keys (loop `0 until N`), so an extra key is reported as "Incorrect identifier" and a
-missing one as a separator error.
+Fixed: the four time deserializers read any number of keys in any order and report the first missing key by name;
+unknown keys are still rejected. Covered by `TimeSpec`.
 
 ### 10. `TypedDeserializer` class resolution is fragile — LIMITATION / BUG (by inspection)
 

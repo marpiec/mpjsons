@@ -6,6 +6,7 @@ import io.mpjsons.impl.deserializer.IdentifierDeserializer
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 
+/** Reads {"date":{...},"time":{...}}; fields may come in any order, both are required. */
 object LocalDateTimeDeserializer extends JsonTypeDeserializer[LocalDateTime] {
 
   override def deserialize(jsonIterator: StringIterator): LocalDateTime = {
@@ -16,33 +17,27 @@ object LocalDateTimeDeserializer extends JsonTypeDeserializer[LocalDateTime] {
     var time: LocalTime = null
     var date: LocalDate = null
 
-    for(i <- 0 until 2) {
-
-      if (i > 0) {
-        jsonIterator.skipWhitespaceChars()
-        jsonIterator.consumeArrayValuesSeparator()
-      }
-
+    while (jsonIterator.currentChar != '}') {
       val identifier = IdentifierDeserializer.deserialize(jsonIterator)
-      jsonIterator.skipWhitespaceChars()
       jsonIterator.consumeFieldValueSeparator()
-
       identifier match {
         case "time" => time = LocalTimeDeserializer.deserialize(jsonIterator)
         case "date" => date = LocalDateDeserializer.deserialize(jsonIterator)
-        case _ => throw new RuntimeException("Incorrect identifier in LocalDateTime '" + identifier + "'")
+        case _ => throw new IllegalArgumentException("Incorrect identifier in LocalDateTime '" + identifier + "'")
       }
-
       jsonIterator.skipWhitespaceChars()
+      if (jsonIterator.currentChar == ',') {
+        jsonIterator.nextChar()
+        jsonIterator.skipWhitespaceChars()
+      }
     }
+    jsonIterator.consumeObjectEnd()
 
-    if(time == null) {
-      throw new RuntimeException("Cannot deserialize LocalDateTime due to missing 'time' field")
-    } else if(date == null) {
-      throw new RuntimeException("Cannot deserialize LocalDateTime due to missing 'date' field")
+    if (date == null) {
+      throw new IllegalArgumentException("Cannot deserialize LocalDateTime due to missing 'date' field")
+    } else if (time == null) {
+      throw new IllegalArgumentException("Cannot deserialize LocalDateTime due to missing 'time' field")
     } else {
-      jsonIterator.skipWhitespaceChars()
-      jsonIterator.consumeObjectEnd()
       LocalDateTime.of(date, time)
     }
   }

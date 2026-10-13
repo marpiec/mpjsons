@@ -4,6 +4,7 @@ import java.lang.reflect.Field
 
 import io.mpjsons.impl.util.TypesUtil
 
+import scala.collection.mutable
 import scala.reflect.runtime.universe._
 
 /**
@@ -14,18 +15,40 @@ private[reflection] object ReflectionUtilNoCache {
 
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
+   *
+   * Classes are visited in linearization order (the class itself first, then its superclasses),
+   * and within one class fields are listed in reverse declaration order, which is the order
+   * `Type.members` has always produced for this library (so the JSON key order of existing
+   * types is unchanged). Field types are resolved as seen from `tpe`, so a field `payload: T`
+   * declared in `Base[T]` is reported as `String` for `Derived extends Base[String]`.
+   *
    * @param tpe type from which the fields should be retrieved
    * @return array containing all defined fields in class
    */
   def getAllAccessibleFields(tpe: Type): Array[FieldWithTypeInfo] = {
-    val members = tpe.members.filterNot(_.isMethod).filterNot(_.isSynthetic)
+    val clazz = TypesUtil.getClassFromType(tpe)
+    val result = mutable.ArrayBuffer[FieldWithTypeInfo]()
+    val seenNames = mutable.HashSet[String]()
 
-    members.map { member =>
-      FieldWithTypeInfo(
-        ReflectionUtilNoCache.getAccessibleField(TypesUtil.getClassFromType(tpe), member.name.toString.trim),
-        member.typeSignature, member.annotations.exists(_.toString.toLowerCase().contains("nullable")))
-    }.filterNot(_.field == null).toArray
+    for (baseClass <- tpe.baseClasses) {
+      val declaredFields = tpe.baseType(baseClass).decls.toList.reverse.filter { member =>
+        member.isTerm && !member.isMethod && !member.isSynthetic && !member.isModule
+      }
+      for (member <- declaredFields) {
+        val fieldName = member.name.toString.trim
+        if (seenNames.add(fieldName)) {
+          val field = getAccessibleField(clazz, fieldName)
+          if (field != null) {
+            result += FieldWithTypeInfo(
+              field,
+              member.typeSignatureIn(tpe),
+              member.annotations.exists(_.toString.toLowerCase().contains("nullable")))
+          }
+        }
+      }
+    }
 
+    result.toArray
   }
 
   /**

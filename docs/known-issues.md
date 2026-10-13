@@ -14,22 +14,11 @@ Fixed: `TypeParamsResolver` substitutes all type parameters before the memoizer 
 `GenericTypeParamsSpec`. (Was: `Box[Int]` then `Box[String]` on one instance failed because `List[T]` was
 cached under the unsubstituted type.)
 
-### 2. Inherited fields are silently ignored — BUG (verified)
+### 2. Inherited fields are silently ignored — FIXED
 
-```scala
-class Base { var baseField: Int = 1 }
-class Derived extends Base { var derivedField: Int = 2 }
-m.serialize(new Derived)   // {"derivedField":2}
-```
-
-Root cause: `ReflectionUtilNoCache.scala:21` enumerates `tpe.members`, which excludes `private[this]` members of
-superclasses; every Scala backing field is `private[this]`. The superclass walk in `getAccessibleField` (`:37-50`)
-only helps for a member that *is* listed. README and the scaladoc claim superclass support. No test covers inheritance.
-
-Fix direction: iterate `tpe.baseClasses` (excluding `Any`, `AnyRef`, `Object`, `Product`, `Serializable`, `Equals`)
-and collect `baseType(cls).decls` term symbols that are fields (`isTerm && !isMethod && !isSynthetic`), with the
-field's `typeSignature` *as seen from* `tpe` (`tpe.baseType(cls)` + `asSeenFrom`) so generic superclasses work.
-Decide and document the key order for inherited fields (base first is the usual expectation).
+Fixed: `ReflectionUtilNoCache.getAllAccessibleFields` walks `tpe.baseClasses` and resolves field types with
+`typeSignatureIn(tpe)` (generic superclasses work); own fields keep the historical reverse declaration order and
+superclass fields follow. Covered by `InheritanceSpec`.
 
 ### 3. Deserializing a field of singleton type crashes — BUG (verified)
 

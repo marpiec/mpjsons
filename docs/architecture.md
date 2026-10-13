@@ -137,21 +137,21 @@ always start with `Context(List.empty, Map.empty)`.
 
 ## 5. Reflection layer (`impl/util/reflection/`, `impl/util/TypesUtil.scala`)
 
-`ReflectionUtilNoCache.getAllAccessibleFields(tpe)` (`:20-29`):
+`ReflectionUtilNoCache.getAllAccessibleFields(tpe)`:
 
 ```scala
-val members = tpe.members.filterNot(_.isMethod).filterNot(_.isSynthetic)
-members.map { m => FieldWithTypeInfo(
-    getAccessibleField(TypesUtil.getClassFromType(tpe), m.name.toString.trim),   // Java Field or null
-    m.typeSignature,                                                              // Scala Type (keeps generics)
-    m.annotations.exists(_.toString.toLowerCase.contains("nullable"))) }
-  .filterNot(_.field == null).toArray
+for (baseClass <- tpe.baseClasses)                       // linearization: the class itself first, then supertypes
+  for (m <- tpe.baseType(baseClass).decls.toList.reverse  // reverse declaration order (historical `members` order)
+         if m.isTerm && !m.isMethod && !m.isSynthetic && !m.isModule; if seenNames.add(name))
+    FieldWithTypeInfo(getAccessibleField(clazz, name),    // Java Field (walks superclasses) or null → skipped
+                      m.typeSignatureIn(tpe),             // field type as seen from tpe (generic bases resolved)
+                      m.annotations.exists(_.toString.toLowerCase.contains("nullable")))
 ```
 
 Verified properties of this scan:
 
-- `tpe.members` yields fields in **reverse declaration order** (`Ordered(zeta, alpha, mid, beta)` serializes as `{"beta":..,"mid":..,"alpha":..,"zeta":..}`). `tpe.members.sorted` and `tpe.decls` give declaration order.
-- `members` does **not** include `private[this]` fields of superclasses, and every Scala `var`/`val` backing field is `private[this]`. Therefore **inherited fields are silently dropped** on both serialize and deserialize (`class Derived extends Base` → only `derivedField`). The Javadoc claim "declared by given class or in its superclasses" is false today; `getAccessibleField`'s superclass walk is never reached for inherited members. known-issues §2.
+- Own fields come first in **reverse declaration order** (`Ordered(zeta, alpha, mid, beta)` serializes as `{"beta":..,"mid":..,"alpha":..,"zeta":..}`), then each superclass's fields in the same order. Switching to declaration order is `decls` without the `.reverse` (roadmap §2.3, owner decision).
+- A field name declared in both a class and its superclass is taken once, from the most-derived class.
 - Local field names carry a trailing space in Scala reflection, hence `.trim`.
 - Non-field members that survive the filter (nested classes, type members, modules) resolve to `null` via `NoSuchFieldException` and are filtered out; cold-path cost only.
 - `getAccessibleField` walks `clazz.getSuperclass` until it equals `Object`; for an interface/trait `getSuperclass` is `null` → NPE (seen when the target type is `mutable.Map`).

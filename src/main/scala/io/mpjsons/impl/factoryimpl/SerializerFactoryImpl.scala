@@ -42,29 +42,29 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
 
     // Primitives, by toString (except Char)
     if (typeOf[Long].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return LongSerializer
     } else if (typeOf[Int].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return IntSerializer
     } else if (typeOf[Short].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return ShortSerializer
     } else if (typeOf[Byte].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return ByteSerializer
     } else if (typeOf[Boolean].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return BooleanSerializer
     } else if (typeOf[Double].typeSymbol == typeSymbol) {
       return DoubleSerializer
     } else if (typeOf[Float].typeSymbol == typeSymbol) {
       return FloatSerializer
     } else if (typeOf[java.lang.Long].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return LongSerializer
     } else if (typeOf[java.lang.Integer].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return IntSerializer
     } else if (typeOf[java.lang.Short].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return ShortSerializer
     } else if (typeOf[java.lang.Byte].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return ByteSerializer
     } else if (typeOf[java.lang.Boolean].typeSymbol == typeSymbol) {
-      return SimpleToStringSerializer
+      return BooleanSerializer
     } else if (typeOf[java.lang.Double].typeSymbol == typeSymbol) {
       return DoubleSerializer
     } else if (typeOf[java.lang.Float].typeSymbol == typeSymbol) {

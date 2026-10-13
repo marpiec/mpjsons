@@ -14,14 +14,10 @@ class IterableSerializer[E](serializerFactory: SerializerFactory, tpe: Type, con
   extends IteratorSerializer[E, Iterable[E]](serializerFactory, tpe, context) {
 
   override def serialize(obj: Iterable[E], jsonBuilder: StringBuilder): Unit = {
-    serializeIterator(obj.iterator, jsonBuilder)
+    obj match {
+      case list: List[E] => serializeList(list, jsonBuilder)
+      case other => serializeIterator(other.iterator, jsonBuilder)
+    }
   }
 
 }
-
-
-
-
-
-
-

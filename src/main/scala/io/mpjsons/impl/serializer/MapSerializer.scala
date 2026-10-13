@@ -20,11 +20,10 @@ class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, conte
 
   override def serialize(map: scala.collection.Map[K, V], jsonBuilder: StringBuilder): Unit = {
 
-
     jsonBuilder.append('[')
     var nonFirstField = false
 
-    for ((key: K, value: V) <- map) {
+    map.foreachEntry { (key, value) =>
       if (nonFirstField) {
         jsonBuilder.append(',')
       } else {

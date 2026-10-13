@@ -38,19 +38,19 @@ object BeanFieldWriter {
     val field = info.field
     val fieldType = field.getType
     val serializer = info.jsonTypeSerializer
-    if (fieldType == java.lang.Integer.TYPE && (serializer eq SimpleToStringSerializer)) {
+    if (fieldType == java.lang.Integer.TYPE && (serializer eq IntSerializer)) {
       new IntWriter(info.name, field)
-    } else if (fieldType == java.lang.Long.TYPE && (serializer eq SimpleToStringSerializer)) {
+    } else if (fieldType == java.lang.Long.TYPE && (serializer eq LongSerializer)) {
       new LongWriter(info.name, field)
-    } else if (fieldType == java.lang.Boolean.TYPE && (serializer eq SimpleToStringSerializer)) {
+    } else if (fieldType == java.lang.Boolean.TYPE && (serializer eq BooleanSerializer)) {
       new BooleanWriter(info.name, field)
     } else if (fieldType == java.lang.Double.TYPE && (serializer eq DoubleSerializer)) {
       new DoubleWriter(info.name, field)
     } else if (fieldType == java.lang.Float.TYPE && (serializer eq FloatSerializer)) {
       new FloatWriter(info.name, field)
-    } else if (fieldType == java.lang.Short.TYPE && (serializer eq SimpleToStringSerializer)) {
+    } else if (fieldType == java.lang.Short.TYPE && (serializer eq ShortSerializer)) {
       new ShortWriter(info.name, field)
-    } else if (fieldType == java.lang.Byte.TYPE && (serializer eq SimpleToStringSerializer)) {
+    } else if (fieldType == java.lang.Byte.TYPE && (serializer eq ByteSerializer)) {
       new ByteWriter(info.name, field)
     } else {
       new ObjectWriter(info.name, field, info.nullable, serializer, errorOnNulls, typeName)

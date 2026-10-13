@@ -1,7 +1,5 @@
 package io.mpjsons.impl.deserializer
 
-import java.lang.reflect.Field
-
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.deserializer.jsontypes.{AbstractFloatingPointDeserializer, AbstractStringDeserializer}
 import io.mpjsons.impl.util.reflection.ReflectionUtil
@@ -26,39 +24,39 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   }
   lazy val fields = ReflectionUtil.getAllAccessibleFields(tpe)
   /** Lazy val to prevent StackOverflow while construction recursive type deserializer */
-  lazy val fieldsByName: Map[String, (Field, JsonTypeDeserializer[AnyRef])] = fields.map { field =>
-    field.field.getName ->(field.field, deserializerFactory.getDeserializer(field.tpe, context).asInstanceOf[JsonTypeDeserializer[AnyRef]])
-  }.toMap
+  lazy val fieldTable: BeanFieldTable = new BeanFieldTable(fields.map { field =>
+    new BeanField(field.field.getName, field.field, deserializerFactory.getDeserializer(field.tpe, context).asInstanceOf[JsonTypeDeserializer[AnyRef]])
+  })
 
 
   override def deserialize(jsonIterator: StringIterator): T = {
 
     jsonIterator.consumeObjectStart()
     val instance = ObjectConstructionUtil.createInstance[T](clazz, constructor, context)
+    val table = fieldTable
 
+    jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
 
-      val identifier = IdentifierDeserializer.deserialize(jsonIterator)
+      val field = table.find(jsonIterator)
 
-      jsonIterator.consumeFieldValueSeparator()
-
-      fieldsByName.get(identifier) match {
-        case Some((field, deserializer)) =>
-          val value = deserializer.deserialize(jsonIterator)
-
-          field.set(instance, value)
-
-          jsonIterator.skipWhitespaceChars()
-          if (jsonIterator.currentChar == ',') {
-            jsonIterator.nextChar()
-          }
-        case None if ignoreNonExistingFields =>
+      if (field != null) {
+        jsonIterator.consumeFieldValueSeparator()
+        field.field.set(instance, field.deserializer.deserialize(jsonIterator))
+      } else {
+        val identifier = IdentifierDeserializer.deserialize(jsonIterator)
+        jsonIterator.consumeFieldValueSeparator()
+        if (ignoreNonExistingFields) {
           skipValue(jsonIterator)
-          jsonIterator.skipWhitespaceChars()
-          if (jsonIterator.currentChar == ',') {
-            jsonIterator.nextChar()
-          }
-        case None => throw new IllegalArgumentException(s"No field [$identifier] in type [$tpe]. Types: ${context.typesStackMessage}")
+        } else {
+          throw new IllegalArgumentException(s"No field [$identifier] in type [$tpe]. Types: ${context.typesStackMessage}")
+        }
+      }
+
+      jsonIterator.skipWhitespaceChars()
+      if (jsonIterator.currentChar == ',') {
+        jsonIterator.nextChar()
+        jsonIterator.skipWhitespaceChars()
       }
     }
 
@@ -84,6 +82,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
   def skipObject(jsonIterator: StringIterator): Unit = {
     jsonIterator.consumeObjectStart()
+    jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
       IdentifierDeserializer.deserialize(jsonIterator)
       jsonIterator.consumeFieldValueSeparator()
@@ -91,6 +90,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
       jsonIterator.skipWhitespaceChars()
       if (jsonIterator.currentChar == ',') {
         jsonIterator.nextChar()
+        jsonIterator.skipWhitespaceChars()
       }
     }
     jsonIterator.nextCharOrNullIfLast
@@ -104,6 +104,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
       jsonIterator.skipWhitespaceChars()
       if (jsonIterator.currentChar == ',') {
         jsonIterator.nextChar()
+        jsonIterator.skipWhitespaceChars()
       }
     }
     jsonIterator.nextChar()

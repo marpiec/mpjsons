@@ -72,12 +72,11 @@ packages collide in the per-name cache. Consider writing the fully-qualified or 
 `DeserializerFactoryImpl.scala:175-179` / `SerializerFactoryImpl.scala:165-169` iterate a `Map[Symbol, _]`; when a
 type extends two registered supertypes, which converter wins depends on map iteration order.
 
-### 12. Misleading errors on type mismatch — LIMITATION (verified)
+### 12. Misleading errors on type mismatch — FIXED for numbers
 
-`"1"`, `true`, or `1.5` for an `Int` field → `NumberFormatException: For input string: ""` or
-`Unexpected end of Json`, because the numeric reader consumes zero chars and the bean loop then
-misinterprets the rest. A JSON-aware "expected number but found string" message costs nothing on the hot path
-(check the first char once).
+Number readers now report `Expected a number but found '"'` (or `'t'`, `end of input`) when no digit is present,
+and overflow as `NumberFormatException` quoting the offending digits (`NumberParsingSpec`). A `1.5` for an `Int`
+field still stops after `1` and fails on the following `.5` with a separator error.
 
 ## Limitations and sharp edges
 

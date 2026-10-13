@@ -64,19 +64,25 @@ object TypedConverter {
    *  2. `binaryNamePrefix + SimpleName`, i.e. a sibling of the marked type (same package for top-level types,
    *     same enclosing object for nested types).
    *
+   * The JSON names the class, so it is treated as untrusted: a sibling name containing '.', '/', '[' or ';' is rejected,
+   * the class is loaded without running its static initializer, and anything that is not a subtype of the marked class
+   * is rejected before an instance is created.
+   *
    * @param binaryNamePrefix prefix of the marked type's binary class name up to and including the last '.' or '$'
    * @param knownSubclasses  name -> class for sealed marked types, see TypeNames.readTable
    * @param markedTypeName   name of the marked type, for error messages
+   * @param markedClass      the marked class; every resolved class must be a subtype of it
    */
   class TypedDeserializer[T <: AnyRef](binaryNamePrefix: String, knownSubclasses: Map[String, Class[_]], markedTypeName: String,
-                                       deserializerFactory: DeserializerFactory)
+                                       markedClass: Class[_], deserializerFactory: DeserializerFactory)
     extends JsonTypeDeserializer[T] {
 
     /** Backward compatible constructor: subtypes are looked up in the given package. */
     def this(packageName: String, deserializerFactory: DeserializerFactory) =
-      this(packageName + ".", Map.empty, packageName, deserializerFactory)
+      this(packageName + ".", Map.empty, packageName, classOf[AnyRef], deserializerFactory)
 
     private val deserializers = new ConcurrentHashMap[String, JsonTypeDeserializer[AnyRef]]()
+    private val classLoader: ClassLoader = Option(markedClass.getClassLoader).getOrElse(getClass.getClassLoader)
 
     override def deserialize(jsonIterator: StringIterator): T = {
 
@@ -107,14 +113,23 @@ object TypedConverter {
       knownSubclasses.get(typeName) match {
         case Some(clazz) => clazz
         case None =>
-          try {
-            Class.forName(binaryNamePrefix + typeName)
+          if (typeName.isEmpty || typeName.exists(c => c == '.' || c == '/' || c == '[' || c == ';')) {
+            throw new IllegalArgumentException("Invalid type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
+              ": expected a simple class name or a @typeName alias")
+          }
+          val resolved = try {
+            Class.forName(binaryNamePrefix + typeName, false, classLoader) // no static initializer runs here
           } catch {
-            case e: ClassNotFoundException =>
+            case e @ (_: ClassNotFoundException | _: LinkageError) =>
               throw new IllegalArgumentException("Unknown type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
-                ": no such class " + binaryNamePrefix + typeName +
+                ": no such class " + binaryNamePrefix + Messages.abbreviate(typeName) +
                 (if (knownSubclasses.nonEmpty) ", known subclasses: " + knownSubclasses.keys.toList.sorted.mkString(", ") else ""), e)
           }
+          if (!markedClass.isAssignableFrom(resolved)) {
+            throw new IllegalArgumentException("Type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
+              " resolves to " + resolved.getName + ", which is not a subtype of it")
+          }
+          resolved
       }
     }
 

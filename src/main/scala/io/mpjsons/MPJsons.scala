@@ -345,7 +345,7 @@ class MPJsons(val config: MPJsonsConfig) {
   private def typedDeserializerFor[T <: AnyRef](tpe: Type, readTable: Map[String, Class[_]], deserializerFactory: DeserializerFactory): TypedDeserializer[T] = {
     val binaryName = TypesUtil.getClassFromType(tpe).getName
     val prefix = binaryName.substring(0, Math.max(binaryName.lastIndexOf('$'), binaryName.lastIndexOf('.')) + 1)
-    new TypedDeserializer[T](prefix, readTable, tpe.toString, deserializerFactory)
+    new TypedDeserializer[T](prefix, readTable, tpe.toString, TypesUtil.getClassFromType(tpe), deserializerFactory)
   }
 
   /**

@@ -63,7 +63,7 @@ unknown keys are still rejected. Covered by `TimeSpec`.
 ### 10. `TypedDeserializer` class resolution is fragile — FIXED for nested and sealed types
 
 Resolution order is now: known subclasses of a sealed marked type (wherever they are declared), then
-`<binary name prefix of the marked type> + SimpleName` (same package for top-level types, same enclosing object for
+`<binary name prefix of the marked type> + SimpleName` (loaded without running static initializers; names containing `.`, `/`, `[` or `;` and classes that are not subtypes of the marked type are rejected, `TypedResolutionSafetySpec`) (same package for top-level types, same enclosing object for
 nested types); an unknown name fails with a message listing the known subclasses. Covered by `TypedNestedSpec`.
 Remaining limitation: subtypes of a **non-sealed** trait must be siblings of the trait, and two subtypes with the
 same simple name cannot be told apart unless one of them gets a `@typeName` alias (sealed hierarchies; `TypeNameSpec`).

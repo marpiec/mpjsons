@@ -67,10 +67,10 @@ sbt publishLocal
 and add the dependency to your project:
 
 ```scala
-libraryDependencies += "io.mpjsons" %% "mpjsons" % "0.6.51"
+libraryDependencies += "io.mpjsons" %% "mpjsons" % "0.7.0"
 ```
 
-(Current version: `0.6.51`, Scala `2.13.16`. Runtime dependency: `scala-reflect`.)
+(Current version: `0.7.0`, Scala `2.13.16`. Runtime dependency: `scala-reflect`.)
 
 ---
 
@@ -501,7 +501,7 @@ try {
 
 ---
 
-## Upgrading from 0.6.51
+## Upgrading from 0.6.51 to 0.7.0
 
 The default wire format is unchanged except for key order (declaration order, superclass fields first)
 and a handful of fixes that change output or accepted input (inherited fields, generic beans, `null`,

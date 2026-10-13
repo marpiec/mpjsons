@@ -6,7 +6,7 @@ Guidance for working in this repository. This is a deep, factual map of the code
 
 ## What this is
 
-`mpjsons` is a Scala object ⇄ JSON conversion library (`io.mpjsons`, version `0.6.51`). The selling point is a minimal API: `mpjsons.serialize[T](obj)` / `mpjsons.deserialize[T](json)` with no hand-written serializers required. It uses **Scala 2.13 runtime reflection** (`scala-reflect`, `scala.reflect.runtime.universe`) to inspect types and build per-type (de)serializers, which are then cached.
+`mpjsons` is a Scala object ⇄ JSON conversion library (`io.mpjsons`, version `0.7.0`). The selling point is a minimal API: `mpjsons.serialize[T](obj)` / `mpjsons.deserialize[T](json)` with no hand-written serializers required. It uses **Scala 2.13 runtime reflection** (`scala-reflect`, `scala.reflect.runtime.universe`) to inspect types and build per-type (de)serializers, which are then cached.
 
 - Build tool: sbt `1.11.7` (`project/build.properties`), Scala `2.13.16`.
 - Current branch is `scala_2.13`; main/PR branch is `master`.

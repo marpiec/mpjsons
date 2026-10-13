@@ -1,7 +1,7 @@
 # mpjsons internals documentation
 
 This directory is the working knowledge base for engineers and AI agents changing `mpjsons`
-(`io.mpjsons`, version `0.6.51`, Scala `2.13.16`). It was produced on 13/10/2026 by reading
+(`io.mpjsons`, version `0.7.0`, Scala `2.13.16`). It was first produced on 13/10/2026 for 0.6.51 by reading
 every source and test file and by running targeted experiments against the real code
 (all claims marked **verified** were observed by running code on this checkout; everything
 else is derived from reading the source and is marked accordingly).
@@ -19,7 +19,7 @@ Read in this order:
 
 Conventions used in these documents:
 
-- Paths are relative to the repository root; `file.scala:NN` points at the line in this checkout (commit `d9fe778` on branch `scala_2.13`).
+- Paths are relative to the repository root; `file.scala:NN` points at the line as of the commit that last edited the referring document; check it against the current source.
 - "Bean" means any class handled by `BeanSerializer`/`BeanDeserializer`: case classes, plain classes with `var`/`val` fields.
 - "Cold path" = code that runs once per type (factory dispatch, reflection). "Hot path" = code that runs for every value on every call.
 - Timing numbers come from in-process micro-benchmarks run inside ScalaTest on JDK 25 / Windows 11 (see `performance.md` for the harness). They are good for ratios and order of magnitude, not for absolute claims; use JMH before accepting or rejecting an optimisation.

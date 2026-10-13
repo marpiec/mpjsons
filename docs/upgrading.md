@@ -1,4 +1,4 @@
-# Upgrading from 0.6.51
+# Upgrading from 0.6.51 to 0.7.0
 
 Everything below applies with the **default configuration** (`new MPJsons`): no format lever is on by
 default, and the wire format of unchanged types is byte-identical except where this page says otherwise.

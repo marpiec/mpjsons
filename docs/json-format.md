@@ -1,6 +1,6 @@
 # JSON wire format reference
 
-What `mpjsons 0.6.51` writes and what it accepts. Every row was derived from the serializer/deserializer
+What `mpjsons 0.7.0` writes and what it accepts, with the default configuration unless a lever is named. Every row was derived from the serializer/deserializer
 source; rows marked **verified** were additionally observed by running code. This is the baseline that
 any size-minimisation or `null`-support change must stay compatible with (see roadmap.md §5).
 

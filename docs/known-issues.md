@@ -131,10 +131,12 @@ warm root lookup is one hash probe with no allocation. The remaining TypeTag-API
   Alternatives: `sun.reflect.ReflectionFactory.newConstructorForSerialization` (kept in a comment at `:78-86`,
   itself `jdk.unsupported`), or generating constructors via `MethodHandles` for case classes (call the primary
   constructor with parsed arguments instead of mutating an allocated blank).
-- Writing `final` fields through `Field.set` (what deserializing a case class does) is the subject of JEP 500
-  ("Prepare to Make Final Mean Final", proposed for JDK 26): first a warning, later disallowed unless
-  `--enable-final-field-mutation`. **Verify the current status before planning**; if it lands, constructor-based
-  construction of case classes becomes mandatory, which also fixes the "defaults are bypassed" problem.
+- Writing `final` fields through `Field.set` (what deserializing a case class does by default) is the subject of
+  JEP 500 ("Prepare to Make Final Mean Final", proposed for JDK 26): first a warning, later disallowed unless
+  `--enable-final-field-mutation`. **Mitigation available**: `MPJsonsConfig(caseClassesViaConstructor = true)`
+  builds case classes through their primary constructor (no final-field writes; constructor bodies run). It is
+  opt-in because it boxes every constructor argument; making it the default is an owner decision once the JDK
+  warning becomes relevant.
 - `Field.setAccessible(true)` on application classes keeps working (unnamed module), but not on `java.*` (§16).
 
 ### 21. Miscellaneous (by inspection)

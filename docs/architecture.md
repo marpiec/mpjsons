@@ -183,6 +183,13 @@ Field population uses `java.lang.reflect.Field.set(instance, value)` after `setA
 writes `final` fields of case classes too (works on JDK 25; see known-issues §20 for the JDK roadmap risk).
 Lazy vals survive because their bitmap field is zero after `allocateInstance` (**verified**).
 
+With `MPJsonsConfig(caseClassesViaConstructor = true)`, `BeanDeserializer` builds concrete case classes
+differently: values are read into an argument array (boxed, `BeanField.readValue`) indexed by primary-constructor
+parameter position (`BeanField.argIndex`), absent parameters get zero / false / null / None, and the Java
+constructor matching the parameter types is invoked, so the constructor body (`require`, derived vals) runs and no
+final field is written reflectively. Fields that are not constructor parameters are set afterwards. Plain classes
+keep the allocation path. `ConstructorConstructionSpec`.
+
 ## 7. Bean (de)serialization
 
 `BeanSerializer` (`impl/serializer/BeanSerializer.scala`):

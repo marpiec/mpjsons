@@ -232,7 +232,7 @@ class DeserializerFactoryImpl(config: MPJsonsConfig) {
       throw new IllegalArgumentException("Cannot deserialize abstract type " + tpe + " (trait or abstract class) without a registered converter, " +
         "use registerConverter, registerSuperclassConverter or markTypedClass. Types: " + context.typesStackMessage)
     } else {
-      new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, config.ignoreNonExistingFields)
+      new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, config)
     }
   }
 

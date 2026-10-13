@@ -20,6 +20,10 @@ package io.mpjsons
  * @param strict                  on read, reject missing commas between members or elements, trailing commas and
  *                                any content after the root value. Bare (unquoted) keys and whitespace are always
  *                                accepted. Off by default (historical, lenient parsing).
+ * @param caseClassesViaConstructor on read, build case classes by calling their primary constructor with the parsed
+ *                                values instead of allocating an instance and writing its final fields reflectively
+ *                                (future JDKs restrict final-field mutation). Absent keys still yield zero / false /
+ *                                null / None. Off by default; costs some boxing per value.
  * @param omitDefaults            on write, leave out every bean field whose value equals what reading `{}` would
  *                                produce for that type (the no-arg constructor's initialisers, or zero / false /
  *                                null / None for types constructed without a constructor). Lossless for round
@@ -32,4 +36,5 @@ final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                mapsAsObjects: Boolean = false,
                                isoTime: Boolean = false,
                                strict: Boolean = false,
-                               omitDefaults: Boolean = false)
+                               omitDefaults: Boolean = false,
+                               caseClassesViaConstructor: Boolean = false)

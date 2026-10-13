@@ -46,6 +46,13 @@ Baseline = commit `a362f8e` (correctness fixes and the harness, no performance w
 What remains is essentially the result object graph plus one output `String` (serialize) or the input
 `StringIterator` plus the deserialized objects (deserialize).
 
+Re-measured after the feature work that followed (`null` literal support, `@jsonName`, `MPJsonsConfig` with the
+`escapeSlash`/`compactOptions`/`mapsAsObjects`/`isoTime` levers, declaration-order keys), commit `d7d2acc`, single fork:
+flat 224 / 208, `List[Int]` 2 464 / 720, Person 688 / 552, sdo 1 256 / 952, String(225) 272 / 592 B/op
+(deserialize / serialize). The per-value `null` check and the per-field policy dispatch cost no allocation; the
+small serialize-side increases (+16 to +36 B) come from the wider output-buffer margin (see step 7) and the
+`Option` field writer.
+
 ### 2.2 Time per operation
 
 Baseline timings are from the two-fork run (error bars ±3-10% except where noted). Current timings are from the

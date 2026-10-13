@@ -13,7 +13,7 @@ Runtime dependency: `scala-reflect` only (the unused `slf4j-api` dependency was 
 
 | Member | Notes |
 |--------|-------|
-| `class MPJsons(ignoreNonExistingFields = false, ignoreNullFields = false)` | One instance owns one `SerializerFactory` and one `DeserializerFactory` and all caches. |
+| `class MPJsons(config: MPJsonsConfig)`; `new MPJsons(ignoreNonExistingFields = false, ignoreNullFields = false, nullPolicy = NullPolicy.Fail)` | One instance owns one `SerializerFactory` and one `DeserializerFactory` (both receive the config) and all caches. `MPJsonsConfig` holds `ignoreNonExistingFields`, `nullPolicy`, and the opt-in format levers `escapeSlash`, `compactOptions`, `mapsAsObjects`, `isoTime` (json-format.md). |
 | `serialize[T](obj)(implicit TypeTag[T]): String` | Resolves `Type` from the tag, looks up the serializer, writes into a fresh `scala.collection.mutable.StringBuilder`, returns `toString`. |
 | `serialize(obj, tpe: Type)` / `serialize(obj, typeName: String)` | Same, with an explicit `Type` or a class name resolved via `Class.forName`. |
 | `deserialize[T](json)(implicit TypeTag[T]): T`, `deserialize(json, tpe)`, `deserialize(jsonIterator, tpe)`, `deserialize(json, typeName)` | Wrap any `RuntimeException` into `JsonInnerException` with a pointer-annotated message (`ErrorMessageFormatter`, `MPJsons.scala:11-28`). |

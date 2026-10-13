@@ -462,6 +462,13 @@ try {
 
 ---
 
+## Upgrading from 0.6.51
+
+The default wire format is unchanged except for key order (declaration order, superclass fields first)
+and a handful of fixes that change output or accepted input (inherited fields, generic beans, `null`,
+absent `Option` fields reading as `None`, non-finite doubles). The full list, including API and
+dependency changes, is in [docs/upgrading.md](docs/upgrading.md).
+
 ## Limitations & notes
 
 - **`Map` form is non-standard.** Regular maps serialize as an array of `[key, value]` pairs (see [Maps](#maps)); use `SimpleMap*` converters for the `{"k":"v"}` object form.

@@ -15,6 +15,7 @@ Read in this order:
 | [known-issues.md](known-issues.md) | Confirmed bugs (with repro and root cause `file:line`), limitations, sharp edges, and JDK-evolution risks. |
 | [performance.md](performance.md) | Measured baseline numbers, hot-path analysis with per-component costs, and a prioritised optimisation plan with expected gains and risks. |
 | [roadmap.md](roadmap.md) | Design notes for the planned work: `null` literal support, field naming / JSON size reduction, raw performance; prerequisite fixes; compatibility strategy; open decisions for the owner. |
+| [upgrading.md](upgrading.md) | Every observable difference from 0.6.51 with the default configuration: output, accepted input, error types, API and dependency changes. |
 
 Conventions used in these documents:
 

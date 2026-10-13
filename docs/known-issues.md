@@ -60,12 +60,13 @@ Fixed: the `Duration` branch has the same "no converter registered" guard as the
 Fixed: the four time deserializers read any number of keys in any order and report the first missing key by name;
 unknown keys are still rejected. Covered by `TimeSpec`.
 
-### 10. `TypedDeserializer` class resolution is fragile — LIMITATION / BUG (by inspection)
+### 10. `TypedDeserializer` class resolution is fragile — FIXED for nested and sealed types
 
-`TypedConverter.scala:45` resolves `packageName + "." + simpleName`. Fails for subtypes in another package, for
-classes nested in objects/classes (binary name uses `$`), and two subtypes with equal simple names in different
-packages collide in the per-name cache. Consider writing the fully-qualified or a registered alias name
-(roadmap.md §4.4).
+Resolution order is now: known subclasses of a sealed marked type (wherever they are declared), then
+`<binary name prefix of the marked type> + SimpleName` (same package for top-level types, same enclosing object for
+nested types); an unknown name fails with a message listing the known subclasses. Covered by `TypedNestedSpec`.
+Remaining limitation: subtypes of a **non-sealed** trait must be siblings of the trait, and two subtypes with the
+same simple name cannot be told apart (the wire format carries only the simple name; see roadmap.md §4.1 for aliases).
 
 ### 11. Superclass-converter matching is nondeterministic — BUG (by inspection)
 

@@ -13,7 +13,6 @@ object ConcurrencySpec {
   case class Box[T](value: T, values: List[T])
 }
 
-// Top-level because the typed converter resolves subtypes by package + simple name (known-issues §10).
 sealed trait Shape
 case class Circle(r: Double) extends Shape
 case class Square(side: Int) extends Shape

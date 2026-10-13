@@ -305,6 +305,25 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
   }
 
 
+  /** Builds the typed deserializer for a marked type: subtypes resolve via the sealed hierarchy or as siblings of the marked type. */
+  private def typedDeserializerFor[T <: AnyRef](tpe: Type, deserializerFactory: DeserializerFactory): TypedDeserializer[T] = {
+    val binaryName = TypesUtil.getClassFromType(tpe).getName
+    val prefix = binaryName.substring(0, Math.max(binaryName.lastIndexOf('$'), binaryName.lastIndexOf('.')) + 1)
+    new TypedDeserializer[T](prefix, knownSubclasses(tpe.typeSymbol), tpe.toString, deserializerFactory)
+  }
+
+  /** Simple class name -> class for every (transitive) known subclass of a sealed type; empty otherwise. */
+  private def knownSubclasses(symbol: Symbol): Map[String, Class[_]] = {
+    if (symbol.isClass && symbol.asClass.isSealed) {
+      symbol.asClass.knownDirectSubclasses.toList.flatMap { sub =>
+        val clazz = TypesUtil.getClassFromType(sub.asClass.toType)
+        (clazz.getSimpleName -> clazz) :: knownSubclasses(sub).toList
+      }.toMap
+    } else {
+      Map.empty
+    }
+  }
+
   /**
    * Method that allows to specify which type will have added type information to serialized json,
    * and which can be deserialized based on this specified type.
@@ -314,11 +333,9 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {
       val tpe = extractType(tag)
-      val typeName: String = tpe.baseClasses.head.fullName
-      val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
       registerConverter[T](
         sf => new TypedSerializer[T](sf),
-        df => new TypedDeserializer[T](packageName, df))
+        df => typedDeserializerFor[T](tpe, df))
     }
   }
 
@@ -333,11 +350,9 @@ class MPJsons(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolea
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {
       val tpe = extractType(tag)
-      val typeName: String = tpe.baseClasses.head.fullName
-      val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
       registerSuperclassConverter[T](
         sf => new TypedSerializer[T](sf),
-        df => new TypedDeserializer[T](packageName, df))
+        df => typedDeserializerFor[T](tpe, df))
     }
   }
 

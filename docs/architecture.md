@@ -213,7 +213,7 @@ Value readers (`impl/deserializer/jsontypes/`) all work on the raw input and `se
 ## 9. Special converters (`impl/special/TypedConverter.scala`)
 
 - `TypedSerializer`: `obj.getClass.getSimpleName` as key; per-class serializer cache (`var Map`); writes `{"SimpleName":` + inner + `}`; inner serializer resolved with `allowSuperType = false`.
-- `TypedDeserializer(packageName, ...)`: reads the key as a JSON string, `Class.forName(packageName + "." + typeName)`, caches per name. Consequences: subtypes must live in the **same package** as the marked type, must be top-level (nested classes have `$` in their binary name), and two subtypes with the same simple name in different packages collide.
+- `TypedDeserializer(binaryNamePrefix, knownSubclasses, markedTypeName, ...)`: reads the key as a JSON string and resolves it first among the known subclasses of a sealed marked type (collected transitively with `knownDirectSubclasses` at `markTypedClass` time), then as `binaryNamePrefix + typeName` where the prefix is the marked type's binary class name up to the last `.` or `$` (siblings in the same package or enclosing object). Resolved deserializers are cached per name. Two subtypes with the same simple name cannot be distinguished.
 
 `SimpleMapSerializer[T]` / `SimpleMapDeserializer[T]` (object form `{"k":v}`) are **not** wired into the
 dispatch; the user instantiates them with a `TypeTag[T]` and registers them as a converter. Null map values are skipped on serialize.

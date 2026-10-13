@@ -55,7 +55,7 @@ Array/Map read loops accept missing and trailing commas (`[1 2 3]` → `List(1,2
 
 ## 5. Singleton objects
 
-`object Foo` (and `case object`) serialize to `{}` (**verified**, detection via a `MODULE$` field). Reading a field declared as `Foo.type` crashes with `ClassCastException` (known-issues §3). Top-level `deserialize[Foo.type]` is likewise broken; the README states singletons are unsupported.
+`object Foo` (and `case object`) serialize to `{}` (detection via `typeSymbol.isModuleClass`). Reading `{}` (whitespace allowed) for a `Foo.type` field or at top level returns the singleton instance itself; any key inside the object is an error (`SingletonObjectSpec`).
 
 ## 6. Polymorphic ("typed") values
 

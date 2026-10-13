@@ -388,7 +388,7 @@ try {
 
 - **`Map` form is non-standard.** Regular maps serialize as an array of `[key, value]` pairs (see [Maps](#maps)); use `SimpleMap*` converters for the `{"k":"v"}` object form.
 - **Sorted collections throw.** `SortedSet`, `TreeSet`, `SortedMap`, `TreeMap`, and `ListBuffer` are intentionally unsupported and throw.
-- **Singleton `object`s are not supported.**
+- **Singleton `object`s** serialize to `{}` and deserialize to the singleton instance when the declared type is `Foo.type`; polymorphic use (an `object` behind a trait) still needs `markTypedClass`.
 - **Constructor-less deserialization uses `sun.misc.Unsafe`.** When a type has no no-arg constructor, instances are allocated without running any constructor — so constructor-side defaults and validation are bypassed, and availability depends on the JVM.
 - **Not thread-safe for cold types.** Internal caches are unsynchronized `var Map`s. A single `MPJsons` instance is not safe for concurrent *first-time* use of new types; once all types are warmed up it is effectively read-only. Warm up types up front if you serialize concurrently.
 

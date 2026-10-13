@@ -5,7 +5,6 @@ import io.mpjsons.impl.SerializerFactory
 import io.mpjsons.impl.serializer._
 import io.mpjsons.impl.serializer.time.{DurationSerializer, LocalDateSerializer, LocalDateTimeSerializer, LocalTimeSerializer}
 import io.mpjsons.impl.util.Context
-import io.mpjsons.impl.util.reflection.ReflectionUtil
 
 import scala.collection.immutable._
 import scala.collection.mutable
@@ -182,7 +181,7 @@ class SerializerFactoryImpl(ignoreNullFields: Boolean) {
       throw new IllegalArgumentException("Serialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if (typeOf[AnyRef].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Serialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
-    } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
+    } else if (typeSymbol.isModuleClass) {
       SingletonObjectSerializer
     } else {
 

@@ -20,17 +20,11 @@ Fixed: `ReflectionUtilNoCache.getAllAccessibleFields` walks `tpe.baseClasses` an
 `typeSignatureIn(tpe)` (generic superclasses work); own fields keep the historical reverse declaration order and
 superclass fields follow. Covered by `InheritanceSpec`.
 
-### 3. Deserializing a field of singleton type crashes — BUG (verified)
+### 3. Deserializing a field of singleton type crashes — FIXED
 
-```scala
-object Single; case class WrapsSingle(s: Single.type)
-m.serialize(WrapsSingle(Single))                 // {"s":{}}   OK
-m.deserialize[WrapsSingle]("""{"s":{}}""")       // ClassCastException: UniqueSingleType cannot be cast to TypeRefApi
-```
-
-Root cause: `DeserializerFactoryImpl.scala:95` `tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass` without
-the `isInstanceOf[TypeRefApi]` guard that `SerializerFactoryImpl.scala:94` has. Any non-`TypeRef` `Type`
-(`SingleType`, `RefinedType`, `ExistentialType`) hits it.
+Fixed: the `Array` check is guarded with `isInstanceOf[TypeRefApi]`, singletons are detected with
+`typeSymbol.isModuleClass` in both factories (instead of scanning for a `MODULE$` field), and the singleton reader
+skips whitespace. Round trip returns the same instance; covered by `SingletonObjectSpec`.
 
 ### 4. Trait/interface-typed targets NPE in field lookup — BUG (verified)
 

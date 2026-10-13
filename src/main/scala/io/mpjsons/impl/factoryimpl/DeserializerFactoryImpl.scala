@@ -9,7 +9,6 @@ import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple1Deseria
 import io.mpjsons.impl.deserializer.values._
 import io.mpjsons.impl.deserializer.{BeanDeserializer, PostTransformDeserializer, SingletonObjectDeserializer}
 import io.mpjsons.impl.util.Context
-import io.mpjsons.impl.util.reflection.ReflectionUtil
 
 import scala.collection._
 import scala.collection.immutable.Map
@@ -92,7 +91,7 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       return DurationDeserializer
     } else if (typeSymbol == typeOf[java.lang.Character].typeSymbol) {
       return CharDeserializer
-    } else if (tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass) {
+    } else if (tpe.isInstanceOf[TypeRefApi] && tpe.asInstanceOf[TypeRefApi].sym == definitions.ArrayClass) {
       return new ArrayDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     } else if (typeSymbol == typeOf[Option[_]].typeSymbol) {
       return new OptionDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
@@ -195,7 +194,7 @@ class DeserializerFactoryImpl(ignoreNonExistingFields: Boolean) {
       throw new IllegalArgumentException("Deserialization of 'Any' or wildcard '_' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if (typeOf[AnyRef].typeSymbol == typeSymbol) {
       throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
-    } else if (ReflectionUtil.getAllAccessibleFields(tpe).exists(_.field.getName == "MODULE$")) {
+    } else if (typeSymbol.isModuleClass) {
       new SingletonObjectDeserializer(tpe)
     } else {
       new BeanDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context, ignoreNonExistingFields)

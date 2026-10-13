@@ -229,7 +229,10 @@ Value readers (`impl/deserializer/jsontypes/`) all work on the raw input and `se
 - `TypedDeserializer(binaryNamePrefix, knownSubclasses, markedTypeName, ...)`: reads the key as a JSON string and resolves it first among the known subclasses of a sealed marked type (collected transitively with `knownDirectSubclasses` at `markTypedClass` time), then as `binaryNamePrefix + typeName` where the prefix is the marked type's binary class name up to the last `.` or `$` (siblings in the same package or enclosing object). Resolved deserializers are cached per name. Two subtypes with the same simple name cannot be distinguished.
 
 `SimpleMapSerializer[T]` / `SimpleMapDeserializer[T]` (object form `{"k":v}`) are **not** wired into the
-dispatch; the user instantiates them with a `TypeTag[T]` and registers them as a converter. Null map values are skipped on serialize.
+dispatch; the user instantiates them with a `TypeTag[T]` and registers them as a converter. Both follow the
+factory's `NullPolicy` (`serializerFactory.config` / `deserializerFactory.config`): a null value is treated like a
+null bean field on write (`Fail` throws, `Omit` skips the entry, `WriteNull` writes `null`) and like any map value
+on read.
 
 ## 10. Caches and mutability (thread-safety)
 

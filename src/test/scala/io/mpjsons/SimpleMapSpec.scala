@@ -71,6 +71,35 @@ class SimpleMapsSpec extends AnyFlatSpec {
 
 
 
+  }
+
+  "SimpleMapSerializer" must "follow the null policy, like a bean field" in {
+    val withNull: Map[String, String] = Map("a" -> "x", "b" -> null)
+
+    def write(policy: NullPolicy, map: Map[String, String]): String = {
+      val builder = new StringBuilder
+      new SimpleMapSerializer[String](new SerializerFactory(policy), Context(List.empty, Map.empty)).serialize(map, builder)
+      builder.toString
+    }
+
+    def read(policy: NullPolicy, json: String): Map[String, String] =
+      new SimpleMapDeserializer[String](new DeserializerFactory(MPJsonsConfig(nullPolicy = policy)), Context(List.empty, Map.empty))
+        .deserialize(new StringIterator(json))
+
+    val e = intercept[IllegalArgumentException] { write(NullPolicy.Fail, withNull) }
+    e.getMessage must include("'b'")
+    e.getMessage must include("NullPolicy.Fail")
+
+    write(NullPolicy.Omit, withNull) mustBe """{"a":"x"}"""
+    write(NullPolicy.WriteNull, withNull) mustBe """{"a":"x","b":null}"""
+    read(NullPolicy.WriteNull, write(NullPolicy.WriteNull, withNull)) mustBe withNull
+
+    intercept[IllegalArgumentException] { read(NullPolicy.Fail, """{"a":"x","b":null}""") }.getMessage must include("null is not allowed")
+    read(NullPolicy.Omit, """{"a":"x","b":null}""") mustBe withNull
+
+    intercept[IllegalArgumentException] { write(NullPolicy.WriteNull, Map((null: String) -> "v")) }.getMessage must include("null map key")
+    write(NullPolicy.Fail, Map("a" -> "x")) mustBe """{"a":"x"}"""
+
     //    smoDeserialized = mpjsons.deserialize[SimpleMapsObject](serializedWithWhitespacesQuotes)
 //
 //    smoDeserialized must not be (null)

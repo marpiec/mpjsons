@@ -181,12 +181,14 @@ Lazy vals survive because their bitmap field is zero after `allocateInstance` (*
 ## 7. Bean (de)serialization
 
 `BeanSerializer` (`impl/serializer/BeanSerializer.scala`):
-- `fields` resolved eagerly, `fieldsWithSerializers` is a `lazy val` (recursion guard).
-- Per call: `append('{')`, then for each field `field.get(obj)`; `null` → throw `IllegalArgumentException` unless `!errorOnNulls || nullable`, in which case the field is **omitted** (the library never writes a `null` literal); else append `"name":` and delegate. Commas are tracked with a boolean.
+- `fields` resolved eagerly; `fieldsWithSerializers` and `writers` are `lazy val`s (recursion guard).
+- One `BeanFieldWriter` per field, chosen at build time: `IntWriter`/`LongWriter`/`BooleanWriter`/`DoubleWriter`/... use `Field.getInt` etc. and append the primitive directly (only when the built-in serializer for that type is in effect, so custom converters still win); `ObjectWriter` does `field.get` and delegates. Each writer holds the precomputed `"name":` and `,"name":` prefixes.
+- Per call: `append('{')`, a `while` loop over the writers, `append('}')`. A `null` reference field throws `IllegalArgumentException` unless `!errorOnNulls || nullable`, in which case the field is **omitted** (the library never writes a `null` literal).
 
 `BeanDeserializer` (`impl/deserializer/BeanDeserializer.scala`):
-- `fieldsByName: Map[String, (Field, JsonTypeDeserializer[AnyRef])]`, lazy.
-- Loop: `consumeObjectStart`, create instance, `while (currentChar != '}')`: read identifier (`IdentifierDeserializer`, quoted or bare), `consumeFieldValueSeparator`, look up field; known → deserialize + `field.set`; unknown → `skipValue` if `ignoreNonExistingFields` (handles `null` literal here only) else throw. A comma is consumed **if present** (so missing and trailing commas are both accepted). Finally `nextCharOrNullIfLast` steps past `}`.
+- `fieldTable: BeanFieldTable` (lazy), an open-addressing table of `BeanField`s keyed by JSON name. `BeanField.set(instance, iterator)` is typed the same way as the writers (`IntField` → `Field.setInt(IntDeserializer.deserialize(it))`, ... , `ObjectField` → `field.set(deserializer.deserialize(it))`).
+- `BeanFieldTable.find` reads the key straight from the raw input, hashing while scanning (String.hashCode formula) and comparing candidates in place with `regionMatches`, so a known key allocates nothing. Quoted keys with escapes and unknown keys are materialised as a `String` (unknown keys: cursor rewound, then `IdentifierDeserializer` reads it for the error message or `skipValue`).
+- Loop: `consumeObjectStart`, create instance, skip whitespace, `while (currentChar != '}')`: find field, `consumeFieldValueSeparator`, set or skip/throw; a comma is consumed **if present** (missing and trailing commas are both accepted). Finally `nextCharOrNullIfLast` steps past `}`.
 - Fields absent from the JSON keep whatever construction left (null/0/false, or the initialiser value when a no-arg constructor exists). `Option` fields absent → `null`, not `None` (**verified**).
 
 ## 8. Low-level parsing: `StringIterator` (`impl/StringIterator.scala`)
@@ -196,12 +198,17 @@ Single mutable cursor shared by all deserializers:
 - `nextChar()`: if `nextIndex < length` read it; if `nextIndex == length` set `currentChar = '\u0000'` (end marker, not `' '`); beyond that throw `IllegalArgumentException("Unexpected end of Json")`.
 - `skipWhitespaceChars()` loops on `Char.isWhitespace`.
 - `consume*` helpers: skip whitespace, check one expected char, advance; error messages embed the whole input and the remainder.
+- `seek(index)` positions the cursor on an absolute index; readers that scan ahead on the raw string (`stringValue`, `stringLength`, `nextIndex - 1` = index of `currentChar`) use it to hand the cursor back.
 - `nextCharOrNullIfLast` returns `Any` (Unit or null); used to step over a closing `}` when it may be the last char.
 - `isCurrentCharADigitPart` accepts digits and `-`; `isCurrentCharAFloatingPointPart` additionally `+ . e E`.
 - `checkFutureChar`, `hasNextChar`, `nextNonWhitespaceChar` are **unused** (verified by grep).
 - `debugGetConsumedString`/`debugGetRemainingString` substring copies are only used for error formatting.
 
-Value readers (`impl/deserializer/jsontypes/`): `AbstractStringDeserializer.readString` (escape handling incl. `\uXXXX`, appends char by char into a new `StringBuilder`), `AbstractIntegerDeserializer.readNumberString` and `AbstractFloatingPointDeserializer.readNumberString` (collect chars into a `StringBuilder`, then `toInt`/`toLong`/`toDouble`), `BooleanDeserializer` (collects lowercase letters, matches `"true"`/`"false"`).
+Value readers (`impl/deserializer/jsontypes/`) all work on the raw input and `seek` past what they consumed:
+- `AbstractStringDeserializer.readString`: scans for the closing quote; no escape → one `substring`; otherwise bulk-copies runs into a `java.lang.StringBuilder` and decodes the eight short escapes and `\uXXXX` (`appendCodePoint`).
+- `AbstractIntegerDeserializer.readLong`: accumulates digits (negatively, so `Long.MinValue` fits) with overflow detection; `readLongInRange` adds the Int/Short/Byte range check. No digit → `Expected a number but found 'x'`.
+- `AbstractFloatingPointDeserializer.scanNumber/readDouble/readFloat`: scans the literal extent; a plain integer of up to 18 digits is accumulated directly, anything else goes through `parseDouble`/`parseFloat` on one substring. `skipNumber` scans without materialising.
+- `BooleanDeserializer`: `startsWith("true"/"false")` on the raw input.
 
 ## 9. Special converters (`impl/special/TypedConverter.scala`)
 
@@ -234,11 +241,12 @@ serialises on that lock.
 | `impl/JsonInnerException.scala` | Boundary exception |
 | `impl/SerializerFactory.scala`, `impl/DeserializerFactory.scala` | Concrete factory classes (empty) |
 | `impl/factoryimpl/*FactoryImpl.scala` | Dispatch chains and converter registries |
-| `impl/factoryimpl/*FactoryMemoizer.scala` | Caching and type-parameter resolution |
+| `impl/factoryimpl/*FactoryMemoizer.scala`, `TypeParamsResolver.scala` | Caching and type-parameter substitution |
 | `impl/util/Context.scala`, `TypesUtil.scala`, `ObjectConstructionUtil.scala` | Context threading, Type/Class helpers, instance allocation |
-| `impl/util/reflection/ReflectionUtil*.scala` | Field discovery (`FieldWithTypeInfo`) |
-| `impl/serializer/*.scala` | `BeanSerializer`, `StringSerializer`, `SimpleToStringSerializer`, `IterableSerializer`/`ArraySerializer` (via `common/IteratorSerializer`), `MapSerializer`, `SimpleMapSerializer`, `OptionSerializer`, `EitherSerializer`, `BitSetSerializer`, `Tuple1..6Serializer`, `SingletonObjectSerializer`, `time/*` |
-| `impl/deserializer/*.scala` | `BeanDeserializer`, `IdentifierDeserializer`, `PostTransformDeserializer`, `SimpleMapDeserializer`, `SingletonObjectDeserializer`; `jsontypes/` abstract readers; `values/` primitives; `immutables/` collections and `Option`; `mutables/ArrayDeserializer`; `utiltypes/` `Either`, tuples; `time/` |
+| `impl/util/reflection/ReflectionUtil*.scala` | Field discovery (`FieldWithTypeInfo`) across the class hierarchy |
+| `impl/serializer/*.scala` | `BeanSerializer` (+ `BeanFieldWriter`s), `StringSerializer`, `PrimitiveSerializers` (`Int/Long/Short/Byte/BooleanSerializer`), `FloatingPointSerializers` (`Double/FloatSerializer`), `SimpleToStringSerializer` (legacy), `IterableSerializer`/`ArraySerializer` (via `common/IteratorSerializer`), `MapSerializer`, `SimpleMapSerializer`, `OptionSerializer`, `EitherSerializer`, `BitSetSerializer`, `Tuple1..6Serializer`, `SingletonObjectSerializer`, `time/*` |
+| `impl/deserializer/*.scala` | `BeanDeserializer`, `BeanField` (typed setters), `BeanFieldTable` (in-place key matching), `IdentifierDeserializer`, `PostTransformDeserializer`, `SimpleMapDeserializer`, `SingletonObjectDeserializer`; `jsontypes/` raw-input readers; `values/` primitives; `immutables/` collections and `Option`; `mutables/` `Array`, `ArrayBuffer`, mutable `HashSet`/`HashMap`; `utiltypes/` `Either`, tuples; `time/` |
 | `impl/special/TypedConverter.scala` | Polymorphic wrapper converters |
+| `src/jmh/scala/io/mpjsons/bench/MpjsonsBenchmark.scala` | JMH benchmarks (`sbt "Jmh/run ..."`, see performance.md) |
 
-Tests: `src/test/scala/io/mpjsons/*Spec.scala`, 56 tests in 26 suites, all passing on JDK 25 (**verified**, 12 s wall clock including compilation). `PerformanceSpec` asserts 5000 round-trips in under 500 ms, which the current code passes with roughly a 20x margin, so it does not detect regressions of the kind that matter.
+Tests: `src/test/scala/io/mpjsons/*Spec.scala`, 97 tests, all passing on JDK 25. `PerformanceSpec` asserts 5000 round-trips in under 500 ms, which the code passes with a very large margin, so it does not detect regressions; use the JMH benchmarks.

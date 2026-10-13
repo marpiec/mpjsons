@@ -167,13 +167,13 @@ Commit history (`a2edb13`, PostgreSQL `jsonb`) shows the output is stored. There
 
 ## 5. Suggested milestone plan
 
-| Milestone | Contents | Exit criteria |
+| Milestone | Contents | Status (13/10/2026) |
 |---|---|---|
-| M1 Correctness | §2.1-2.4; delete fixed entries from known-issues.md | new specs green; `sbt test` green |
-| M2 Bench + hot loops | performance.md rows 0-7 | JMH report in `docs/`; output byte-identical to 0.6.51 fixtures |
-| M3 Null | §3 | `NullLiteralSpec`; README section |
-| M4 Naming + compact | §4.1, §4.2, §4.3, §4.4 | fixtures for both formats; size comparison table in json-format.md |
-| M5 Hardening | thread-safe caches, JPMS-safe construction path (constructor-based for case classes), `LazyList`, `BigDecimal`/`UUID`/`Instant` converters, drop `slf4j-api` | |
+| M1 Correctness | §2.1-2.4 | **Done** except §2.3 (field order, owner decision) and the registries (still registration-time `var Map`s). Known-issues §1-§5, §7-§9, §12 (numbers), §18, §19 fixed with specs. |
+| M2 Bench + hot loops | performance.md rows 0-7 | **Done**: JMH module, memoizer/caches, strings, numbers, key matching, typed field access, collection builders, primitive serializers, output pre-sizing. Output byte-identical. |
+| M3 Null | §3 | Open: needs decisions 1-3 in §6. |
+| M4 Naming + compact | §4.1, §4.2, §4.3, §4.4 | Open: needs decisions 4-6 in §6. |
+| M5 Hardening | JPMS-safe construction path (constructor-based for case classes), `LazyList`, `BigDecimal`/`UUID`/`Instant` converters, `TypedDeserializer` nested-class resolution (known-issues §10), deterministic superclass-converter matching (§11), drop `slf4j-api` | Open. |
 
 ## 6. Open decisions for the owner (collect answers before M3/M4)
 

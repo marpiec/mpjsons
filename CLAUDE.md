@@ -87,12 +87,12 @@ Still plain `var Map`s, written only at registration time: `DeserializerFactoryI
 
 ## Performance-sensitive hot paths
 
-When evaluating perf changes, these are the paths exercised per call (after warm-up the factory lookups are cached, so the real cost is the inner loops):
-- `BeanSerializer.serialize` — per-field reflective `field.get` + `StringBuilder.append`. Field array is iterated every call.
-- `BeanDeserializer.deserialize` — per-field `fieldsByName.get(identifier)` (HashMap lookup) + reflective `field.set`. New `StringBuilder`s allocated per identifier/string.
-- `StringIterator` — char-by-char; `skipWhitespaceChars` and `isWhitespace` called frequently.
-- `StringSerializer` — per-char `match`; allocates short strings for control-char hex escapes.
-- Numeric deserializers allocate a `StringBuilder`/`String` then parse — a known allocation hotspot.
+When evaluating perf changes, these are the paths exercised per call (after warm-up the factory lookups are cached, so the real cost is the inner loops). All of them are now allocation-conscious; measure with the JMH module (`sbt "Jmh/run -f1 -wi 3 -w 1 -i 5 -r 1 -prof gc .*MpjsonsBenchmark.*"`) before and after any change:
+- `BeanSerializer.serialize` — `while` loop over per-field `BeanFieldWriter`s: typed `Field.getInt/getLong/...` + direct primitive append, precomputed `"name":` prefixes; reference fields delegate to the field's serializer.
+- `BeanDeserializer.deserialize` — `BeanFieldTable.find` matches keys in place on the raw input (no `String` per key), then typed `BeanField.set` (`Field.setInt` etc.).
+- `StringIterator` — readers scan the raw `stringValue` with a local index and `seek` back; `skipWhitespaceChars` is still called at every separator.
+- `StringSerializer` / `readString` — bulk runs, escape table, single `substring` when no escapes.
+- Numbers and booleans are parsed directly from the input chars; collections are built with their builders; the output `StringBuilder` is pre-sized from the previous output length per type.
 
 **History worth knowing:** commits `6442f3c`/`2bfcbb2` ("Optimization by claude") rewrote `DeserializerFactoryImpl`/`SerializerFactoryImpl` and were **both reverted** (`53ada5e`, `a174a40`). The dispatch chains are intentionally back to their original form. Those chains are **cold path** (run once per type and then cached), so rewriting them cannot change steady-state throughput; real wins are in the per-value loops listed above. Measured baseline and a prioritised plan are in `docs/performance.md`.
 

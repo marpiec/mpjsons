@@ -125,7 +125,7 @@ Then `getDeserializerNoCache` wraps the result in `PostTransformDeserializer` if
 1. Scala and Java numeric/boolean primitives → `SimpleToStringSerializer` (`append(obj: Any)`).
 2. `java.time` four types (all four guarded by "no converter registered"; ISO string variants when `isoTime`); then `BigDecimal`/`BigInt` (Scala and `java.math`) → number serializers and `UUID`/`Instant`/`OffsetDateTime`/`ZonedDateTime` → `ToStringAsJsonStringSerializer`, same guard.
 3. `String`, `mutable.StringBuilder`, `Char`, `java.lang.Character` → `StringSerializer` (or its no-slash-escape variant).
-3b. Final fallback: a `java.*` type without a converter fails with "use registerConverter" instead of reaching `BeanSerializer`.
+3b. Final fallback: a `java.*` type without a converter fails with "use registerConverter" instead of reaching `BeanSerializer`. An abstract type (trait or abstract class, not a singleton) without a converter fails as well, pointing to `markTypedClass`, because `BeanSerializer` would write only the abstract type's own fields.
 4. `Array` (guarded with `isInstanceOf[TypeRefApi]`).
 5. **Only if** `typeSymbol.fullName.startsWith("scala.")`: any mutable `Seq/Set/Iterable` → `IterableSerializer`, mutable `Map` → `MapSerializer`; any `collection.Seq`, `BitSet` (exact), `collection.Set`, `collection.Map`, `Iterable` likewise; then `Either`, `Option`, `Tuple1..6` by `baseClasses.contains`. Serialization therefore accepts every standard collection, while deserialization supports the explicit list in the chain above.
 6. Superclass serializers (if `allowSuperType`), exact custom serializer by `tpe.toString`, `Nothing/Any/AnyRef` errors, singleton (`typeSymbol.isModuleClass`) → `SingletonObjectSerializer`.

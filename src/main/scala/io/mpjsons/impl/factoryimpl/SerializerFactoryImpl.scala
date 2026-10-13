@@ -205,6 +205,11 @@ class SerializerFactoryImpl(val config: MPJsonsConfig) {
         case Some(serializer) => serializer(this.asInstanceOf[SerializerFactory])
         case None if typeSymbol.fullName.startsWith("java.") =>
           throw new IllegalArgumentException("No built-in serializer for java type " + tpe + ", use registerConverter. Types: " + context.typesStackMessage)
+        case None if typeSymbol.isAbstract && !typeSymbol.isModuleClass =>
+          // Only the abstract type's own fields would be written and the concrete class would be lost.
+          throw new IllegalArgumentException("Cannot serialize abstract type " + tpe + " (trait or abstract class) without a registered converter, " +
+            "use markTypedClass to write the concrete type, or registerConverter, registerSuperclassConverter or registerSerializerForAnySubtype. " +
+            "Types: " + context.typesStackMessage)
         case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config)
       }
 

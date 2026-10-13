@@ -63,7 +63,7 @@ Array/Map read loops accept missing and trailing commas (`[1 2 3]` → `List(1,2
 
 ## 6. Polymorphic ("typed") values
 
-After `markTypedClass[Base]`, a value whose **static** type is `Base` is written as `{"ConcreteSimpleName":{...fields...}}` (or `{"alias":{...}}` when the subclass carries `@typeName("alias")`; aliases need a sealed `Base`, and the simple name is still accepted on read); a value whose static type is already the concrete class is written plainly. Reading resolves `Class.forName(<package of Base>.<SimpleName>)`.
+After `markTypedClass[Base]`, a value whose **static** type is `Base` is written as `{"ConcreteSimpleName":{...fields...}}` (or `{"alias":{...}}` when the subclass carries `@typeName("alias")`; aliases need a sealed `Base`, and the simple name is still accepted on read); a value whose static type is already the concrete class is written plainly. Without `markTypedClass` or a converter, serializing a value through a trait or abstract class fails when the serializer is built (it used to write only the abstract type's own fields, e.g. `{}`). Reading resolves `Class.forName(<package of Base>.<SimpleName>)`.
 
 ## 7. `java.time`
 

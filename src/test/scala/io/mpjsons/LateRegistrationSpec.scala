@@ -47,7 +47,7 @@ class LateRegistrationSpec extends AnyFlatSpec {
 
   "markTypedClass" must "apply after the hierarchy was already used" in {
     val mpjsons = new MPJsons
-    mpjsons.serialize[Pet](Cat("Tom")) mustBe "{}" // the trait itself has no fields
+    intercept[IllegalArgumentException] { mpjsons.serialize[Pet](Cat("Tom")) } // unmarked trait
     mpjsons.markTypedClass[Pet]
     mpjsons.serialize[Pet](Cat("Tom")) mustBe """{"Cat":{"name":"Tom"}}"""
     mpjsons.deserialize[Pet]("""{"Cat":{"name":"Tom"}}""") mustBe Cat("Tom")

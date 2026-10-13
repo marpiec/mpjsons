@@ -31,7 +31,7 @@ skips whitespace. Round trip returns the same instance; covered by `SingletonObj
 Fixed: `getAccessibleField` stops at a `null` superclass; deserializers were added for `mutable.ArrayBuffer`
 (also used for `mutable.Buffer/Seq/IndexedSeq/Iterable`), `mutable.HashSet`/`mutable.Set` and
 `mutable.HashMap`/`mutable.Map`; a trait or abstract class without a registered converter now fails at
-(de)serializer build time with a message naming the type and the registration options. `ListBuffer` still
+(de)serializer build time with a message naming the type and the registration options. Since 13/10/2026 this holds for serializing too (`UnmarkedAbstractTypeSpec`); it used to write `{}`. `ListBuffer` still
 throws by design. Covered by `MutableCollectionsSpec`.
 
 ### 5. Empty input escapes the error wrapper — FIXED

@@ -510,6 +510,7 @@ dependency changes, is in [docs/upgrading.md](docs/upgrading.md).
 
 ## Limitations & notes
 
+- **Traits and abstract classes need `markTypedClass` or a converter.** Serializing or deserializing a value through such a type otherwise fails when first used, because the concrete class would be lost.
 - **`Map` form is non-standard.** Regular maps serialize as an array of `[key, value]` pairs (see [Maps](#maps)); use `SimpleMap*` converters for the `{"k":"v"}` object form.
 - **Sorted collections throw.** `SortedSet`, `TreeSet`, `SortedMap`, `TreeMap`, and `ListBuffer` are intentionally unsupported and throw.
 - **Singleton `object`s** serialize to `{}` and deserialize to the singleton instance when the declared type is `Foo.type`; polymorphic use (an `object` behind a trait) still needs `markTypedClass`.

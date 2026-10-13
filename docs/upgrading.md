@@ -36,7 +36,7 @@ because output or accepted input changes.
 | **Superclass converters** (*fix*) | when several registered supertypes matched, the winner depended on `Map` iteration order | the most specific supertype wins | |
 | **Duration converter** (*fix*) | `registerConverter[Duration]` was ignored on read | honoured | |
 | **Late registrations** (*fix*) | `registerConverter`, `registerSuperclassConverter`, `registerSerializerForAnySubtype`, `markTypedClass` and `postDeserializationTransform` were silently ignored for types already (de)serialized by the instance | they drop the cached (de)serializers and take effect immediately; static (de)serializers built earlier keep their behaviour | code that registered converters lazily |
-| **Typed class names from the JSON** (*fix*) | any class whose name resolved next to the marked type was loaded (running its static initializer), instantiated and returned, even if it was not a subtype; names with `.` reached subpackages | only subtypes of the marked type are accepted, loaded without initialization; other names fail with a clear error | JSON that relied on typed wrappers naming unrelated classes |
+| **Typed class names from the JSON** (*fix*) | any class whose name resolved next to the marked type was loaded (running its static initializer), instantiated and returned, even if it was not a subtype; names with `.` reached subpackages | only subtypes of the marked type are accepted, loaded without initialization; other names fail with a clear error; with `markTypedSuperClass`, only subtypes of the declared type being read | JSON that relied on typed wrappers naming unrelated classes |
 
 ## API
 

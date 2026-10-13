@@ -110,7 +110,7 @@ Facts that matter:
 8. Sets: `Set`, `immutable.HashSet`, `immutable.ListSet`; `SortedSet`/`TreeSet` → `IllegalStateException`; `BitSet`.
 9. Maps: `immutable.HashMap`; `SortedMap`/`TreeMap` → throw; `immutable.ListMap`.
 10. Mutable collections: `mutable.ArrayBuffer/Buffer/Seq/IndexedSeq/Iterable` → `ArrayBufferDeserializer`; `mutable.Set/HashSet` → `MutableHashSetDeserializer`; `mutable.Map/HashMap` → `MutableHashMapDeserializer`.
-11. If `allowSuperType`: registered superclass deserializers (exact symbol, then `baseClasses.contains` over the registry map in map-iteration order).
+11. If `allowSuperType`: registered superclass deserializers (probed in `baseClasses` order, so the most specific registered supertype wins). A `TypedDeserializer` obtained for a declared type more specific than the one it was registered for is narrowed with `restrictedTo(class of tpe)`, so it only produces instances of the declared type.
 12. `ListBuffer` → `IllegalArgumentException`.
 13. Exact-type custom deserializer by `tpe.toString`.
 14. `Nothing` / `Any` / `AnyRef` → `IllegalArgumentException`.

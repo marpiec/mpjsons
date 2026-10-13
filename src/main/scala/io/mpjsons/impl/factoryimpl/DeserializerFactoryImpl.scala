@@ -8,7 +8,8 @@ import io.mpjsons.impl.deserializer.time.{DurationDeserializer, LocalDateDeseria
 import io.mpjsons.impl.deserializer.utiltypes.{EitherDeserializer, Tuple1Deserializer, Tuple2Deserializer, Tuple3Deserializer, Tuple4Deserializer, Tuple5Deserializer, Tuple6Deserializer}
 import io.mpjsons.impl.deserializer.values._
 import io.mpjsons.impl.deserializer.{BeanDeserializer, PostTransformDeserializer, SingletonObjectDeserializer}
-import io.mpjsons.impl.util.Context
+import io.mpjsons.impl.special.TypedConverter.TypedDeserializer
+import io.mpjsons.impl.util.{Context, TypesUtil}
 
 import scala.collection._
 import scala.collection.immutable.Map
@@ -207,9 +208,14 @@ class DeserializerFactoryImpl(val config: MPJsonsConfig) {
 
     if(allowSuperType) {
       // The most specific registered supertype wins: baseClasses is the linearization, most derived first.
-      val registered = tpe.baseClasses.iterator.flatMap(additionalSuperclassDeserializers.get).nextOption()
+      val registered = tpe.baseClasses.iterator.flatMap(c => additionalSuperclassDeserializers.get(c).map(c -> _)).nextOption()
       if (registered.isDefined) {
-        return registered.get(this.asInstanceOf[DeserializerFactory])
+        val (registeredFor, create) = registered.get
+        return create(this.asInstanceOf[DeserializerFactory]) match {
+          // A typed reader registered for a supertype must only produce instances of the declared type being read.
+          case typed: TypedDeserializer[_] if registeredFor != typeSymbol => typed.restrictedTo(TypesUtil.getClassFromType(tpe), tpe.toString)
+          case deserializer => deserializer
+        }
       }
     }
 

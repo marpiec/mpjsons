@@ -110,28 +110,38 @@ object TypedConverter {
     }
 
     private def resolveClass(typeName: String): Class[_] = {
-      knownSubclasses.get(typeName) match {
+      val resolved = knownSubclasses.get(typeName) match {
         case Some(clazz) => clazz
-        case None =>
-          if (typeName.isEmpty || typeName.exists(c => c == '.' || c == '/' || c == '[' || c == ';')) {
-            throw new IllegalArgumentException("Invalid type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
-              ": expected a simple class name or a @typeName alias")
-          }
-          val resolved = try {
-            Class.forName(binaryNamePrefix + typeName, false, classLoader) // no static initializer runs here
-          } catch {
-            case e @ (_: ClassNotFoundException | _: LinkageError) =>
-              throw new IllegalArgumentException("Unknown type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
-                ": no such class " + binaryNamePrefix + Messages.abbreviate(typeName) +
-                (if (knownSubclasses.nonEmpty) ", known subclasses: " + knownSubclasses.keys.toList.sorted.mkString(", ") else ""), e)
-          }
-          if (!markedClass.isAssignableFrom(resolved)) {
-            throw new IllegalArgumentException("Type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
-              " resolves to " + resolved.getName + ", which is not a subtype of it")
-          }
-          resolved
+        case None => findSibling(typeName)
+      }
+      if (!markedClass.isAssignableFrom(resolved)) {
+        throw new IllegalArgumentException("Type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
+          " resolves to " + resolved.getName + ", which is not a subtype of it")
+      }
+      resolved
+    }
+
+    private def findSibling(typeName: String): Class[_] = {
+      if (typeName.isEmpty || typeName.exists(c => c == '.' || c == '/' || c == '[' || c == ';')) {
+        throw new IllegalArgumentException("Invalid type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
+          ": expected a simple class name or a @typeName alias")
+      }
+      try {
+        Class.forName(binaryNamePrefix + typeName, false, classLoader) // no static initializer runs here
+      } catch {
+        case e @ (_: ClassNotFoundException | _: LinkageError) =>
+          throw new IllegalArgumentException("Unknown type name '" + Messages.abbreviate(typeName) + "' for typed class " + markedTypeName +
+            ": no such class " + binaryNamePrefix + Messages.abbreviate(typeName) +
+            (if (knownSubclasses.nonEmpty) ", known subclasses: " + knownSubclasses.keys.toList.sorted.mkString(", ") else ""), e)
       }
     }
+
+    /**
+     * The same reader, accepting only subclasses of `requiredClass` (a subtype of the marked class). Used when a
+     * converter registered for a supertype reads a more specific declared type (markTypedSuperClass).
+     */
+    def restrictedTo(requiredClass: Class[_], requiredTypeName: String): TypedDeserializer[T] =
+      new TypedDeserializer[T](binaryNamePrefix, knownSubclasses, requiredTypeName, requiredClass, deserializerFactory)
 
     def extractTypeName(jsonIterator: StringIterator): String = {
       val deserializer = deserializerFactory.getDeserializer[String](typeOf[String], Context(List.empty, Map.empty))

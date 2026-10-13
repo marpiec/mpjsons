@@ -32,7 +32,7 @@ For most use cases, `serialize` and `deserialize` are all you will ever need.
 - **Generics** — `List[User]`, `Map[String, List[User]]`, and other nested type parameters are resolved automatically.
 - **Collections** — `List`, `Vector`, `Seq`, `Set`, `Queue`, `Stream`, `Array`, and `Map`, both mutable and immutable, including `Hash*`/`List*` variants.
 - **Scala types** — `Option`, `Either`, and `Tuple1`–`Tuple6`.
-- **`java.time`** — `LocalDate`, `LocalTime`, `LocalDateTime`, `Duration`.
+- **`java.time` and friends** — `LocalDate`, `LocalTime`, `LocalDateTime`, `Duration` (objects, or ISO-8601 strings with `isoTime`), `Instant`, `OffsetDateTime`, `ZonedDateTime`, `java.util.UUID` (strings), `BigDecimal` and `BigInt` (exact numbers).
 - **Custom converters** — plug in your own (de)serializers for any type.
 - **Polymorphic JSON** — embed type tags so collections of subtypes round-trip (`markTypedClass`).
 - **Helpful errors** — deserialization failures are wrapped with a pointer to the exact spot in the JSON.

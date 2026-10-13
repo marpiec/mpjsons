@@ -101,6 +101,27 @@ class DeserializerFactoryImpl(config: MPJsonsConfig) {
       return new EitherDeserializer(this.asInstanceOf[DeserializerFactory], tpe, context)
     }
 
+    // Arbitrary precision numbers, UUID and the zoned java.time types (unless a converter is registered)
+    if (!additionalDeserializers.contains(tpe.toString)) {
+      if (typeSymbol == typeOf[BigDecimal].typeSymbol) {
+        return BigDecimalDeserializer
+      } else if (typeSymbol == typeOf[java.math.BigDecimal].typeSymbol) {
+        return JavaBigDecimalDeserializer
+      } else if (typeSymbol == typeOf[BigInt].typeSymbol) {
+        return BigIntDeserializer
+      } else if (typeSymbol == typeOf[java.math.BigInteger].typeSymbol) {
+        return JavaBigIntegerDeserializer
+      } else if (typeSymbol == typeOf[java.util.UUID].typeSymbol) {
+        return UuidDeserializer
+      } else if (typeSymbol == typeOf[java.time.Instant].typeSymbol) {
+        return InstantDeserializer
+      } else if (typeSymbol == typeOf[java.time.OffsetDateTime].typeSymbol) {
+        return OffsetDateTimeDeserializer
+      } else if (typeSymbol == typeOf[java.time.ZonedDateTime].typeSymbol) {
+        return ZonedDateTimeDeserializer
+      }
+    }
+
     // tuple
 
     if (typeSymbol == typeOf[Tuple1[_]].typeSymbol) {
@@ -205,6 +226,8 @@ class DeserializerFactoryImpl(config: MPJsonsConfig) {
       throw new IllegalArgumentException("Deserialization of 'AnyRef' type is not supported, be sure to define type more precisely. Types: " + context.typesStackMessage)
     } else if (typeSymbol.isModuleClass) {
       new SingletonObjectDeserializer(tpe)
+    } else if (typeSymbol.fullName.startsWith("java.")) {
+      throw new IllegalArgumentException("No built-in deserializer for java type " + tpe + ", use registerConverter. Types: " + context.typesStackMessage)
     } else if (typeSymbol.isAbstract) {
       throw new IllegalArgumentException("Cannot deserialize abstract type " + tpe + " (trait or abstract class) without a registered converter, " +
         "use registerConverter, registerSuperclassConverter or markTypedClass. Types: " + context.typesStackMessage)

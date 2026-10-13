@@ -102,7 +102,7 @@ Facts that matter:
 
 1. Scala primitives by `typeSymbol` equality: Long, Int, Boolean, String, Double, Float, Short, Byte, Char.
 2. Java boxed: `java.lang.Long/Integer/Boolean/Double/Float/Short/Byte` (mapped to the *same* Scala deserializer objects; the `Java*Deserializer` objects in `values/` exist but are unused).
-3. `java.time.LocalTime/LocalDate/LocalDateTime` unless a converter is registered for that `tpe.toString`; `java.time.Duration` **without** that override guard (`:91`); `java.lang.Character`.
+3. `java.time.LocalTime/LocalDate/LocalDateTime/Duration` unless a converter is registered for that `tpe.toString`; `java.lang.Character`; then (same converter guard) `BigDecimal`, `java.math.BigDecimal`, `BigInt`, `java.math.BigInteger`, `java.util.UUID`, `java.time.Instant/OffsetDateTime/ZonedDateTime`.
 4. `Array` via `tpe.asInstanceOf[TypeRef].sym == definitions.ArrayClass` (**unguarded cast**, crashes for `SingleType` such as `Foo.type`, known-issues §3).
 5. `Option`, `Map`/`immutable.Map`, `Either`.
 6. `Tuple1..Tuple6`.
@@ -115,7 +115,7 @@ Facts that matter:
 13. Exact-type custom deserializer by `tpe.toString`.
 14. `Nothing` / `Any` / `AnyRef` → `IllegalArgumentException`.
 15. Singleton object (`typeSymbol.isModuleClass`) → `SingletonObjectDeserializer`.
-16. Abstract type (trait / abstract class, `typeSymbol.isAbstract`) → `IllegalArgumentException` naming the type and the registration options.
+16. Any other `java.*` type → `IllegalArgumentException` ("use registerConverter"); abstract type (trait / abstract class, `typeSymbol.isAbstract`) → `IllegalArgumentException` naming the type and the registration options.
 17. Otherwise `BeanDeserializer`.
 
 Then `getDeserializerNoCache` wraps the result in `PostTransformDeserializer` if a transform is registered for exactly `tpe`.
@@ -123,8 +123,9 @@ Then `getDeserializerNoCache` wraps the result in `PostTransformDeserializer` if
 `SerializerFactoryImpl.getSerializerNoCache` (`:40-199`):
 
 1. Scala and Java numeric/boolean primitives → `SimpleToStringSerializer` (`append(obj: Any)`).
-2. `java.time` four types (all four guarded by "no converter registered").
-3. `String`, `mutable.StringBuilder`, `Char`, `java.lang.Character` → `StringSerializer`.
+2. `java.time` four types (all four guarded by "no converter registered"; ISO string variants when `isoTime`); then `BigDecimal`/`BigInt` (Scala and `java.math`) → number serializers and `UUID`/`Instant`/`OffsetDateTime`/`ZonedDateTime` → `ToStringAsJsonStringSerializer`, same guard.
+3. `String`, `mutable.StringBuilder`, `Char`, `java.lang.Character` → `StringSerializer` (or its no-slash-escape variant).
+3b. Final fallback: a `java.*` type without a converter fails with "use registerConverter" instead of reaching `BeanSerializer`.
 4. `Array` (guarded with `isInstanceOf[TypeRefApi]`).
 5. **Only if** `typeSymbol.fullName.startsWith("scala.")`: any mutable `Seq/Set/Iterable` → `IterableSerializer`, mutable `Map` → `MapSerializer`; any `collection.Seq`, `BitSet` (exact), `collection.Set`, `collection.Map`, `Iterable` likewise; then `Either`, `Option`, `Tuple1..6` by `baseClasses.contains`. Serialization therefore accepts every standard collection, while deserialization supports the explicit list in the chain above.
 6. Superclass serializers (if `allowSuperType`), exact custom serializer by `tpe.toString`, `Nothing/Any/AnyRef` errors, singleton (`typeSymbol.isModuleClass`) → `SingletonObjectSerializer`.

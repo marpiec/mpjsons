@@ -14,7 +14,8 @@ object JsonShapes {
     typeOf[Int], typeOf[Long], typeOf[Short], typeOf[Byte], typeOf[Double], typeOf[Float], typeOf[Boolean], typeOf[Char],
     typeOf[java.lang.Integer], typeOf[java.lang.Long], typeOf[java.lang.Short], typeOf[java.lang.Byte],
     typeOf[java.lang.Double], typeOf[java.lang.Float], typeOf[java.lang.Boolean], typeOf[java.lang.Character],
-    typeOf[String], typeOf[StringBuilder])
+    typeOf[String], typeOf[StringBuilder], typeOf[BigDecimal], typeOf[BigInt], typeOf[java.math.BigDecimal], typeOf[java.math.BigInteger],
+    typeOf[java.util.UUID], typeOf[java.time.Instant], typeOf[java.time.OffsetDateTime], typeOf[java.time.ZonedDateTime])
 
   private val timeTypes: List[Type] = List(
     typeOf[java.time.LocalDate], typeOf[java.time.LocalTime], typeOf[java.time.LocalDateTime], typeOf[java.time.Duration])

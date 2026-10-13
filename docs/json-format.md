@@ -13,6 +13,9 @@ any size-minimisation or `null`-support change must stay compatible with (see ro
 | `Boolean` (+ boxed) | `true` / `false` | lowercase letters collected, must equal `true`/`false` | |
 | `Char`, `java.lang.Character` | one-char JSON string `"M"` | string of length 1 | |
 | `String`, `mutable.StringBuilder` | JSON string, see escaping | JSON string | |
+| `BigDecimal`, `BigInt`, `java.math.BigDecimal`, `java.math.BigInteger` | JSON number, exact (`toString`, so `1E+10` is possible) | the full number literal text | |
+| `java.util.UUID`, `java.time.Instant`, `OffsetDateTime`, `ZonedDateTime` | JSON string (`toString`: `"2023-07-23T10:15:30.123Z"`, `"...+02:00[Europe\/Warsaw]"`) | `parse` / `UUID.fromString` of the string | `/` in zone ids follows `escapeSlash` |
+| any other `java.*` type | **error** at (de)serializer build time naming the type (`use registerConverter`) | | replaces the `InaccessibleObjectException` the bean fallback used to throw under JPMS |
 
 String escaping on write (`StringSerializer`): `"`→`\"`, `\`→`\\`, `/`→`\/` (**unnecessary, +1 byte per slash**), `\b \f \n \r \t`, other chars `< 0x20` → `\u00XX`, `\u0000` → **throws** `IllegalArgumentException("Null byte in String is not allowed")`. Everything else, including non-ASCII and surrogate pairs, is emitted as raw UTF-16 chars (**verified** `["😀"]`).
 

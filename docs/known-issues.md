@@ -98,12 +98,12 @@ payloads and inside `Some`. See json-format.md §2 and `NullLiteralSpec`.
 `Option` fields that construction left `null` are set to `None` before the key loop, so an absent key reads as
 `None`; defaults set by a no-arg constructor are kept.
 
-### 16. `java.*` value types fall into bean reflection and fail under JPMS — LIMITATION (verified)
+### 16. `java.*` value types fall into bean reflection and fail under JPMS — FIXED
 
-`m.serialize(BigDecimal("1.5"))` and `m.serialize(UUID.randomUUID())` throw `InaccessibleObjectException`
-(`module java.base does not "opens java.math"`). Any JDK type without an explicit (de)serializer is unusable on
-JDK 9+. Options: dedicated converters for the common ones (`BigDecimal`, `BigInt`, `UUID`, `Instant`, `ZonedDateTime`,
-`java.util.Date`), and a fail-fast check in the bean fallback for `typeSymbol.fullName.startsWith("java.")`.
+Built-in support for `BigDecimal`, `BigInt`, `java.math.BigDecimal/BigInteger` (exact JSON numbers) and
+`java.util.UUID`, `java.time.Instant/OffsetDateTime/ZonedDateTime` (strings); any other `java.*` type without a
+registered converter now fails at build time with a message naming the type instead of
+`InaccessibleObjectException`. Covered by `ExtraTypesSpec`.
 
 ### 17. Field order is reverse declaration order — FIXED (owner decision 13/10/2026)
 

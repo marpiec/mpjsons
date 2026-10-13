@@ -81,6 +81,18 @@ class SerializerFactoryImpl(config: MPJsonsConfig) {
 
 
 
+    // Arbitrary precision numbers, UUID and the zoned java.time types (unless a converter is registered)
+    if (!additionalSerializers.contains(tpe.toString)) {
+      if (typeOf[BigDecimal].typeSymbol == typeSymbol || typeOf[java.math.BigDecimal].typeSymbol == typeSymbol) {
+        return BigDecimalSerializer
+      } else if (typeOf[BigInt].typeSymbol == typeSymbol || typeOf[java.math.BigInteger].typeSymbol == typeSymbol) {
+        return BigIntSerializer
+      } else if (typeOf[java.util.UUID].typeSymbol == typeSymbol || typeOf[java.time.Instant].typeSymbol == typeSymbol ||
+        typeOf[java.time.OffsetDateTime].typeSymbol == typeSymbol || typeOf[java.time.ZonedDateTime].typeSymbol == typeSymbol) {
+        return new ToStringAsJsonStringSerializer(if (config.escapeSlash) StringSerializer else StringSerializer.withoutSlashEscape)
+      }
+    }
+
     // String, StringBuilder, Char
 
     if (typeOf[String].typeSymbol == typeSymbol ||
@@ -185,6 +197,8 @@ class SerializerFactoryImpl(config: MPJsonsConfig) {
       val additionalOption = additionalSerializersAnySubType.get(stripTypes(tpe.toString))
       additionalOption match {
         case Some(serializer) => serializer(this.asInstanceOf[SerializerFactory])
+        case None if typeSymbol.fullName.startsWith("java.") =>
+          throw new IllegalArgumentException("No built-in serializer for java type " + tpe + ", use registerConverter. Types: " + context.typesStackMessage)
         case None => new BeanSerializer(this.asInstanceOf[SerializerFactory], tpe, context, config)
       }
 

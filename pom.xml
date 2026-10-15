@@ -6,7 +6,7 @@
 
     <groupId>io.mpjsons</groupId>
     <artifactId>mpjsons_2.13</artifactId>
-    <version>0.6.51</version>
+    <version>0.7.0</version>
     <packaging>jar</packaging>
 
     <name>mpjsons</name>

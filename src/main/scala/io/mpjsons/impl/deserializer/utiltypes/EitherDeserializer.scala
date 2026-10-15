@@ -2,7 +2,7 @@ package io.mpjsons.impl.deserializer.utiltypes
 
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, StringIterator}
 
 import scala.reflect.runtime.universe._
@@ -14,9 +14,9 @@ import scala.reflect.runtime.universe._
 class EitherDeserializer[L, R](val deserializerFactory: DeserializerFactory, tpe: Type, context: Context)
   extends JsonTypeDeserializer[Either[L, R]] {
 
-  val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
-  val leftDeserializer = deserializerFactory.getDeserializer[L](leftType, context)
-  val rightDeserializer = deserializerFactory.getDeserializer[R](rightType, context)
+  private val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
+  private val leftDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[L](leftType, context), leftType, deserializerFactory.config)
+  private val rightDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[R](rightType, context), rightType, deserializerFactory.config)
 
 
   override def deserialize(jsonIterator: StringIterator): Either[L, R] = {

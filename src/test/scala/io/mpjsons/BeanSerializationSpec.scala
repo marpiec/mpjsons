@@ -1,8 +1,7 @@
 package io.mpjsons
 
-
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 import org.scalatest.exceptions.TestFailedException
 
 import scala.annotation.meta.{field, param}
@@ -39,7 +38,10 @@ class SimpleDataObjectB {
 
 case class SimpleObjectWithNulls(@(nullable @field) a: String, b: String)
 
-class BeanSerializationSpec extends FlatSpec {
+
+case class SimpleCaseClassObjectWithNulls(a: String)
+
+class BeanSerializationSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 
@@ -64,6 +66,7 @@ class BeanSerializationSpec extends FlatSpec {
 
   val withNullsCorrect = SimpleObjectWithNulls(null, "ok")
   val withNullsIncorrect = SimpleObjectWithNulls("fail", null)
+  val simpleCaseClass = SimpleCaseClassObjectWithNulls("Hello")
 
   val properJsonSometimesIdentifiersWithoutQuotes = " { " +
     "charValue  : \"M\"  " +
@@ -209,6 +212,17 @@ class BeanSerializationSpec extends FlatSpec {
 
   "Serializer" must "allow null values im annotated" in {
     val serialized = mpjsons.serialize(withNullsCorrect)
+  }
+
+
+  "Serializer" must "serialize case class" in {
+    val serialized = mpjsons.serialize(simpleCaseClass)
+
+    serialized mustBe "{\"a\":\"Hello\"}"
+
+    val deserialized = mpjsons.deserialize[SimpleCaseClassObjectWithNulls](serialized)
+
+    deserialized mustBe simpleCaseClass
   }
 
 }

@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 /**
  * @author Marcin Pieciukiewicz
@@ -15,7 +15,7 @@ class ContainerObject(testObject: TestObject) {
   var otherString: String = testObject.someString
 }
 
-class ComplexConstructorsSpec extends FlatSpec {
+class ComplexConstructorsSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 

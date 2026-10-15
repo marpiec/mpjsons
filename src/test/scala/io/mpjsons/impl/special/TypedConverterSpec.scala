@@ -2,7 +2,9 @@ package io.mpjsons.impl.special
 
 
 import io.mpjsons.MPJsons
-import org.scalatest.{FlatSpec, MustMatchers}
+
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 sealed trait CustomDescription
 
@@ -10,7 +12,7 @@ case class TextDescription(text: String) extends CustomDescription
 case class NumericDescription(number: Int) extends CustomDescription
 
 
-class TypedConverterSpec extends FlatSpec with MustMatchers {
+class TypedConverterSpec extends AnyFlatSpec {
 
   "Typed serializer" must "generate correct JSON" in {
     val mpjsons = new MPJsons

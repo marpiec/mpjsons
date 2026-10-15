@@ -1,36 +1,69 @@
 package io.mpjsons
 
+import io.mpjsons.impl.special.TypeNames
 import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerializer}
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
 
+import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.StaticAnnotation
 import scala.reflect.runtime.universe._
 
 
 private object ErrorMessageFormatter {
 
-  final val trimmingSize = 40
+  private final val trimmingSize = 40
 
+  /**
+   * Describes a deserialization failure with only a short window of the input around the failing position, so the
+   * message stays small and does not copy whole (possibly sensitive) payloads into logs.
+   */
   def formatDeserializationError(json: String, jsonIterator: StringIterator, e: RuntimeException, tpe: Type): String = {
-    val consumed = jsonIterator.debugGetConsumedString
-    val remaining = jsonIterator.debugGetRemainingString
-    val consumedTrimmed = consumed.substring(Math.max(0, consumed.length - trimmingSize), consumed.length)
-    val remainingTrimmed = remaining.substring(0, Math.min(remaining.length, trimmingSize))
-    val consumedPlaceholder = " " * consumedTrimmed.length
+    val input = jsonIterator.stringValue
+    val position = Math.min(Math.max(jsonIterator.nextIndex - 1, 0), input.length)
+    val start = Math.max(0, position - trimmingSize)
+    val end = Math.min(input.length, position + trimmingSize)
+    val prefix = if (start > 0) "..." else ""
+    val suffix = if (end < input.length) "..." else ""
+    val window = printable(input.substring(start, end))
+    val caret = " " * (prefix.length + position - start) + "^"
     s"""|Problem deserializing: $tpe
         |Problem: ${e.toString}
-        |In this place:
-        |...$consumedTrimmed$remainingTrimmed...
-        | $consumedPlaceholder^
-        |Json: $json""".stripMargin
+        |At position $position of ${input.length}:
+        |$prefix$window$suffix
+        |$caret""".stripMargin
+  }
+
+  /** Keeps the window on one line so the caret lines up. */
+  private def printable(text: String): String = {
+    text.map(c => if (c < ' ') ' ' else c)
+  }
+}
+
+/**
+ * Remembers the length of the last output produced for one type, so the next output buffer can be
+ * allocated at the right size instead of growing from the default capacity in several steps.
+ * Races between threads only make the hint slightly stale, which is harmless.
+ */
+private[mpjsons] final class OutputSizeHint {
+  @volatile private var length: Int = 64
+
+  // Margin: StringBuilder.append(double) reserves 24 chars up front (JDK 19+), so a trailing number must not overflow.
+  def newBuilder(): StringBuilder = new StringBuilder(length + 32)
+
+  def update(builder: StringBuilder): Unit = {
+    length = builder.length
   }
 }
 
 /**
  * Serializer for a single type.
  */
-class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], tpe: Type) {
+class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], config: MPJsonsConfig) {
+
+  def this(innerSerializer: JsonTypeSerializer[T]) = this(innerSerializer, MPJsonsConfig())
+
+  private val sizeHint = new OutputSizeHint
 
   /**
    * Takes an object and returns a String containing JSON representation of that object.
@@ -45,8 +78,9 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], tp
    * which requires copying of underlying char array.
    */
   def serializeToStringBuilder(obj: T): StringBuilder = {
-    val json = new StringBuilder()
-    innerSerializer.serialize(obj, json)
+    val json = sizeHint.newBuilder()
+    if (obj == null) NullValues.writeNull(json, config.nullPolicy != NullPolicy.Fail, "the top-level value") else innerSerializer.serialize(obj, json)
+    sizeHint.update(json)
     json
   }
 }
@@ -54,15 +88,19 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], tp
 /**
  * Deserializer for a single type.
  */
-class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[T], tpe: Type) {
+class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[T], tpe: Type, config: MPJsonsConfig) {
+
+  def this(innerDeserializer: JsonTypeDeserializer[T], tpe: Type) = this(innerDeserializer, tpe, MPJsonsConfig())
 
   /**
    * Takes a String containing JSON representation of objects and returns an instance of given object.
    */
   def deserialize(json: String): T = {
-    val jsonIterator = new StringIterator(json)
+    val jsonIterator = new StringIterator(json, config.strict)
     try {
-      innerDeserializer.deserialize(jsonIterator)
+      val result = if (jsonIterator.tryConsumeNull()) NullValues.forType(tpe, config).get().asInstanceOf[T] else innerDeserializer.deserialize(jsonIterator)
+      jsonIterator.expectEnd()
+      result
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e, tpe), e)
@@ -80,30 +118,44 @@ final class nullable extends StaticAnnotation
  * Main class of json serialization library.
  * @author Marcin Pieciukiewicz
  */
-class MPJsons(ignoreNonExistingFields: Boolean = false) {
+class MPJsons(val config: MPJsonsConfig) {
 
-  private val deserializerFactory = new DeserializerFactory(ignoreNonExistingFields)
-  private val serializerFactory = new SerializerFactory
+  /** Backward compatible constructor; `ignoreNullFields = true` is the same as `NullPolicy.Omit`. */
+  def this(ignoreNonExistingFields: Boolean = false, ignoreNullFields: Boolean = false, nullPolicy: NullPolicy = NullPolicy.Fail) =
+    this(MPJsonsConfig(ignoreNonExistingFields = ignoreNonExistingFields, nullPolicy = if (ignoreNullFields) NullPolicy.Omit else nullPolicy))
 
-  private var extractTypeCache = Map[TypeTag[_], Type]()
-  private var extractTypeFromNameCache = Map[String, Type]()
+  private val deserializerFactory = new DeserializerFactory(config)
+  private val serializerFactory = new SerializerFactory(config)
+
+  private val extractTypeFromNameCache = new ConcurrentHashMap[String, Type]()
+  private val outputSizeHints = new ConcurrentHashMap[Type, OutputSizeHint]()
 
   private val nothingTypeTag = typeTag[Nothing]
 
-  private def extractType[T](tag: TypeTag[T]): Type = {
-    extractTypeCache.getOrElse(tag, {
-      val tpe = tag.tpe
-      extractTypeCache += tag -> tpe
-      tpe
-    })
-  }
+  // A materialised TypeTag is a fresh object on every call and its equals/hashCode evaluate tag.tpe anyway,
+  // so caching by TypeTag cannot save that computation; tag.tpe itself is cheap for interned types.
+  private def extractType[T](tag: TypeTag[T]): Type = tag.tpe
 
   private def extractTypeFromName[T](typeName: String): Type = {
-    extractTypeFromNameCache.getOrElse(typeName, {
+    val cached = extractTypeFromNameCache.get(typeName)
+    if (cached != null) {
+      cached
+    } else {
       val tpe = TypesUtil.getTypeFromClass(Class.forName(typeName))
-      extractTypeFromNameCache += typeName -> tpe
+      extractTypeFromNameCache.putIfAbsent(typeName, tpe)
       tpe
-    })
+    }
+  }
+
+  private def outputSizeHint(tpe: Type): OutputSizeHint = {
+    val cached = outputSizeHints.get(tpe)
+    if (cached != null) {
+      cached
+    } else {
+      val hint = new OutputSizeHint
+      val previous = outputSizeHints.putIfAbsent(tpe, hint)
+      if (previous == null) hint else previous
+    }
   }
 
   /**
@@ -121,7 +173,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * Creates object from gives json String, based on a passed type.
    */
   def deserialize[T](json: String, tpe: Type): T = {
-    val jsonIterator = new StringIterator(json)
+    val jsonIterator = new StringIterator(json, config.strict)
     deserialize(jsonIterator, tpe)
   }
 
@@ -130,7 +182,13 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
     */
   def deserialize[T](jsonIterator: StringIterator, tpe: Type): T = {
     try {
-      deserializerFactory.getDeserializer(tpe, Context(List.empty, Map.empty)).deserialize(jsonIterator)
+      val result = if (jsonIterator.tryConsumeNull()) {
+        NullValues.forType(tpe, config).get().asInstanceOf[T]
+      } else {
+        deserializerFactory.getDeserializer(tpe, Context(List.empty, Map.empty)).deserialize(jsonIterator)
+      }
+      jsonIterator.expectEnd()
+      result
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(jsonIterator.stringValue, jsonIterator, e, tpe), e)
@@ -160,7 +218,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * Creates a specialized deserializer for a passed type.
    */
   def buildStaticDeserializer[T](tpe: Type): StaticDeserializer[T] = {
-    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe, Context(List.empty, Map.empty)), tpe)
+    new StaticDeserializer[T](deserializerFactory.getDeserializer[T](tpe, Context(List.empty, Map.empty)), tpe, config)
   }
 
   /**
@@ -190,9 +248,18 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * @return JSON representation of given object
    */
   def serialize[T](obj: T, tpe: Type): String = {
-    val json = new StringBuilder()
-    serializerFactory.getSerializer(tpe, Context(List.empty, Map.empty)).serialize(obj, json)
-    json.toString()
+    if (obj == null) {
+      if (config.nullPolicy == NullPolicy.Fail) {
+        throw new IllegalArgumentException("Null value is not allowed as the top-level value (NullPolicy.Fail); use NullPolicy.Omit or WriteNull to allow nulls")
+      }
+      "null"
+    } else {
+      val hint = outputSizeHint(tpe)
+      val json = hint.newBuilder()
+      serializerFactory.getSerializer(tpe, Context(List.empty, Map.empty)).serialize(obj, json)
+      hint.update(json)
+      json.toString()
+    }
   }
 
   /**
@@ -220,7 +287,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * Creates a specialized serializer for a passed type name (class name).
    */
   def buildStaticSerializer[T](tpe: Type): StaticSerializer[T] = {
-    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Context(List.empty, Map.empty)), tpe)
+    new StaticSerializer[T](serializerFactory.getSerializer[T](tpe, Context(List.empty, Map.empty)), config)
   }
 
   /**
@@ -237,7 +304,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
    * @param deserializer deserializer that will be used to serialize given type
    */
   def registerConverter[T: TypeTag](serializer: SerializerFactory => JsonTypeSerializer[T],
-                                    deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]) {
+                                    deserializer: DeserializerFactory => JsonTypeDeserializer[T])(implicit tag: TypeTag[T]): Unit = {
     if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
     } else {
@@ -261,6 +328,25 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
     }
   }
 
+  /**
+   * Method to register custom json converter to support custom types of data _and_all_types_that_are_extending_it_.
+   * @param serializer serializer that will be used to serialize  given type and its descendant, it will handle any subtype of given type, eg. Something[T](value: T)
+   */
+  def registerSerializerForAnySubtype[T](serializer: SerializerFactory => JsonTypeSerializer[T])(implicit tag: TypeTag[T]): Unit = {
+    if (tag == nothingTypeTag) {
+      throw new IllegalArgumentException("Type for converter was not specified, or was Nothing. Please specify object type.")
+    } else {
+      serializerFactory.registerSerializerAllSubTypes[T](extractType(tag), serializer)
+    }
+  }
+
+
+  /** Builds the typed deserializer for a marked type: subtypes resolve via the sealed hierarchy or as siblings of the marked type. */
+  private def typedDeserializerFor[T <: AnyRef](tpe: Type, readTable: Map[String, Class[_]], deserializerFactory: DeserializerFactory): TypedDeserializer[T] = {
+    val binaryName = TypesUtil.getClassFromType(tpe).getName
+    val prefix = binaryName.substring(0, Math.max(binaryName.lastIndexOf('$'), binaryName.lastIndexOf('.')) + 1)
+    new TypedDeserializer[T](prefix, readTable, tpe.toString, TypesUtil.getClassFromType(tpe), deserializerFactory)
+  }
 
   /**
    * Method that allows to specify which type will have added type information to serialized json,
@@ -271,11 +357,10 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {
       val tpe = extractType(tag)
-      val typeName: String = tpe.baseClasses.head.fullName
-      val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
+      val readTable = TypeNames.readTable(tpe.typeSymbol)
       registerConverter[T](
-        sf => new TypedSerializer[T](packageName, sf),
-        df => new TypedDeserializer[T](packageName, df))
+        sf => new TypedSerializer[T](sf, readTable, tpe.toString),
+        df => typedDeserializerFor[T](tpe, readTable, df))
     }
   }
 
@@ -290,11 +375,10 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {
       val tpe = extractType(tag)
-      val typeName: String = tpe.baseClasses.head.fullName
-      val packageName = typeName.substring(0, typeName.lastIndexOf('.'))
+      val readTable = TypeNames.readTable(tpe.typeSymbol)
       registerSuperclassConverter[T](
-        sf => new TypedSerializer[T](packageName, sf),
-        df => new TypedDeserializer[T](packageName, df))
+        sf => new TypedSerializer[T](sf, readTable, tpe.toString),
+        df => typedDeserializerFor[T](tpe, readTable, df))
     }
   }
 
@@ -302,7 +386,7 @@ class MPJsons(ignoreNonExistingFields: Boolean = false) {
   /**
     * Method that allows object to be transformed after deserialization, e.g. to get rid of nulls for missing JSON properties.
     */
-  def postDeserializationTransform[T](transform: (T) => T)(implicit tag: TypeTag[T]): Unit = {
+  def postDeserializationTransform[T](transform: T => T)(implicit tag: TypeTag[T]): Unit = {
     if (tag == nothingTypeTag) {
       throw new IllegalArgumentException("Type for typed class was not specified, or was Nothing. Please specify object type.")
     } else {

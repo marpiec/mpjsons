@@ -1,11 +1,11 @@
 package io.mpjsons.impl.deserializer.immutables
 
 import io.mpjsons.JsonTypeDeserializer
+import io.mpjsons.impl.deserializer.values.IntDeserializer
 import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
 import scala.collection.immutable.BitSet
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.runtime.universe._
 
 /**
@@ -15,29 +15,26 @@ import scala.reflect.runtime.universe._
 class BitSetDeserializer(deserializerFactory: DeserializerFactory, tpe: Type, context: Context)
   extends JsonTypeDeserializer[BitSet] {
 
-  val deserializer = deserializerFactory.getDeserializer[Int](typeOf[Int], context)
+  private val deserializer = deserializerFactory.getDeserializer[Int](typeOf[Int], context)
+  private val useBuiltIn = deserializer eq IntDeserializer
 
 
   override def deserialize(jsonIterator: StringIterator): BitSet = {
 
     jsonIterator.consumeArrayStart()
 
-    val buffer = ArrayBuffer[Int]()
+    val builder = BitSet.newBuilder
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != ']') {
 
-      val value = deserializer.deserialize(jsonIterator)
-      buffer += value
+      builder += (if (useBuiltIn) IntDeserializer.deserialize(jsonIterator) else deserializer.deserialize(jsonIterator))
 
-      jsonIterator.skipWhitespaceChars()
-      if (jsonIterator.currentChar == ',') {
-        jsonIterator.nextChar()
-      }
+      jsonIterator.afterValue(']')
     }
 
     jsonIterator.nextChar()
-    BitSet(buffer.toArray: _*)
+    builder.result()
   }
 
 }

@@ -36,8 +36,6 @@ object ObjectConstructionUtil {
         // try to create object using default constructor
         constructor.newInstance()
       } catch {
-        //otherwise create object without calling constructor
-        case e: NoSuchMethodException => createInstanceWithoutCallingConstructor(clazz)
         case e: InstantiationException => throw new JsonInnerException("Cannot instantiate class of type " + clazz + ", maybe it is abstract? Types: " + context.typesStackMessage, e)
       }
     }

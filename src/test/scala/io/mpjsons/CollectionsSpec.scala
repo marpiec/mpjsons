@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 import scala.collection.immutable.Queue
 
@@ -14,9 +14,11 @@ class CollectionsDataObject {
   var stringsVector: Vector[String] = _
   var stringsStream: Stream[String] = _
   var stringsQueue: Queue[String] = _
+  var stringSome: Option[String] = _
+  var stringNone: Option[String] = _
 }
 
-class CollectionsSpec extends FlatSpec {
+class CollectionsSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 
@@ -31,9 +33,14 @@ class CollectionsSpec extends FlatSpec {
     cdo.stringsVector = Vector[String]("x", "Y", "zz")
     cdo.stringsQueue = Queue("An", "Be", "Do")
     cdo.stringsStream = Stream.iterate("A")(_ + "A").take(5)
+    cdo.stringSome = Some("Hello")
+    cdo.stringNone = None
 
 
     val simpleJson = mpjsons.serialize(cdo)
+
+    println(simpleJson)
+
     val dataObject = mpjsons.deserialize[CollectionsDataObject](simpleJson)
 
     val deserializedObject = dataObject.asInstanceOf[CollectionsDataObject]
@@ -46,6 +53,8 @@ class CollectionsSpec extends FlatSpec {
     deserializedObject.stringsVector mustEqual cdo.stringsVector
     deserializedObject.stringsQueue mustEqual cdo.stringsQueue
     deserializedObject.stringsStream mustEqual cdo.stringsStream
+    deserializedObject.stringSome mustEqual cdo.stringSome
+    deserializedObject.stringNone mustEqual cdo.stringNone
 
 
   }

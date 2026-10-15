@@ -4,7 +4,7 @@ import io.mpjsons.impl.deserializer.jsontypes.AbstractJsonMapDeserializer
 import io.mpjsons.impl.util.Context
 import io.mpjsons.impl.{DeserializerFactory, StringIterator}
 
-import scala.collection.immutable.HashMap
+import scala.collection.immutable.{ArraySeq, HashMap}
 import scala.reflect.runtime.universe._
 
 /**
@@ -19,8 +19,7 @@ class HashMapDeserializer[K, V](private val deserializerFactory: DeserializerFac
    * @return created object
    */
   override def deserialize(jsonIterator: StringIterator): HashMap[K, V] = {
-    val buffer = readBuffer(jsonIterator)
-    HashMap(buffer.toArray: _*)
+    readInto(jsonIterator, HashMap.newBuilder[K, V])
   }
 
 }

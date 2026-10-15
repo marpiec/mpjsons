@@ -4,7 +4,8 @@ import io.mpjsons.impl.deserializer.BeanDeserializer
 import io.mpjsons.impl.serializer.BeanSerializer
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
-import org.scalatest.{FlatSpec, MustMatchers}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 import scala.reflect.runtime.universe._
 
@@ -43,7 +44,7 @@ class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: D
     jsonIterator.nextChar()
 
     jsonIterator.skipWhitespaceChars()
-    val value = new BeanDeserializer[T](deserializerFactory, elementType, Context(List.empty, Map.empty)).deserialize(jsonIterator).asInstanceOf[T]
+    val value = new BeanDeserializer[T](deserializerFactory, elementType, Context(List.empty, Map.empty), false).deserialize(jsonIterator).asInstanceOf[T]
 
     jsonIterator.skipWhitespaceChars()
     jsonIterator.nextChar()
@@ -59,7 +60,7 @@ class TypedDeserializer[T <: AnyRef](packageName: String, deserializerFactory: D
 
 }
 
-class CustomConverterSupportSpec extends FlatSpec with MustMatchers {
+class CustomConverterSupportSpec extends AnyFlatSpec {
 
 
 

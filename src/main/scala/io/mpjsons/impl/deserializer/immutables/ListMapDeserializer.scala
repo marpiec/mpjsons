@@ -12,8 +12,7 @@ class ListMapDeserializer[K, V](private val deserializerFactory: DeserializerFac
 
 
   override def deserialize(jsonIterator: StringIterator): ListMap[K, V] = {
-    val buffer = readBuffer(jsonIterator)
-    ListMap(buffer.toArray.reverse: _*)
+    readInto(jsonIterator, ListMap.newBuilder[K, V])
   }
 
 }

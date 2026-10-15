@@ -13,15 +13,11 @@ import scala.reflect.runtime.universe._
 class IterableSerializer[E](serializerFactory: SerializerFactory, tpe: Type, context: Context)
   extends IteratorSerializer[E, Iterable[E]](serializerFactory, tpe, context) {
 
-  override def serialize(obj: Iterable[E], jsonBuilder: StringBuilder) {
-    serializeIterator(obj.iterator, jsonBuilder)
+  override def serialize(obj: Iterable[E], jsonBuilder: StringBuilder): Unit = {
+    obj match {
+      case list: List[E] => serializeList(list, jsonBuilder)
+      case other => serializeIterator(other.iterator, jsonBuilder)
+    }
   }
 
 }
-
-
-
-
-
-
-

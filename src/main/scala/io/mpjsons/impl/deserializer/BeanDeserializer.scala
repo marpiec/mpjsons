@@ -57,7 +57,10 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     val typeName = tpe.toString
     val jsonNames = fields.map(_.jsonName).toSet
     val entries = fields.flatMap { field =>
-      val deserializer = deserializerFactory.getDeserializer(field.tpe, context)
+      // A skipped field is never written, so its type may have no reader (e.g. an unmarked trait): build it only when the key shows up.
+      val deserializer =
+        if (field.skipSerialization) BeanDeserializer.lazyDeserializer(deserializerFactory.getDeserializer(field.tpe, context))
+        else deserializerFactory.getDeserializer(field.tpe, context)
       val argIndex = if (useConstructor) constructorParams.indexOf(field.field.getName) else -1
       val primary = BeanField(field.jsonName, field.field, field.tpe, typeName, deserializer, argIndex, field.nullable, config)
       val scalaName = field.field.getName
@@ -236,6 +239,11 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
 object BeanDeserializer {
   private val optionType = typeOf[Option[_]]
+
+  private def lazyDeserializer(build: => JsonTypeDeserializer[_]): JsonTypeDeserializer[AnyRef] = new JsonTypeDeserializer[AnyRef] {
+    private lazy val deserializer = build.asInstanceOf[JsonTypeDeserializer[AnyRef]]
+    override def deserialize(jsonIterator: StringIterator): AnyRef = deserializer.deserialize(jsonIterator)
+  }
 
   /**
    * The primary constructor's parameter names when `tpe` is a concrete case class whose parameters are all

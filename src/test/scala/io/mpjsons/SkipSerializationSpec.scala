@@ -71,6 +71,10 @@ class SkipSerializationSpec extends AnyFlatSpec {
     mpjsons.serialize(WithHandler(1, new Handler {})) mustBe """{"id":1}"""
   }
 
+  it must "not require a deserializer for the field's type while the key is absent" in {
+    new MPJsons().deserialize[WithHandler]("""{"id":1}""") mustBe WithHandler(1, null)
+  }
+
   it must "not apply the null policy to skipped fields" in {
     mpjsons.serialize(Session(null, "ann", 0)) mustBe """{"user":"ann"}"""
     mpjsons.serialize(WithOption(null, Some(1))) mustBe """{"value":{"value":1}}"""

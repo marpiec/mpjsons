@@ -39,8 +39,9 @@ class SkipSerializationSpec extends AnyFlatSpec {
     mpjsons.serialize(Session("abc", "ann", 3)) mustBe """{"user":"ann"}"""
   }
 
-  it must "still read the field when the key is present" in {
-    mpjsons.deserialize[Session]("""{"token":"abc","user":"ann","attempts":3}""") mustBe Session("abc", "ann", 3)
+  it must "ignore the field's key on read" in {
+    mpjsons.deserialize[Session]("""{"token":"abc","user":"ann","attempts":3}""") mustBe Session(null, "ann", 0)
+    mpjsons.deserialize[Session]("""{"token":{"nested":[1,"x",null]},"user":"ann"}""") mustBe Session(null, "ann", 0)
   }
 
   it must "give an absent field the value of any absent key" in {
@@ -52,27 +53,28 @@ class SkipSerializationSpec extends AnyFlatSpec {
     bean.visible = "v"
     bean.cached = 7L
     mpjsons.serialize(bean) mustBe """{"visible":"v"}"""
-    mpjsons.deserialize[Bean]("""{"visible":"v","cached":7}""").cached mustBe 7L
+    mpjsons.deserialize[Bean]("""{"visible":"v","cached":7}""").cached mustBe 0L
 
     val derived = new Derived
     derived.secret = "s"
     derived.name = "n"
     mpjsons.serialize(derived) mustBe """{"name":"n"}"""
-    mpjsons.deserialize[Derived]("""{"secret":"s","name":"n"}""").secret mustBe "s"
+    mpjsons.deserialize[Derived]("""{"secret":"s","name":"n"}""").secret mustBe null
   }
 
-  it must "keep reading the @jsonName key and the Scala name fallback" in {
+  it must "accept but ignore the @jsonName key and the Scala name fallback" in {
     mpjsons.serialize(Renamed("abc", "ann")) mustBe """{"user":"ann"}"""
-    mpjsons.deserialize[Renamed]("""{"t":"abc","user":"ann"}""") mustBe Renamed("abc", "ann")
-    mpjsons.deserialize[Renamed]("""{"token":"abc","user":"ann"}""") mustBe Renamed("abc", "ann")
+    mpjsons.deserialize[Renamed]("""{"t":"abc","user":"ann"}""") mustBe Renamed(null, "ann")
+    mpjsons.deserialize[Renamed]("""{"token":"abc","user":"ann"}""") mustBe Renamed(null, "ann")
   }
 
   it must "not require a serializer for the field's type" in {
     mpjsons.serialize(WithHandler(1, new Handler {})) mustBe """{"id":1}"""
   }
 
-  it must "not require a deserializer for the field's type while the key is absent" in {
+  it must "not require a deserializer for the field's type" in {
     new MPJsons().deserialize[WithHandler]("""{"id":1}""") mustBe WithHandler(1, null)
+    new MPJsons().deserialize[WithHandler]("""{"id":1,"handler":{"a":1}}""") mustBe WithHandler(1, null)
   }
 
   it must "not apply the null policy to skipped fields" in {
@@ -84,14 +86,14 @@ class SkipSerializationSpec extends AnyFlatSpec {
     val compact = new MPJsons(MPJsonsConfig(compactOptions = true, omitDefaults = true))
     compact.serialize(WithOption(Some("x"), Some(1))) mustBe """{"value":1}"""
     compact.serialize(WithOption(Some("x"), None)) mustBe "{}"
-    compact.deserialize[WithOption]("""{"note":"x","value":1}""") mustBe WithOption(Some("x"), Some(1))
+    compact.deserialize[WithOption]("""{"note":"x","value":1}""") mustBe WithOption(None, Some(1))
     compact.serialize(Session("abc", "ann", 3)) mustBe """{"user":"ann"}"""
   }
 
-  it must "be read through the constructor in caseClassesViaConstructor mode" in {
+  it must "be ignored by the constructor in caseClassesViaConstructor mode" in {
     val viaConstructor = new MPJsons(MPJsonsConfig(caseClassesViaConstructor = true))
     viaConstructor.serialize(Validated("x", 1)) mustBe """{"n":1}"""
-    viaConstructor.deserialize[Validated]("""{"note":"x","n":1}""") mustBe Validated("x", 1)
+    viaConstructor.deserialize[Validated]("""{"note":"x","n":1}""") mustBe Validated(null, 1)
     viaConstructor.deserialize[Validated]("""{"n":1}""") mustBe Validated(null, 1)
   }
 
@@ -99,6 +101,6 @@ class SkipSerializationSpec extends AnyFlatSpec {
     val typed = new MPJsons
     typed.markTypedClass[Event]()
     typed.serialize[List[Event]](List(Created(1, "dbg"))) mustBe """[{"Created":{"id":1}}]"""
-    typed.deserialize[List[Event]]("""[{"Created":{"id":1,"debug":"dbg"}}]""") mustBe List(Created(1, "dbg"))
+    typed.deserialize[List[Event]]("""[{"Created":{"id":1,"debug":"dbg"}}]""") mustBe List(Created(1, null))
   }
 }

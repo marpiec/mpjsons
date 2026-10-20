@@ -263,8 +263,8 @@ built.
 
 ### Leaving fields out of the output
 
-`@skipSerialization` leaves a field out of the JSON that `serialize` writes. Reading is not
-affected.
+`@skipSerialization` leaves a field out of the JSON entirely: `serialize` does not write it and
+`deserialize` ignores its key.
 
 ```scala
 import io.mpjsons.skipSerialization
@@ -272,15 +272,16 @@ import io.mpjsons.skipSerialization
 case class Session(user: String, @skipSerialization token: String)
 
 mpjsons.serialize(Session("ann", "secret"))                        // {"user":"ann"}
-mpjsons.deserialize[Session]("""{"user":"ann","token":"secret"}""") // Session("ann", "secret")
+mpjsons.deserialize[Session]("""{"user":"ann","token":"secret"}""") // Session("ann", null)
 mpjsons.deserialize[Session]("""{"user":"ann"}""")                  // Session("ann", null)
 ```
 
-- The key is still read, under its `@jsonName` if it has one. When the key is absent, the field
-  gets zero, false, null or None, like any other absent key. A serialize-then-deserialize round
-  trip therefore loses the value.
-- No serializer is built for the field, so its type does not need to be serializable, and the
-  null policy does not apply to it. A deserializer is still built, so the type must be readable.
+- The key (and its `@jsonName`, if it has one) is accepted, so JSON written before the field was
+  annotated still reads, but its value is discarded. The field gets zero, false, null or None,
+  like any absent key. A field initialised in the class body is not initialised either, unless
+  the bean is built through a constructor.
+- No serializer or deserializer is built for the field, so its type does not need to be readable
+  or writable, and the null policy does not apply to it.
 - Like `@jsonName`, it works on case class parameters, `val`s and `var`s without a
   meta-annotation, and on inherited fields.
 

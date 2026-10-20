@@ -57,17 +57,20 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     val typeName = tpe.toString
     val jsonNames = fields.map(_.jsonName).toSet
     val entries = fields.flatMap { field =>
-      // A skipped field is never written, so its type may have no reader (e.g. an unmarked trait): build it only when the key shows up.
-      val deserializer =
-        if (field.skipSerialization) BeanDeserializer.lazyDeserializer(deserializerFactory.getDeserializer(field.tpe, context))
-        else deserializerFactory.getDeserializer(field.tpe, context)
-      val argIndex = if (useConstructor) constructorParams.indexOf(field.field.getName) else -1
-      val primary = BeanField(field.jsonName, field.field, field.tpe, typeName, deserializer, argIndex, field.nullable, config)
+      // A skipped field keeps its keys so that stored JSON still reads, but the value is discarded; no deserializer is
+      // built, so its type may have no reader (e.g. an unmarked trait).
+      def entry(name: String): BeanField =
+        if (field.skipSerialization) {
+          new BeanField.SkippedField(name, field.field, skipValue)
+        } else {
+          val argIndex = if (useConstructor) constructorParams.indexOf(field.field.getName) else -1
+          BeanField(name, field.field, field.tpe, typeName, deserializerFactory.getDeserializer(field.tpe, context), argIndex, field.nullable, config)
+        }
       val scalaName = field.field.getName
       if (scalaName != field.jsonName && !jsonNames.contains(scalaName)) {
-        Array(primary, BeanField(scalaName, field.field, field.tpe, typeName, deserializer, argIndex, field.nullable, config))
+        Array(entry(field.jsonName), entry(scalaName))
       } else {
-        Array(primary)
+        Array(entry(field.jsonName))
       }
     }
     new BeanFieldTable(entries)
@@ -127,7 +130,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         val value = field.readValue(jsonIterator)
         if (field.argIndex >= 0) {
           arguments(field.argIndex) = value
-        } else {
+        } else if (!field.skipped) {
           lateFields = (field, value) :: lateFields
         }
       } else {
@@ -239,11 +242,6 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
 object BeanDeserializer {
   private val optionType = typeOf[Option[_]]
-
-  private def lazyDeserializer(build: => JsonTypeDeserializer[_]): JsonTypeDeserializer[AnyRef] = new JsonTypeDeserializer[AnyRef] {
-    private lazy val deserializer = build.asInstanceOf[JsonTypeDeserializer[AnyRef]]
-    override def deserialize(jsonIterator: StringIterator): AnyRef = deserializer.deserialize(jsonIterator)
-  }
 
   /**
    * The primary constructor's parameter names when `tpe` is a concrete case class whose parameters are all

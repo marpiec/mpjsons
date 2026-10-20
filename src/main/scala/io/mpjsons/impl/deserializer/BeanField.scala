@@ -26,6 +26,9 @@ abstract class BeanField(val name: String, val field: Field, nullValue: NullValu
   /** Reads the value at the cursor as a (boxed) object, for constructor arguments. */
   def readValue(jsonIterator: StringIterator): AnyRef
 
+  /** True when the value is consumed and discarded (`@skipSerialization`). */
+  def skipped: Boolean = false
+
   protected final def setNull(instance: AnyRef): Unit = field.set(instance, nullValue.get())
 
   protected final def nullArgument(): AnyRef = nullValue.get()
@@ -55,6 +58,16 @@ object BeanField {
       new CharField(name, field, nullValue, argIndex)
     } else {
       new ObjectField(name, field, nullValue, deserializer.asInstanceOf[JsonTypeDeserializer[AnyRef]], argIndex)
+    }
+  }
+
+  /** Consumes the value without touching the instance; `readValue` returns null and must not be stored. */
+  final class SkippedField(name: String, field: Field, skipValue: StringIterator => Unit) extends BeanField(name, field, null, -1) {
+    override def skipped: Boolean = true
+    override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = skipValue(jsonIterator)
+    override def readValue(jsonIterator: StringIterator): AnyRef = {
+      skipValue(jsonIterator)
+      null
     }
   }
 

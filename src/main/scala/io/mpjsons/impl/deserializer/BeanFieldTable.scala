@@ -8,9 +8,16 @@ import io.mpjsons.impl.StringIterator
  * `find` reads a key (quoted or bare) directly from the raw input, hashing it while scanning and comparing
  * candidates in place, so the common case allocates nothing. On a miss the cursor is rewound to the start
  * of the key so the caller can read it as a String for the error message or skip the value.
- * Instances are shared between threads and hold no per-call state.
+ *
+ * `ordered` lists the fields in the order the serializer writes their keys. `find(jsonIterator, expected)` first
+ * compares the key with the expected one in that order (keys written by mpjsons always come in this order), which
+ * skips hashing and the table probe; any other key falls back to the hash lookup with the same result.
+ *
+ * Instances are shared between threads and hold no per-call state; the expected position is kept by the caller.
  */
-final class BeanFieldTable(fields: Array[BeanField]) {
+final class BeanFieldTable(fields: Array[BeanField], ordered: Array[BeanField]) {
+
+  def this(fields: Array[BeanField]) = this(fields, Array.empty[BeanField])
 
   private val mask: Int = {
     var size = 8
@@ -30,6 +37,46 @@ final class BeanFieldTable(fields: Array[BeanField]) {
       slots(index) = field
     }
     slots
+  }
+
+  /**
+   * Fields that can be predicted: the name has no quote or backslash (so a raw comparison equals what the escape-aware
+   * scan would read) and the hash lookup of the name returns this very entry.
+   */
+  private val predicted: Array[BeanField] = ordered.filter { field =>
+    field.name.indexOf('"') < 0 && field.name.indexOf('\\') < 0 && (lookup(field.name.hashCode, field.name, 0, field.name.length) eq field)
+  }
+
+  // Every entry of a predicted field (including its fallback names) continues the prediction after that field.
+  for (field <- fields) {
+    field.order = predicted.indexWhere(_.field == field.field)
+  }
+
+  /**
+   * Same as `find(jsonIterator)`, but first checks whether the key is the `expected`-th key of the serializer's
+   * order (the caller passes `found.order + 1` after each match, starting with 0).
+   */
+  def find(jsonIterator: StringIterator, expected: Int): BeanField = {
+    if (expected >= 0 && expected < predicted.length) {
+      jsonIterator.skipWhitespaceChars()
+      val input = jsonIterator.stringValue
+      val keyStart = jsonIterator.nextIndex - 1
+      val candidate = predicted(expected)
+      val name = candidate.name
+      val nameLength = name.length
+      val end = keyStart + 1 + nameLength
+      if (end < jsonIterator.stringLength && input.charAt(keyStart) == '"' && input.charAt(end) == '"') {
+        var i = 0
+        while (i < nameLength && input.charAt(keyStart + 1 + i) == name.charAt(i)) {
+          i += 1
+        }
+        if (i == nameLength) {
+          jsonIterator.seek(end + 1)
+          return candidate
+        }
+      }
+    }
+    find(jsonIterator)
   }
 
   /**

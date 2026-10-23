@@ -69,6 +69,37 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
     charBuffer
   }
 
+  // Scratch arrays for primitive arrays of unknown length: filled while reading, then copied once at the exact size.
+  // Owned by this iterator (one parse, one thread). A reader must copy its result out before anything that could read
+  // another array of the same element type from this iterator runs.
+  private var intScratch: Array[Int] = null
+  private var longScratch: Array[Long] = null
+  private var doubleScratch: Array[Double] = null
+
+  /** Scratch Int array of at least `minSize` elements, with the first `keep` elements preserved. */
+  final def intScratch(minSize: Int, keep: Int): Array[Int] = {
+    if (intScratch == null || intScratch.length < minSize) {
+      intScratch = if (intScratch == null) new Array[Int](minSize) else java.util.Arrays.copyOf(intScratch, Math.max(minSize, keep * 2))
+    }
+    intScratch
+  }
+
+  /** Scratch Long array of at least `minSize` elements, with the first `keep` elements preserved. */
+  final def longScratch(minSize: Int, keep: Int): Array[Long] = {
+    if (longScratch == null || longScratch.length < minSize) {
+      longScratch = if (longScratch == null) new Array[Long](minSize) else java.util.Arrays.copyOf(longScratch, Math.max(minSize, keep * 2))
+    }
+    longScratch
+  }
+
+  /** Scratch Double array of at least `minSize` elements, with the first `keep` elements preserved. */
+  final def doubleScratch(minSize: Int, keep: Int): Array[Double] = {
+    if (doubleScratch == null || doubleScratch.length < minSize) {
+      doubleScratch = if (doubleScratch == null) new Array[Double](minSize) else java.util.Arrays.copyOf(doubleScratch, Math.max(minSize, keep * 2))
+    }
+    doubleScratch
+  }
+
   /** True if characters from `start` (inclusive) to `end` (exclusive) are equal to `text`. */
   final def rangeEquals(start: Int, end: Int, text: String): Boolean = {
     end - start == text.length && stringValue.regionMatches(start, text, 0, text.length)

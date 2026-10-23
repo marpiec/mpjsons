@@ -67,6 +67,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         } else {
           val argIndex = if (useConstructor) constructorParams.indexOf(field.field.getName) else -1
           val beanField = BeanField(name, field.field, field.tpe, typeName, deserializerFactory.getDeserializer(field.tpe, context), argIndex, field.nullable, config)
+          beanField.optionSlot = optionFields.indexOf(field.field)
           if (writers == null) beanField else beanField.useWriters(writers, fields.indexOf(field))
         }
       val scalaName = field.field.getName
@@ -76,7 +77,9 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         Array(entry(field.jsonName))
       }
     }
-    new BeanFieldTable(entries)
+    // The keys the serializer writes, in its order: the JSON name of every field that is not skipped on write.
+    val ordered = entries.filter(entry => !entry.skipped && fields.exists(f => f.field == entry.field && f.jsonName == entry.name))
+    new BeanFieldTable(entries, ordered)
   }
   /** Option fields are initialised to None when construction left them null, so an absent key reads as None. */
   private lazy val optionFields: Array[Field] = fields.filter(_.tpe <:< BeanDeserializer.optionType).map(_.field)
@@ -94,16 +97,28 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     jsonIterator.consumeObjectStart()
     val instance = ObjectConstructionUtil.createInstance[T](clazz, constructor, context)
     val table = fieldTable
-    initialiseOptions(instance.asInstanceOf[AnyRef])
+    // Option fields still unset after the loop are initialised to None at the end (see initialiseAbsentOptions);
+    // with more than 64 of them, all are initialised up front as before.
+    val trackOptions = optionFields.length <= 64
+    if (!trackOptions) {
+      initialiseOptions(instance.asInstanceOf[AnyRef])
+    }
+    // Per-call state lives in locals only: the deserializer is shared between threads.
+    var assignedOptions = 0L
+    var expected = 0
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
 
-      val field = table.find(jsonIterator)
+      val field = table.find(jsonIterator, expected)
 
       if (field != null) {
         jsonIterator.consumeFieldValueSeparator()
         field.set(instance.asInstanceOf[AnyRef], jsonIterator)
+        if (field.optionSlot >= 0) {
+          assignedOptions |= 1L << field.optionSlot
+        }
+        expected = field.order + 1
       } else {
         skipOrFail(jsonIterator)
       }
@@ -112,6 +127,10 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     }
 
     jsonIterator.nextCharOrNullIfLast
+
+    if (trackOptions) {
+      initialiseAbsentOptions(instance.asInstanceOf[AnyRef], assignedOptions)
+    }
 
     instance
   }
@@ -122,14 +141,16 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     val table = fieldTable
     val arguments = argumentDefaults.clone()
     var lateFields: List[(BeanField, AnyRef)] = Nil
+    var expected = 0
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
 
-      val field = table.find(jsonIterator)
+      val field = table.find(jsonIterator, expected)
 
       if (field != null) {
         jsonIterator.consumeFieldValueSeparator()
+        expected = field.order + 1
         val value = field.readValue(jsonIterator)
         if (field.argIndex >= 0) {
           arguments(field.argIndex) = value
@@ -167,6 +188,24 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
       val identifier = IdentifierDeserializer.deserialize(jsonIterator)
       jsonIterator.consumeFieldValueSeparator()
       throw new IllegalArgumentException(s"No field [${Messages.abbreviate(identifier)}] in type [$tpe]. Types: ${context.typesStackMessage}")
+    }
+  }
+
+  /**
+   * Same result as `initialiseOptions` before the key loop: an Option field that no key was written to is set to None
+   * when construction left it null. An instance allocated without a constructor has only null fields, so it is not read.
+   */
+  private def initialiseAbsentOptions(instance: AnyRef, assigned: Long): Unit = {
+    val options = optionFields
+    var index = 0
+    while (index < options.length) {
+      if ((assigned & (1L << index)) == 0) {
+        val field = options(index)
+        if (constructor == null || field.get(instance) == null) {
+          field.set(instance, None)
+        }
+      }
+      index += 1
     }
   }
 

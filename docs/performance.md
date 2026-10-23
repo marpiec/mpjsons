@@ -209,7 +209,7 @@ Changes (research, sources and the remaining proposals in `serialization-researc
   over the primitive array instead of boxing every element, when the built-in element serializer is in effect (a
   custom converter still wins). Same text, same exception for non-finite numbers.
 - **Byte output (S3)** was implemented and removed again: as `serialize(obj).getBytes(UTF_8)` it saved nothing over
-  what callers already do.
+  what callers already do. It came back with the native UTF-8 writer (§4d).
 - `fuzz/SerializationDifferentialSpec` compares the output with the 0.7.2 copy for 12 models in 4 configurations,
   the failures for non-finite numbers and nulls, and 16 threads on one instance. One run with `-Dfuzz.values=5000`
   and 2 seeds compared 480,000 values: all identical.
@@ -260,6 +260,52 @@ settings on the same day):
 
 The string benchmarks are not reliable to ±10%: in the baseline run, where both implementations had the same
 serializer code, `textsBytes` measured 18 498 vs 14 422 ops/s. The other rows differed by at most 2.4% in that run.
+
+## 4d. Native UTF-8 output (S5, after 0.7.5)
+
+`serializeToBytes` on `MPJsons` and `StaticSerializer`:
+- **Mechanism:** every built-in serializer also implements the internal `Utf8Writer.writeUtf8(obj, out: Utf8Output)`,
+  writing bytes into a growable array.
+- **Escaping and copying:** string escaping uses the same table and runs as `serialize`. ASCII runs are copied in bulk
+  (`String.getBytes(int, int, byte[], int)`); other runs are encoded.
+- **Numbers and names:** ints and longs are written from a digit-pair table. Doubles and floats are formatted by
+  `StringBuilder.append` into a scratch builder and copied. Field names and type wrappers are pre-encoded.
+- **Contract:** the bytes are exactly `serialize(obj).getBytes(UTF_8)`, including `?` for an unpaired surrogate.
+  The same checks run in the same order, so the same exceptions are thrown.
+- **Custom converters and subclasses:** custom converters keep the `StringBuilder` SPI and are bridged (one builder
+  reused per output). A subclass of a built-in serializer is bridged too, because only the exact built-in class
+  writes bytes itself, so an overridden `serialize` is honoured.
+
+Verification:
+- `fuzz/ByteOutputDifferentialSpec` covers all fuzz models and extra ones in 5 configurations, through every entry
+  point. The extras are unpaired and reversed surrogates, java.time/UUID/big numbers, tuples 1–6, scalar map keys,
+  non-ASCII field and type names, fields holding defaults, and custom converters.
+- It also checks 15 failure cases and 16 threads.
+- `Utf8OutputSpec` compares 200,000+ random ints and longs, 200,000 doubles and floats, and 70,000 strings with
+  JDK formatting and `getBytes`.
+- Mutation checks:
+  - Bridging subclasses switched off: caught.
+  - Wrong surrogate encoding: caught by 10 tests.
+  - Default omission dropped in the Int, Double and Object field writers: caught. A model with default-valued fields
+    was added for this, because the generic fuzz rarely produces defaults.
+
+Results (JDK 25.0.4.1, `Utf8OutputBench`, two forks, 23/10/2026; measured; `bench-results/utf8-output.txt`):
+
+| Fixture | `serialize` ops/s | `serialize(x).getBytes(UTF_8)` | `serializeToBytes` | bytes: new vs before | B/op before → now |
+|---|---:|---:|---:|---:|---:|
+| `User` | 4 164 847 | 3 912 543 | 4 895 104 | +25% | 504 → 424 |
+| `SimpleBean` | 1 490 125 | 1 407 015 | 1 742 372 | +24% | 1 200 → 832 |
+| strings (non-ASCII) | 18 094 | 16 604 | 26 641 | +60% | 118 723 → 27 328 |
+| 200 orders | 3 273 | 3 180 | 3 319 | +4% | 364 097 → 250 337 |
+| numbers | 9 636 | 9 226 | 9 064 | −2% | 150 997 → 100 744 |
+| typed shapes (doubles) | 11 822 | 11 798 | 11 420 | −3% | 68 553 → 45 784 |
+
+- **Where it is slower:** number-heavy output, by 2–3% (within about 1.5 error bars). Doubles are formatted by the JDK
+  into a scratch builder and then copied. Copying with `getChars`, or using `Double.toString` with a bulk copy, was
+  slower: −4.5%/−2.4%, and −9%/−14% with 3x allocation. Formatting doubles ourselves (S8) is the remaining lever.
+- **`serialize` still uses the `StringBuilder`.** A String decoded from the writer's buffer measured +17% (`User`),
+  +20% (bean), +6% (strings) and +1% (orders), but −6% (numbers) and −5% (shapes). It also could not keep unpaired
+  surrogates. So it was not adopted (`xUtf8String` rows in `utf8-output.txt`).
 
 ## 5. Constraints to respect while optimising
 

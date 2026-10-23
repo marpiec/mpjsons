@@ -13,7 +13,7 @@ import scala.reflect.runtime.universe._
  * Some(null) is written with a null payload only when the NullPolicy allows nulls; under Fail it is rejected.
  */
 class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, compact: Boolean)
-  extends JsonTypeSerializer[Option[T]] {
+  extends JsonTypeSerializer[Option[T]] with Utf8Writer[Option[T]] {
 
   def this(serializerFactory: SerializerFactory, tpe: Type, context: Context) = this(serializerFactory, tpe, context, false)
 
@@ -43,6 +43,32 @@ class OptionSerializer[T](serializerFactory: SerializerFactory, private val tpe:
       jsonBuilder.append('}')
     }
   }
+
+  private val subTypeWriter: Utf8Writer[T] = Utf8Writer.of(subTypeSerializer)
+
+  override def writeUtf8(obj: Option[T], out: Utf8Output): Unit = {
+    if (compact) {
+      obj match {
+        case Some(value) => if (value == null) NullValues.writeNull(out, nullsAllowed, "Some of " + tpe) else subTypeWriter.writeUtf8(value, out)
+        case None => out.writeAscii("null")
+      }
+    } else {
+      out.writeByte('{')
+      obj match {
+        case Some(value) =>
+          out.writeAscii("\"value\":")
+          if (value == null) {
+            NullValues.writeNull(out, nullsAllowed, "Some of " + tpe)
+          } else {
+            subTypeWriter.writeUtf8(value, out)
+          }
+        case None => ()
+      }
+      out.writeByte('}')
+    }
+  }
+
+  override private[mpjsons] def writesUtf8Itself: Boolean = getClass eq classOf[OptionSerializer[_]]
 }
 
 object OptionSerializer {

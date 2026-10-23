@@ -11,7 +11,7 @@ import scala.reflect.runtime.universe._
  */
 
 class Tuple6Serializer[T1, T2, T3, T4, T5, T6](serializerFactory: SerializerFactory, tpe: Type, context: Context)
-  extends JsonTypeSerializer[scala.Tuple6[T1, T2, T3, T4, T5, T6]] {
+  extends JsonTypeSerializer[scala.Tuple6[T1, T2, T3, T4, T5, T6]] with Utf8Writer[scala.Tuple6[T1, T2, T3, T4, T5, T6]] {
 
   private val subtypes = TypesUtil.getMultipleSubElementsType(tpe)
   private val t1Serializer = NullValues.nullSafe(serializerFactory.getSerializer(subtypes.head, context).asInstanceOf[JsonTypeSerializer[T1]], serializerFactory.config, "a value of " + tpe)
@@ -36,5 +36,30 @@ class Tuple6Serializer[T1, T2, T3, T4, T5, T6](serializerFactory: SerializerFact
     t6Serializer.serialize(tuple._6, jsonBuilder)
     jsonBuilder.append(']')
   }
+
+  private val t1Writer = Utf8Writer.of(t1Serializer)
+  private val t2Writer = Utf8Writer.of(t2Serializer)
+  private val t3Writer = Utf8Writer.of(t3Serializer)
+  private val t4Writer = Utf8Writer.of(t4Serializer)
+  private val t5Writer = Utf8Writer.of(t5Serializer)
+  private val t6Writer = Utf8Writer.of(t6Serializer)
+
+  override def writeUtf8(tuple: scala.Tuple6[T1, T2, T3, T4, T5, T6], out: Utf8Output): Unit = {
+    out.writeByte('[')
+    t1Writer.writeUtf8(tuple._1, out)
+    out.writeByte(',')
+    t2Writer.writeUtf8(tuple._2, out)
+    out.writeByte(',')
+    t3Writer.writeUtf8(tuple._3, out)
+    out.writeByte(',')
+    t4Writer.writeUtf8(tuple._4, out)
+    out.writeByte(',')
+    t5Writer.writeUtf8(tuple._5, out)
+    out.writeByte(',')
+    t6Writer.writeUtf8(tuple._6, out)
+    out.writeByte(']')
+  }
+
+  override private[mpjsons] def writesUtf8Itself: Boolean = getClass eq classOf[Tuple6Serializer[_, _, _, _, _, _]]
 
 }

@@ -1,0 +1,21 @@
+Benchmark                                               Mode  Cnt       Score     Error   Units
+Utf8OutputBench.drawingStringBytes                     thrpt   10   11355,527 ± 329,442   ops/s
+Utf8OutputBench.drawingStringBytes:gc.alloc.rate       thrpt   10     742,313 ±  21,512  MB/sec
+Utf8OutputBench.drawingStringBytes:gc.alloc.rate.norm  thrpt   10   68553,551 ±  18,051    B/op
+Utf8OutputBench.drawingStringBytes:gc.count            thrpt   10     122,000            counts
+Utf8OutputBench.drawingStringBytes:gc.time             thrpt   10     154,000                ms
+Utf8OutputBench.drawingUtf8                            thrpt   10    9753,158 ± 300,616   ops/s
+Utf8OutputBench.drawingUtf8:gc.alloc.rate              thrpt   10    1854,692 ±  57,196  MB/sec
+Utf8OutputBench.drawingUtf8:gc.alloc.rate.norm         thrpt   10  199424,362 ±   0,013    B/op
+Utf8OutputBench.drawingUtf8:gc.count                   thrpt   10     132,000            counts
+Utf8OutputBench.drawingUtf8:gc.time                    thrpt   10     173,000                ms
+Utf8OutputBench.numbersStringBytes                     thrpt   10    9172,507 ±  64,530   ops/s
+Utf8OutputBench.numbersStringBytes:gc.alloc.rate       thrpt   10    1320,704 ±   9,252  MB/sec
+Utf8OutputBench.numbersStringBytes:gc.alloc.rate.norm  thrpt   10  150996,974 ±  16,212    B/op
+Utf8OutputBench.numbersStringBytes:gc.count            thrpt   10     122,000            counts
+Utf8OutputBench.numbersStringBytes:gc.time             thrpt   10     158,000                ms
+Utf8OutputBench.numbersUtf8                            thrpt   10    8383,701 ±  77,804   ops/s
+Utf8OutputBench.numbersUtf8:gc.alloc.rate              thrpt   10    1634,116 ±  15,172  MB/sec
+Utf8OutputBench.numbersUtf8:gc.alloc.rate.norm         thrpt   10  204408,422 ±   0,005    B/op
+Utf8OutputBench.numbersUtf8:gc.count                   thrpt   10     132,000            counts
+Utf8OutputBench.numbersUtf8:gc.time                    thrpt   10     170,000                ms

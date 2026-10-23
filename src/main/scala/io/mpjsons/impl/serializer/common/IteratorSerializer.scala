@@ -2,6 +2,7 @@ package io.mpjsons.impl.serializer.common
 
 import io.mpjsons.{JsonTypeSerializer, NullPolicy}
 import io.mpjsons.impl.SerializerFactory
+import io.mpjsons.impl.serializer.{Utf8Output, Utf8Writer}
 import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 
 import scala.reflect.runtime.universe._
@@ -61,6 +62,56 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
       NullValues.writeNull(jsonBuilder, nullsAllowed, "an element of " + tpe)
     } else {
       subTypeSerializer.serialize(element, jsonBuilder)
+    }
+  }
+
+  private val subTypeWriter: Utf8Writer[T] = Utf8Writer.of(subTypeSerializer)
+
+  /** serializeIterator for UTF-8 output. */
+  protected def writeIterator(iterator: Iterator[T], out: Utf8Output): Unit = {
+
+    out.writeByte('[')
+
+    var isNotFirstField = false
+
+    while (iterator.hasNext) {
+      if (isNotFirstField) {
+        out.writeByte(',')
+      } else {
+        isNotFirstField = true
+      }
+      writeElement(iterator.next(), out)
+    }
+
+    out.writeByte(']')
+  }
+
+  /** serializeList for UTF-8 output. */
+  protected def writeList(list: List[T], out: Utf8Output): Unit = {
+
+    out.writeByte('[')
+
+    var remaining = list
+    var isNotFirstField = false
+
+    while (remaining ne Nil) {
+      if (isNotFirstField) {
+        out.writeByte(',')
+      } else {
+        isNotFirstField = true
+      }
+      writeElement(remaining.head, out)
+      remaining = remaining.tail
+    }
+
+    out.writeByte(']')
+  }
+
+  private def writeElement(element: T, out: Utf8Output): Unit = {
+    if (element == null) {
+      NullValues.writeNull(out, nullsAllowed, "an element of " + tpe)
+    } else {
+      subTypeWriter.writeUtf8(element, out)
     }
   }
 }

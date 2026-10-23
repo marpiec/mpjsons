@@ -17,7 +17,7 @@ import scala.reflect.runtime.universe._
  */
 
 class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, context: Context, asObject: Boolean)
-  extends JsonTypeSerializer[scala.collection.Map[K, V]] {
+  extends JsonTypeSerializer[scala.collection.Map[K, V]] with Utf8Writer[scala.collection.Map[K, V]] {
 
   def this(serializerFactory: SerializerFactory, tpe: Type, context: Context) = this(serializerFactory, tpe, context, false)
 
@@ -95,6 +95,79 @@ class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, conte
 
     jsonBuilder.append('}')
   }
+
+  private val keyWriter = Utf8Writer.of(keySerializer)
+  private val valueWriter = Utf8Writer.of(valueSerializer)
+
+  override def writeUtf8(map: scala.collection.Map[K, V], out: Utf8Output): Unit = {
+    if (asObject) writeAsObject(map, out) else writeAsPairs(map, out)
+  }
+
+  private def writeAsPairs(map: scala.collection.Map[K, V], out: Utf8Output): Unit = {
+
+    out.writeByte('[')
+    var nonFirstField = false
+
+    map.foreachEntry { (key, value) =>
+      if (nonFirstField) {
+        out.writeByte(',')
+      } else {
+        nonFirstField = true
+      }
+      out.writeByte('[')
+
+      if (key == null) NullValues.writeNull(out, nullsAllowed, "a key of " + tpe) else keyWriter.writeUtf8(key, out)
+
+      out.writeByte(',')
+
+      if (value == null) NullValues.writeNull(out, nullsAllowed, "a value of " + tpe) else valueWriter.writeUtf8(value, out)
+
+      out.writeByte(']')
+    }
+
+    out.writeByte(']')
+  }
+
+  private def writeAsObject(map: scala.collection.Map[K, V], out: Utf8Output): Unit = {
+
+    out.writeByte('{')
+    var nonFirstField = false
+
+    map.foreachEntry { (key, value) =>
+      if (key == null) {
+        throw new IllegalArgumentException("A null map key cannot be written as a JSON object key")
+      }
+
+      if (value == null && nullPolicy == NullPolicy.Fail) {
+        throw new IllegalArgumentException("Null value is not allowed for map key '" + key + "' in " + tpe +
+          " (NullPolicy.Fail); use NullPolicy.Omit or WriteNull to allow nulls")
+      }
+
+      if (value != null || nullPolicy == NullPolicy.WriteNull) {
+        if (nonFirstField) {
+          out.writeByte(',')
+        } else {
+          nonFirstField = true
+        }
+
+        if (keyIsString) {
+          keyWriter.writeUtf8(key, out)
+        } else {
+          out.writeByte('"')
+          out.writeText(key.toString)
+          out.writeByte('"')
+        }
+
+        out.writeByte(':')
+
+        if (value == null) out.writeAscii("null") else valueWriter.writeUtf8(value, out)
+      }
+    }
+
+    out.writeByte('}')
+  }
+
+  override private[mpjsons] def writesUtf8Itself: Boolean = getClass eq classOf[MapSerializer[_, _]]
 
 }
 

@@ -1,6 +1,7 @@
 package io.mpjsons.impl.util
 
 import io.mpjsons.impl.StringIterator
+import io.mpjsons.impl.serializer.{Utf8Output, Utf8Writer}
 import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer, MPJsonsConfig, NullPolicy}
 
 import scala.reflect.runtime.universe._
@@ -69,16 +70,31 @@ object NullValues {
     if (nullsAllowed) {
       jsonBuilder.append("null")
     } else {
-      throw new IllegalArgumentException("Null value is not allowed in " + where + " (NullPolicy.Fail); use NullPolicy.Omit or WriteNull to allow nulls")
+      throw nullNotAllowed(where)
     }
   }
+
+  /** writeNull for UTF-8 output. */
+  def writeNull(out: Utf8Output, nullsAllowed: Boolean, where: String): Unit = {
+    if (nullsAllowed) {
+      out.writeAscii("null")
+    } else {
+      throw nullNotAllowed(where)
+    }
+  }
+
+  private def nullNotAllowed(where: String): IllegalArgumentException =
+    new IllegalArgumentException("Null value is not allowed in " + where + " (NullPolicy.Fail); use NullPolicy.Omit or WriteNull to allow nulls")
 }
 
 final class NullableDeserializer[T](inner: JsonTypeDeserializer[T], nullValue: NullValue) extends JsonTypeDeserializer[T] {
   override def deserialize(jsonIterator: StringIterator): T = NullValues.read(jsonIterator, nullValue, inner)
 }
 
-final class NullSafeSerializer[T](inner: JsonTypeSerializer[T], nullsAllowed: Boolean, where: String) extends JsonTypeSerializer[T] {
+final class NullSafeSerializer[T](inner: JsonTypeSerializer[T], nullsAllowed: Boolean, where: String) extends JsonTypeSerializer[T] with Utf8Writer[T] {
+
+  private val innerWriter = Utf8Writer.of(inner)
+
   override def serialize(obj: T, jsonBuilder: StringBuilder): Unit = {
     if (obj == null) {
       NullValues.writeNull(jsonBuilder, nullsAllowed, where)
@@ -86,4 +102,14 @@ final class NullSafeSerializer[T](inner: JsonTypeSerializer[T], nullsAllowed: Bo
       inner.serialize(obj, jsonBuilder)
     }
   }
+
+  override def writeUtf8(obj: T, out: Utf8Output): Unit = {
+    if (obj == null) {
+      NullValues.writeNull(out, nullsAllowed, where)
+    } else {
+      innerWriter.writeUtf8(obj, out)
+    }
+  }
+
+  override private[mpjsons] def writesUtf8Itself: Boolean = true
 }

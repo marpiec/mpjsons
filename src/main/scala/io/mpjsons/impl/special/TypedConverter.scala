@@ -4,9 +4,10 @@ import io.mpjsons.impl.util.Messages
 
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
-import io.mpjsons.impl.serializer.StringSerializer
+import io.mpjsons.impl.serializer.{StringSerializer, Utf8Output, Utf8Writer}
 import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer}
 
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 import scala.reflect.runtime.universe._
 
@@ -21,25 +22,42 @@ object TypedConverter {
    *                  that check (backward compatible constructor).
    */
   class TypedSerializer[T <: AnyRef](serializerFactory: SerializerFactory, readTable: Map[String, Class[_]], markedTypeName: String)
-    extends JsonTypeSerializer[T] {
+    extends JsonTypeSerializer[T] with Utf8Writer[T] {
 
     def this(serializerFactory: SerializerFactory) = this(serializerFactory, null, "")
 
-    private final class Entry(val prefix: String, val serializer: JsonTypeSerializer[AnyRef])
+    private final class Entry(val prefix: String, val serializer: JsonTypeSerializer[AnyRef]) {
+      val prefixBytes: Array[Byte] = prefix.getBytes(StandardCharsets.UTF_8)
+      val writer: Utf8Writer[AnyRef] = Utf8Writer.of(serializer)
+    }
 
     private val entries = new ConcurrentHashMap[Class[_], Entry]()
 
     override def serialize(obj: T, jsonBuilder: StringBuilder): Unit = {
-      val clazz = obj.getClass
+      val entry = entryFor(obj.getClass)
+
+      jsonBuilder.append(entry.prefix)
+      entry.serializer.serialize(obj, jsonBuilder)
+      jsonBuilder.append('}')
+    }
+
+    override def writeUtf8(obj: T, out: Utf8Output): Unit = {
+      val entry = entryFor(obj.getClass)
+
+      out.writeBytes(entry.prefixBytes)
+      entry.writer.writeUtf8(obj, out)
+      out.writeByte('}')
+    }
+
+    override private[mpjsons] def writesUtf8Itself: Boolean = getClass eq classOf[TypedSerializer[_]]
+
+    private def entryFor(clazz: Class[_]): Entry = {
       var entry = entries.get(clazz)
       if (entry == null) {
         entry = createEntry(clazz)
         entries.putIfAbsent(clazz, entry)
       }
-
-      jsonBuilder.append(entry.prefix)
-      entry.serializer.serialize(obj, jsonBuilder)
-      jsonBuilder.append('}')
+      entry
     }
 
     private def createEntry(clazz: Class[_]): Entry = {

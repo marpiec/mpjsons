@@ -1,10 +1,12 @@
 package io.mpjsons
 
+import io.mpjsons.impl.serializer.{Utf8Output, Utf8Writer}
 import io.mpjsons.impl.special.TypeNames
 import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerializer}
 import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, SerializerFactory, StringIterator}
 
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.StaticAnnotation
 import scala.reflect.runtime.universe._
@@ -63,6 +65,14 @@ private[mpjsons] final class OutputSizeHint {
   def update(builder: StringBuilder): Unit = {
     length = builder.length
   }
+
+  @volatile private var byteLength: Int = 64
+
+  def newUtf8Output(): Utf8Output = new Utf8Output(byteLength + 32)
+
+  def update(out: Utf8Output): Unit = {
+    byteLength = out.size
+  }
 }
 
 /**
@@ -91,6 +101,23 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], co
     if (obj == null) NullValues.writeNull(json, config.nullPolicy != NullPolicy.Fail, "the top-level value") else innerSerializer.serialize(obj, json)
     sizeHint.update(json)
     json
+  }
+
+  private val utf8Writer: Utf8Writer[T] = Utf8Writer.of(innerSerializer)
+
+  /**
+   * Takes an object and returns JSON representation of that object encoded in UTF-8: the same bytes as
+   * `serialize(obj).getBytes(UTF_8)`, written without building the String first.
+   */
+  def serializeToBytes(obj: T): Array[Byte] = {
+    if (obj == null) {
+      serialize(obj).getBytes(StandardCharsets.UTF_8)
+    } else {
+      val out = sizeHint.newUtf8Output()
+      utf8Writer.writeUtf8(obj, out)
+      sizeHint.update(out)
+      out.toByteArray
+    }
   }
 }
 
@@ -290,6 +317,49 @@ class MPJsons(val config: MPJsonsConfig) {
    */
   def serialize[T](obj: T, typeName: String): String = {
     serialize(obj, extractTypeFromName(typeName))
+  }
+
+  /**
+   * Creates JSON representation of given object encoded in UTF-8: the same bytes as
+   * `serialize(obj).getBytes(UTF_8)`, written without building the String first.
+   * @param obj object to serialize
+   * @return JSON representation of given object as UTF-8 bytes
+   */
+  def serializeToBytes[T](obj: T)(implicit tag: TypeTag[T]): Array[Byte] = {
+    val tpe = extractType(tag)
+    if (isNothing(tpe)) {
+      throw new IllegalArgumentException("Type for object serialization was not specified, or was Nothing. Please specify object type.")
+    } else {
+      serializeToBytes(obj, tpe)
+    }
+  }
+
+  /**
+   * Creates JSON representation of given object based on the given type, encoded in UTF-8.
+   * @param obj object to serialize
+   * @param tpe type of object to serialize
+   * @return JSON representation of given object as UTF-8 bytes
+   */
+  def serializeToBytes[T](obj: T, tpe: Type): Array[Byte] = {
+    if (obj == null) {
+      serialize(obj, tpe).getBytes(StandardCharsets.UTF_8)
+    } else {
+      val hint = outputSizeHint(tpe)
+      val out = hint.newUtf8Output()
+      Utf8Writer.of(serializerFactory.getSerializer[T](tpe, rootContext)).writeUtf8(obj, out)
+      hint.update(out)
+      out.toByteArray
+    }
+  }
+
+  /**
+   * Creates JSON representation of given object based on the given type name (class name), encoded in UTF-8.
+   * @param obj object to serialize
+   * @param typeName type name (class name) of object to serialize
+   * @return JSON representation of given object as UTF-8 bytes
+   */
+  def serializeToBytes[T](obj: T, typeName: String): Array[Byte] = {
+    serializeToBytes(obj, extractTypeFromName(typeName))
   }
 
   /**

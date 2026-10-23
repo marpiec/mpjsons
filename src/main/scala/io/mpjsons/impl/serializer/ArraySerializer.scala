@@ -11,7 +11,7 @@ import scala.reflect.runtime.universe._
  */
 
 class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, context: Context)
-  extends IteratorSerializer[E, Array[E]](serializerFactory, tpe, context) {
+  extends IteratorSerializer[E, Array[E]](serializerFactory, tpe, context) with Utf8Writer[Array[E]] {
 
   /**
    * Arrays of primitives written by the built-in element serializers are written without boxing every element;
@@ -128,6 +128,92 @@ class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, contex
     }
     builder.append(']')
   }
+
+  override def writeUtf8(obj: Array[E], out: Utf8Output): Unit = {
+    primitiveKind match {
+      case ArraySerializer.OtherKind => writeIterator(obj.iterator, out)
+      case ArraySerializer.IntKind =>
+        val array = obj.asInstanceOf[Array[Int]]
+        out.writeByte('[')
+        var i = 0
+        while (i < array.length) {
+          if (i > 0) out.writeByte(',')
+          out.writeInt(array(i))
+          i += 1
+        }
+        out.writeByte(']')
+      case ArraySerializer.LongKind =>
+        val array = obj.asInstanceOf[Array[Long]]
+        out.writeByte('[')
+        var i = 0
+        while (i < array.length) {
+          if (i > 0) out.writeByte(',')
+          out.writeLong(array(i))
+          i += 1
+        }
+        out.writeByte(']')
+      case ArraySerializer.DoubleKind =>
+        val array = obj.asInstanceOf[Array[Double]]
+        out.writeByte('[')
+        var i = 0
+        while (i < array.length) {
+          if (i > 0) out.writeByte(',')
+          val value = array(i)
+          if (!java.lang.Double.isFinite(value)) {
+            throw new IllegalArgumentException("Non-finite floating point value " + value + " cannot be represented in JSON")
+          }
+          out.writeDouble(value)
+          i += 1
+        }
+        out.writeByte(']')
+      case ArraySerializer.FloatKind =>
+        val array = obj.asInstanceOf[Array[Float]]
+        out.writeByte('[')
+        var i = 0
+        while (i < array.length) {
+          if (i > 0) out.writeByte(',')
+          val value = array(i)
+          if (!java.lang.Float.isFinite(value)) {
+            throw new IllegalArgumentException("Non-finite floating point value " + value + " cannot be represented in JSON")
+          }
+          out.writeFloat(value)
+          i += 1
+        }
+        out.writeByte(']')
+      case ArraySerializer.ShortKind =>
+        val array = obj.asInstanceOf[Array[Short]]
+        out.writeByte('[')
+        var i = 0
+        while (i < array.length) {
+          if (i > 0) out.writeByte(',')
+          out.writeInt(array(i).toInt)
+          i += 1
+        }
+        out.writeByte(']')
+      case ArraySerializer.ByteKind =>
+        val array = obj.asInstanceOf[Array[Byte]]
+        out.writeByte('[')
+        var i = 0
+        while (i < array.length) {
+          if (i > 0) out.writeByte(',')
+          out.writeInt(array(i).toInt)
+          i += 1
+        }
+        out.writeByte(']')
+      case ArraySerializer.BooleanKind =>
+        val array = obj.asInstanceOf[Array[Boolean]]
+        out.writeByte('[')
+        var i = 0
+        while (i < array.length) {
+          if (i > 0) out.writeByte(',')
+          out.writeAscii(if (array(i)) "true" else "false")
+          i += 1
+        }
+        out.writeByte(']')
+    }
+  }
+
+  override private[mpjsons] def writesUtf8Itself: Boolean = getClass eq classOf[ArraySerializer[_]]
 }
 
 private object ArraySerializer {

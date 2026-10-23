@@ -507,15 +507,27 @@ val back = des.deserialize(json)
 `StaticSerializer` also exposes `serializeToStringBuilder(obj): StringBuilder`, which
 avoids the char-array copy of `.toString()` when a `StringBuilder` can be consumed directly.
 
-### With Pekko HTTP
+### Byte output
 
-Send the JSON as `application/json`; this encodes the `String` to UTF-8 once, with no further copy:
+When the JSON goes to an HTTP response, a file or another byte sink, `serializeToBytes` writes
+UTF-8 directly instead of building a `String` and encoding it. The bytes are exactly
+`serialize(obj).getBytes(UTF_8)`:
 
 ```scala
-complete(HttpEntity(ContentTypes.`application/json`, ser.serialize(user)))
+val bytes: Array[Byte] = mpjsons.serializeToBytes(user)   // also (obj, Type) and (obj, typeName)
+val ser = mpjsons.buildStaticSerializer[User]
+ser.serializeToBytes(user)
 ```
 
-`complete(json: String)` would be sent as `text/plain`.
+Custom converters keep writing into a `StringBuilder`; their output is encoded to UTF-8.
+
+With Pekko HTTP, wrap the bytes without another copy and send them as `application/json`:
+
+```scala
+complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromArrayUnsafe(ser.serializeToBytes(user))))
+```
+
+`complete(json: String)` would be sent as `text/plain`, and `HttpEntity(contentType, bytes)` copies the array.
 
 ### Error handling
 

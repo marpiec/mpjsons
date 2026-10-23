@@ -131,6 +131,12 @@ Not recommended: `sun.misc.Unsafe` stores or String-internals access (fastjson2 
   - output identical to 0.7.2 in 480,000 fuzzed values.
 - S3 was implemented and removed: without S5 behind it, `serializeToBytes` was only `serialize(obj).getBytes(UTF_8)`.
   Byte output is worth an API only together with S5.
+- S5 is implemented: `serializeToBytes` writes UTF-8 directly (performance.md §4d) [measured, vs
+  `serialize(x).getBytes(UTF_8)`]:
+  - `User` +25%, bean +24%, non-ASCII strings +60%, orders +4%;
+  - number-heavy output −2 to −3%;
+  - 16–77% less allocation.
+  `serialize` keeps the StringBuilder: a String built from the bytes was slower for numbers.
 - S4 is not planned. It would add no dependency to the core artifact: it would be a separate one depending on
   `pekko-http`. An application with its own JSON support trait needs only a few lines (README, "With Pekko HTTP").
 - Found while measuring the API path for Pekko users: the 0.7.3 TypeTag cache duplicated Scala's own (2.13.7+), and

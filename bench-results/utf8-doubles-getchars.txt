@@ -1,0 +1,5 @@
+Benchmark                            Mode  Cnt      Score     Error  Units
+Utf8OutputBench.drawingStringBytes  thrpt   10  11285,842 ± 384,615  ops/s
+Utf8OutputBench.drawingUtf8         thrpt   10  11015,375 ± 138,733  ops/s
+Utf8OutputBench.numbersStringBytes  thrpt   10   9074,183 ± 252,442  ops/s
+Utf8OutputBench.numbersUtf8         thrpt   10   8661,816 ±  55,403  ops/s

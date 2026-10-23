@@ -1,6 +1,7 @@
 package io.mpjsons.impl.serializer
 
 import java.lang.reflect.Field
+import java.nio.charset.StandardCharsets
 
 import io.mpjsons.{JsonTypeSerializer, MPJsonsConfig, NullPolicy}
 import io.mpjsons.impl.SerializerFactory
@@ -42,8 +43,26 @@ abstract class BeanFieldWriter(val name: String, val field: Field, val nullable:
 
   def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean
 
+  /**
+   * `write` for UTF-8 output: same checks in the same order, same text. The built-in writers write bytes directly;
+   * this default (for other subclasses) encodes what `write` produces.
+   */
+  def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+    val builder = new StringBuilder
+    val written = write(obj, builder, notFirst)
+    out.writeText(builder.toString)
+    written
+  }
+
   protected final def appendPrefix(builder: java.lang.StringBuilder, notFirst: Boolean): Unit = {
     builder.append(if (notFirst) prefixWithComma else prefix)
+  }
+
+  private val prefixBytes: Array[Byte] = prefix.getBytes(StandardCharsets.UTF_8)
+  private val prefixWithCommaBytes: Array[Byte] = prefixWithComma.getBytes(StandardCharsets.UTF_8)
+
+  protected final def writePrefix(out: Utf8Output, notFirst: Boolean): Unit = {
+    out.writeBytes(if (notFirst) prefixWithCommaBytes else prefixBytes)
   }
 }
 
@@ -116,6 +135,29 @@ object BeanFieldWriter {
         true
       }
     }
+
+    private val writer = Utf8Writer.of(serializer)
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getObject(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        false
+      } else if (value == null) {
+        if (nullMode == NullWritten) {
+          writePrefix(out, notFirst)
+          out.writeAscii("null")
+          true
+        } else if (nullMode == NullOmitted) {
+          false
+        } else {
+          throw new IllegalArgumentException("Null value is not allowed for field " + name + " in type " + typeName)
+        }
+      } else {
+        writePrefix(out, notFirst)
+        writer.writeUtf8(value, out)
+        true
+      }
+    }
   }
 
   /** Compact Option field: Some(v) is written as v, None is omitted; a null reference follows the null policy. */
@@ -152,6 +194,37 @@ object BeanFieldWriter {
           }
       }
     }
+
+    private val elementWriter = Utf8Writer.of(elementSerializer)
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getObject(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        return false
+      }
+      value match {
+        case Some(element) =>
+          if (element == null && nullMode != NullWritten) {
+            if (nullMode == NullOmitted) return false
+            throw new IllegalArgumentException("Null value is not allowed in Some of field " + name + " in type " + typeName + " (NullPolicy.Fail)")
+          }
+          writePrefix(out, notFirst)
+          if (element == null) out.writeAscii("null") else elementWriter.writeUtf8(element.asInstanceOf[AnyRef], out)
+          true
+        case None =>
+          false
+        case null =>
+          if (nullMode == NullWritten) {
+            writePrefix(out, notFirst)
+            out.writeAscii("null")
+            true
+          } else if (nullMode == NullOmitted) {
+            false
+          } else {
+            throw new IllegalArgumentException("Null value is not allowed for field " + name + " in type " + typeName)
+          }
+      }
+    }
   }
 
   final class IntWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Int) extends BeanFieldWriter(name, field, false) {
@@ -163,6 +236,16 @@ object BeanFieldWriter {
       val builder = jsonBuilder.underlying
       appendPrefix(builder, notFirst)
       builder.append(value)
+      true
+    }
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getInt(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        return false
+      }
+      writePrefix(out, notFirst)
+      out.writeInt(value)
       true
     }
   }
@@ -178,6 +261,16 @@ object BeanFieldWriter {
       builder.append(value)
       true
     }
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getLong(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        return false
+      }
+      writePrefix(out, notFirst)
+      out.writeLong(value)
+      true
+    }
   }
 
   final class BooleanWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Boolean) extends BeanFieldWriter(name, field, false) {
@@ -189,6 +282,16 @@ object BeanFieldWriter {
       val builder = jsonBuilder.underlying
       appendPrefix(builder, notFirst)
       builder.append(if (value) "true" else "false")
+      true
+    }
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getBoolean(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        return false
+      }
+      writePrefix(out, notFirst)
+      out.writeAscii(if (value) "true" else "false")
       true
     }
   }
@@ -207,6 +310,19 @@ object BeanFieldWriter {
       builder.append(value)
       true
     }
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getDouble(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        return false
+      }
+      if (!java.lang.Double.isFinite(value)) {
+        throw new IllegalArgumentException("Non-finite floating point value " + value + " in field " + name + " cannot be represented in JSON")
+      }
+      writePrefix(out, notFirst)
+      out.writeDouble(value)
+      true
+    }
   }
 
   final class FloatWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Float) extends BeanFieldWriter(name, field, false) {
@@ -223,6 +339,19 @@ object BeanFieldWriter {
       builder.append(value)
       true
     }
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getFloat(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        return false
+      }
+      if (!java.lang.Float.isFinite(value)) {
+        throw new IllegalArgumentException("Non-finite floating point value " + value + " in field " + name + " cannot be represented in JSON")
+      }
+      writePrefix(out, notFirst)
+      out.writeFloat(value)
+      true
+    }
   }
 
   final class ShortWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Short) extends BeanFieldWriter(name, field, false) {
@@ -234,6 +363,16 @@ object BeanFieldWriter {
       val builder = jsonBuilder.underlying
       appendPrefix(builder, notFirst)
       builder.append(value.toInt)
+      true
+    }
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getShort(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        return false
+      }
+      writePrefix(out, notFirst)
+      out.writeInt(value.toInt)
       true
     }
   }
@@ -249,10 +388,20 @@ object BeanFieldWriter {
       builder.append(value.toInt)
       true
     }
+
+    override def writeUtf8(obj: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val value = readers.getByte(obj, slot)
+      if (omitDefault && value == defaultValue) {
+        return false
+      }
+      writePrefix(out, notFirst)
+      out.writeInt(value.toInt)
+      true
+    }
   }
 }
 
-class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, config: MPJsonsConfig) extends JsonTypeSerializer[AnyRef] {
+class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type, private val context: Context, config: MPJsonsConfig) extends JsonTypeSerializer[AnyRef] with Utf8Writer[AnyRef] {
 
   def this(serializerFactory: SerializerFactory, tpe: Type, context: Context) =
     this(serializerFactory, tpe, context, MPJsonsConfig())
@@ -320,6 +469,50 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
 
     jsonBuilder.append('}')
   }
+
+  /** `serialize` for UTF-8 output, with the same cycle detection. */
+  override def writeUtf8(obj: AnyRef, out: Utf8Output): Unit = {
+    val path = BeanSerializer.currentPath.get()
+    path.depth += 1
+    try {
+      if (path.depth > BeanSerializer.CycleCheckDepth) {
+        // Deep enough to be a reference cycle: track the beans on the current path by identity.
+        if (!path.onPath.add(obj)) {
+          throw new IllegalArgumentException("Cyclic reference detected while serializing " + tpe +
+            ": an object of this type refers back to itself through its fields")
+        }
+        try {
+          writeFieldsUtf8(obj, out)
+        } finally {
+          path.onPath.remove(obj)
+        }
+      } else {
+        writeFieldsUtf8(obj, out)
+      }
+    } finally {
+      path.depth -= 1
+    }
+  }
+
+  private def writeFieldsUtf8(obj: AnyRef, out: Utf8Output): Unit = {
+
+    val fieldWriters = writers
+
+    out.writeByte('{')
+
+    var isNotFirstField = false
+    var index = 0
+    while (index < fieldWriters.length) {
+      if (fieldWriters(index).writeUtf8(obj, out, isNotFirstField)) {
+        isNotFirstField = true
+      }
+      index += 1
+    }
+
+    out.writeByte('}')
+  }
+
+  override private[mpjsons] def writesUtf8Itself: Boolean = getClass eq classOf[BeanSerializer]
 
 }
 

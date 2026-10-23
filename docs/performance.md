@@ -307,6 +307,58 @@ Results (JDK 25.0.4.1, `Utf8OutputBench`, two forks, 23/10/2026; measured; `benc
   +20% (bean), +6% (strings) and +1% (orders), but −6% (numbers) and −5% (shapes). It also could not keep unpaired
   surrogates. So it was not adopted (`xUtf8String` rows in `utf8-output.txt`).
 
+## 4e. 0.7.6 against 0.6.51 (the last release before 0.7)
+
+How the comparison was set up (measured 23/10/2026, JDK 25.0.4.1, two forks with `-prof gc`, warm-up 3×2 s,
+measurement 5×2 s):
+
+- **Released jars:** 0.6.51 from the Maven repository and 0.7.6 as published from `377e666`. The two versions share
+  package names, so they cannot run side by side.
+- **Harness:** a standalone JMH project ran the same benchmark code with the same fixtures (`Models.scala`) twice,
+  once per version. Only the API calls differ (`markTypedClass`, the lenient constructor, bytes).
+- **Same content written:** both versions produce identical JSON content for every fixture (same length, same
+  multiset of bytes); 0.6.51 writes keys in reverse declaration order (docs/upgrading.md).
+- **Same values read:** each version reads its own output. 0.6.51 reads equal values, though its maps iterate in a
+  different order.
+- **Old key order:** the `old key order` rows show 0.7.6 reading JSON written by 0.6.51, as data stored by
+  applications on 0.6.x looks.
+- **Raw results:** `bench-results/release-0.6.51.txt` and `release-0.7.6.txt`.
+
+| Benchmark | 0.6.51 ops/s | 0.7.6 ops/s | speed-up | B/op 0.6.51 → 0.7.6 |
+|---|---:|---:|---:|---:|
+| **read** `User`, static deserializer | 950 640 | 3 081 474 | 3.24× | 1 896 → 256 |
+| read `User`, `deserialize[T]` | 783 411 | 2 825 938 | 3.61× | 1 992 → 352 |
+| read `User`, old key order | 950 619 | 2 901 440 | 3.05× | 1 896 → 256 |
+| read 200 orders (114 KB) | 956 | 2 746 | 2.87× | 1 705 876 → 244 601 |
+| read 200 orders, old key order | 967 | 2 412 | 2.50× | 1 705 876 → 242 201 |
+| read 200 orders into a projection (skipping) | 1 697 | 5 913 | 3.48× | 1 012 058 → 7 793 |
+| read `SimpleBean` | 343 508 | 1 081 272 | 3.15× | 4 816 → 1 032 |
+| read number arrays | 1 561 | 4 671 | 2.99× | 852 466 → 56 105 |
+| read strings (escapes, non-ASCII) | 14 155 | 42 550 | 3.01× | 116 273 → 42 464 |
+| read typed shapes | 2 350 | 9 611 | 4.09× | 676 009 → 58 064 |
+| **write** `User`, static serializer | 2 167 121 | 4 159 166 | 1.92× | 824 → 384 |
+| write `User`, `serialize[T]` | 1 585 417 | 3 049 086 | 1.92× | 920 → 480 |
+| write 200 orders | 1 981 | 3 256 | 1.64× | 701 778 → 250 297 |
+| write `SimpleBean` | 908 574 | 1 508 612 | 1.66× | 2 584 → 864 |
+| write number arrays | 6 074 | 9 577 | 1.58× | 469 689 → 100 704 |
+| write strings | 16 999 | 18 012 | ~1.06× (noise: ±19% on 0.6.51) | 100 276 → 65 768 |
+| write typed shapes | 5 994 | 11 497 | 1.92× | 336 593 → 45 744 |
+| **UTF-8 bytes** `User` (0.6.51: `getBytes`; 0.7.6: `serializeToBytes`) | 2 134 298 | 4 894 429 | 2.29× | 944 → 424 |
+| UTF-8 bytes, 200 orders | 1 936 | 3 328 | 1.72× | 815 578 → 250 337 |
+| UTF-8 bytes, strings | 13 884 | 24 857 | 1.79× | 153 233 → 27 328 |
+
+Reading is 2.5–4.1× faster with 63–99% less allocation. Writing is 1.6–1.9× faster (strings within noise), and
+UTF-8 output 1.7–2.3× faster, with 34–86% less allocation.
+
+Reading JSON in the old key order costs 0.7.6 about 12% on orders (2 412 vs 2 746 ops/s; the second row is noisy at
+±15%) and about 6% on `User`: key prediction misses, and every key takes the hash lookup. Data re-written by 0.7.x
+gets the full speed.
+
+Noisy rows (error above 5%):
+- 0.7.6 read orders: ±15.2%;
+- 0.6.51 write strings and strings bytes: ±19.1% and ±15.7%;
+- 0.7.6 write `SimpleBean`: ±8.2%.
+
 ## 5. Constraints to respect while optimising
 
 - Public API: `JsonTypeSerializer.serialize(obj, jsonBuilder: scala.collection.mutable.StringBuilder)`,

@@ -31,9 +31,19 @@ libraryDependencies ++= Seq(
 
 scalacOptions := Seq("-unchecked", "-deprecation")
 enablePlugins(JmhPlugin)
+// sbt-jmh adds JMH to the Compile dependencies, which would put it into the published pom (and on users' runtime
+// classpath); only the benchmarks (src/jmh) need it
+libraryDependencies := libraryDependencies.value.map { module =>
+  if (module.organization == "org.openjdk.jmh") module.withConfigurations(Some(Jmh.name + "->default(compile)")) else module
+}
+// sbt-jmh runs its generator and the benchmarks with the Compile classpath; add the JMH artifacts back for them
+Jmh / dependencyClasspath := (Compile / dependencyClasspath).value ++ (Jmh / managedClasspath).value
 
 // FieldWritersGenerator (Java) uses java.lang.classfile, which the Scala 2.13 compiler cannot read, so it is compiled first
 Compile / compileOrder := CompileOrder.JavaThenScala
+// Scaladoc cannot read those Java sources either: document the Scala sources only, against the compiled classes
+Compile / doc / sources := (Compile / doc / sources).value.filterNot(_.getName.endsWith(".java"))
+Compile / doc / dependencyClasspath ++= (Compile / exportedProducts).value
 Test / compileOrder := CompileOrder.Mixed
 Jmh / compileOrder := CompileOrder.Mixed
 

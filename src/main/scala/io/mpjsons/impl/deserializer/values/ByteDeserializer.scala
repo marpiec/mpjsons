@@ -7,9 +7,9 @@ import io.mpjsons.impl.deserializer.jsontypes.AbstractIntegerDeserializer
  * @author Marcin Pieciukiewicz
  */
 object ByteDeserializer extends AbstractIntegerDeserializer[Byte] {
-  override def deserialize(jsonIterator: StringIterator) = readNumberString(jsonIterator).toByte
+  override def deserialize(jsonIterator: StringIterator): Byte = readByte(jsonIterator)
 }
 
 object JavaByteDeserializer extends AbstractIntegerDeserializer[java.lang.Byte] {
-  override def deserialize(jsonIterator: StringIterator): java.lang.Byte = readNumberString(jsonIterator).toByte
+  override def deserialize(jsonIterator: StringIterator): java.lang.Byte = readByte(jsonIterator)
 }

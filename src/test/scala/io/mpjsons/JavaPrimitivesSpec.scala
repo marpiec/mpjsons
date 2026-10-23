@@ -1,7 +1,7 @@
 package io.mpjsons
 
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 import scala.annotation.meta.field
 
@@ -16,7 +16,7 @@ case class PrimitiveHolder(
    @(nullable @field) h: java.lang.Character
 )
 
-class JavaPrimitivesSpec extends FlatSpec {
+class JavaPrimitivesSpec extends AnyFlatSpec {
 
   val mpjsons = new MPJsons
 
@@ -26,7 +26,7 @@ class JavaPrimitivesSpec extends FlatSpec {
 
     val serialized = mpjsons.serialize(o)
 
-    serialized must be ("""{"h":"g","g":0.75,"f":0.45,"e":true,"d":65,"c":5,"b":21,"a":123}""")
+    serialized must be ("""{"a":123,"b":21,"c":5,"d":65,"e":true,"f":0.45,"g":0.75,"h":"g"}""")
 
     val deserialized = mpjsons.deserialize[PrimitiveHolder](serialized)
 

@@ -2,7 +2,7 @@ package io.mpjsons.impl.deserializer.utiltypes
 
 import io.mpjsons.JsonTypeDeserializer
 import io.mpjsons.impl.deserializer.IdentifierDeserializer
-import io.mpjsons.impl.util.{Context, TypesUtil}
+import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, JsonInnerException, StringIterator}
 
 import scala.reflect.runtime.universe._
@@ -14,24 +14,29 @@ import scala.reflect.runtime.universe._
 class EitherDeserializer[L, R](val deserializerFactory: DeserializerFactory, tpe: Type, context: Context)
   extends JsonTypeDeserializer[Either[L, R]] {
 
-  val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
-  val leftDeserializer = deserializerFactory.getDeserializer[L](leftType, context)
-  val rightDeserializer = deserializerFactory.getDeserializer[R](rightType, context)
+  private val (leftType, rightType) = TypesUtil.getDoubleSubElementsType(tpe)
+  private val leftDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[L](leftType, context), leftType, deserializerFactory.config)
+  private val rightDeserializer = NullValues.nullable(deserializerFactory.getDeserializer[R](rightType, context), rightType, deserializerFactory.config)
 
 
   override def deserialize(jsonIterator: StringIterator): Either[L, R] = {
 
     jsonIterator.consumeObjectStart()
 
-    val identifier = IdentifierDeserializer.deserialize(jsonIterator)
+    jsonIterator.skipWhitespaceChars()
+    val keyStart = jsonIterator.nextIndex - 1
+    val isLeft = IdentifierDeserializer.matches(jsonIterator, "left")
+    val isRight = !isLeft && { jsonIterator.seek(keyStart); IdentifierDeserializer.matches(jsonIterator, "right") }
 
     jsonIterator.consumeFieldValueSeparator()
 
-    val deserialized = if (identifier == "left") {
+    val deserialized = if (isLeft) {
       Left(leftDeserializer.deserialize(jsonIterator))
-    } else if (identifier == "right") {
+    } else if (isRight) {
       Right(rightDeserializer.deserialize(jsonIterator))
     } else {
+      jsonIterator.seek(keyStart)
+      val identifier = IdentifierDeserializer.deserialize(jsonIterator)
       throw new JsonInnerException("Incorrect identifier in Either " + identifier + ".Types: " + context.typesStackMessage, null)
     }
 

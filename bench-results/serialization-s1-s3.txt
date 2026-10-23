@@ -1,0 +1,91 @@
+Benchmark                                            (impl)   Mode  Cnt        Score        Error   Units
+SerializationBench.bean                              legacy  thrpt   10  1275816,654 ±  41410,510   ops/s
+SerializationBench.bean:gc.alloc.rate                legacy  thrpt   10     1158,167 ±     37,586  MB/sec
+SerializationBench.bean:gc.alloc.rate.norm           legacy  thrpt   10      952,003 ±      0,001    B/op
+SerializationBench.bean:gc.count                     legacy  thrpt   10      141,000               counts
+SerializationBench.bean:gc.time                      legacy  thrpt   10      174,000                   ms
+SerializationBench.bean                             current  thrpt   10  1520217,276 ±  59534,232   ops/s
+SerializationBench.bean:gc.alloc.rate               current  thrpt   10     1252,377 ±     48,924  MB/sec
+SerializationBench.bean:gc.alloc.rate.norm          current  thrpt   10      864,002 ±      0,001    B/op
+SerializationBench.bean:gc.count                    current  thrpt   10      140,000               counts
+SerializationBench.bean:gc.time                     current  thrpt   10      175,000                   ms
+SerializationBench.numbers                           legacy  thrpt   10     9170,464 ±    248,533   ops/s
+SerializationBench.numbers:gc.alloc.rate             legacy  thrpt   10     1300,927 ±     35,270  MB/sec
+SerializationBench.numbers:gc.alloc.rate.norm        legacy  thrpt   10   148768,390 ±      0,017    B/op
+SerializationBench.numbers:gc.count                  legacy  thrpt   10      119,000               counts
+SerializationBench.numbers:gc.time                   legacy  thrpt   10      156,000                   ms
+SerializationBench.numbers                          current  thrpt   10     9661,062 ±     99,563   ops/s
+SerializationBench.numbers:gc.alloc.rate            current  thrpt   10      927,716 ±      9,567  MB/sec
+SerializationBench.numbers:gc.alloc.rate.norm       current  thrpt   10   100704,365 ±      0,004    B/op
+SerializationBench.numbers:gc.count                 current  thrpt   10      138,000               counts
+SerializationBench.numbers:gc.time                  current  thrpt   10      177,000                   ms
+SerializationBench.orders                            legacy  thrpt   10     3044,176 ±    112,719   ops/s
+SerializationBench.orders:gc.alloc.rate              legacy  thrpt   10      726,555 ±     26,894  MB/sec
+SerializationBench.orders:gc.alloc.rate.norm         legacy  thrpt   10   250297,156 ±      0,042    B/op
+SerializationBench.orders:gc.count                   legacy  thrpt   10      119,000               counts
+SerializationBench.orders:gc.time                    legacy  thrpt   10      156,000                   ms
+SerializationBench.orders                           current  thrpt   10     3272,756 ±     41,731   ops/s
+SerializationBench.orders:gc.alloc.rate             current  thrpt   10      781,119 ±      9,960  MB/sec
+SerializationBench.orders:gc.alloc.rate.norm        current  thrpt   10   250297,075 ±      0,013    B/op
+SerializationBench.orders:gc.count                  current  thrpt   10      127,000               counts
+SerializationBench.orders:gc.time                   current  thrpt   10      166,000                   ms
+SerializationBench.ordersBytes                       legacy  thrpt   10     2876,453 ±     74,143   ops/s
+SerializationBench.ordersBytes:gc.alloc.rate         legacy  thrpt   10      998,682 ±     25,744  MB/sec
+SerializationBench.ordersBytes:gc.alloc.rate.norm    legacy  thrpt   10   364097,224 ±      0,032    B/op
+SerializationBench.ordersBytes:gc.count              legacy  thrpt   10      134,000               counts
+SerializationBench.ordersBytes:gc.time               legacy  thrpt   10      173,000                   ms
+SerializationBench.ordersBytes                      current  thrpt   10     3088,892 ±    109,000   ops/s
+SerializationBench.ordersBytes:gc.alloc.rate        current  thrpt   10     1072,440 ±     37,863  MB/sec
+SerializationBench.ordersBytes:gc.alloc.rate.norm   current  thrpt   10   364097,139 ±      0,040    B/op
+SerializationBench.ordersBytes:gc.count             current  thrpt   10      126,000               counts
+SerializationBench.ordersBytes:gc.time              current  thrpt   10      165,000                   ms
+SerializationBench.texts                             legacy  thrpt   10    16437,630 ±   1375,703   ops/s
+SerializationBench.texts:gc.alloc.rate               legacy  thrpt   10     1030,869 ±     86,271  MB/sec
+SerializationBench.texts:gc.alloc.rate.norm          legacy  thrpt   10    65768,215 ±      0,019    B/op
+SerializationBench.texts:gc.count                    legacy  thrpt   10      137,000               counts
+SerializationBench.texts:gc.time                     legacy  thrpt   10      158,000                   ms
+SerializationBench.texts                            current  thrpt   10    17841,927 ±    134,703   ops/s
+SerializationBench.texts:gc.alloc.rate              current  thrpt   10     1118,949 ±      8,435  MB/sec
+SerializationBench.texts:gc.alloc.rate.norm         current  thrpt   10    65768,197 ±      0,002    B/op
+SerializationBench.texts:gc.count                   current  thrpt   10      148,000               counts
+SerializationBench.texts:gc.time                    current  thrpt   10      186,000                   ms
+SerializationBench.textsBytes                        legacy  thrpt   10    18453,162 ±    812,092   ops/s
+SerializationBench.textsBytes:gc.alloc.rate          legacy  thrpt   10     2089,404 ±     91,902  MB/sec
+SerializationBench.textsBytes:gc.alloc.rate.norm     legacy  thrpt   10   118744,059 ±      0,422    B/op
+SerializationBench.textsBytes:gc.count               legacy  thrpt   10      140,000               counts
+SerializationBench.textsBytes:gc.time                legacy  thrpt   10      174,000                   ms
+SerializationBench.textsBytes                       current  thrpt   10    18742,661 ±    414,814   ops/s
+SerializationBench.textsBytes:gc.alloc.rate         current  thrpt   10     2122,184 ±     46,968  MB/sec
+SerializationBench.textsBytes:gc.alloc.rate.norm    current  thrpt   10   118744,055 ±      0,422    B/op
+SerializationBench.textsBytes:gc.count              current  thrpt   10      148,000               counts
+SerializationBench.textsBytes:gc.time               current  thrpt   10      185,000                   ms
+SerializationBench.typedDrawing                      legacy  thrpt   10     9459,796 ±    649,337   ops/s
+SerializationBench.typedDrawing:gc.alloc.rate        legacy  thrpt   10      412,606 ±     28,319  MB/sec
+SerializationBench.typedDrawing:gc.alloc.rate.norm   legacy  thrpt   10    45744,378 ±      0,030    B/op
+SerializationBench.typedDrawing:gc.count             legacy  thrpt   10       67,000               counts
+SerializationBench.typedDrawing:gc.time              legacy  thrpt   10       84,000                   ms
+SerializationBench.typedDrawing                     current  thrpt   10    11462,232 ±    414,253   ops/s
+SerializationBench.typedDrawing:gc.alloc.rate       current  thrpt   10      499,982 ±     18,071  MB/sec
+SerializationBench.typedDrawing:gc.alloc.rate.norm  current  thrpt   10    45744,309 ±      0,013    B/op
+SerializationBench.typedDrawing:gc.count            current  thrpt   10       81,000               counts
+SerializationBench.typedDrawing:gc.time             current  thrpt   10       99,000                   ms
+SerializationBench.user                              legacy  thrpt   10  3731416,634 ± 438703,000   ops/s
+SerializationBench.user:gc.alloc.rate                legacy  thrpt   10     1366,326 ±    160,640  MB/sec
+SerializationBench.user:gc.alloc.rate.norm           legacy  thrpt   10      384,001 ±      0,001    B/op
+SerializationBench.user:gc.count                     legacy  thrpt   10      117,000               counts
+SerializationBench.user:gc.time                      legacy  thrpt   10      144,000                   ms
+SerializationBench.user                             current  thrpt   10  4302593,918 ± 185279,133   ops/s
+SerializationBench.user:gc.alloc.rate               current  thrpt   10     1575,452 ±     67,868  MB/sec
+SerializationBench.user:gc.alloc.rate.norm          current  thrpt   10      384,001 ±      0,001    B/op
+SerializationBench.user:gc.count                    current  thrpt   10      118,000               counts
+SerializationBench.user:gc.time                     current  thrpt   10      145,000                   ms
+SerializationBench.userViaApi                        legacy  thrpt   10  2498878,965 ±  87571,670   ops/s
+SerializationBench.userViaApi:gc.alloc.rate          legacy  thrpt   10     1181,873 ±     41,442  MB/sec
+SerializationBench.userViaApi:gc.alloc.rate.norm     legacy  thrpt   10      496,006 ±      0,001    B/op
+SerializationBench.userViaApi:gc.count               legacy  thrpt   10      113,000               counts
+SerializationBench.userViaApi:gc.time                legacy  thrpt   10      141,000                   ms
+SerializationBench.userViaApi                       current  thrpt   10  2496149,126 ± 124399,968   ops/s
+SerializationBench.userViaApi:gc.alloc.rate         current  thrpt   10     1199,076 ±     32,960  MB/sec
+SerializationBench.userViaApi:gc.alloc.rate.norm    current  thrpt   10      504,006 ±     12,749    B/op
+SerializationBench.userViaApi:gc.count              current  thrpt   10      111,000               counts
+SerializationBench.userViaApi:gc.time               current  thrpt   10      146,000                   ms

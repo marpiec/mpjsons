@@ -1,0 +1,3 @@
+Benchmark                         Mode  Cnt           Score           Error  Units
+TypeTagBench.createdOnceTag      thrpt    5  5741673599,264 ± 250740266,883  ops/s
+TypeTagBench.materialisedAtCall  thrpt    5    10914796,091 ±     83244,762  ops/s

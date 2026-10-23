@@ -11,6 +11,7 @@ class SingletonObjectDeserializer(tpe: Type) extends JsonTypeDeserializer[AnyRef
   override def deserialize(jsonIterator: StringIterator): AnyRef = {
 
     jsonIterator.consumeObjectStart()
+    jsonIterator.skipWhitespaceChars()
     val instance = ObjectConstructionUtil.retrieveObjectInstance(TypesUtil.getClassFromType(tpe))
 
     if (jsonIterator.currentChar == '}') {

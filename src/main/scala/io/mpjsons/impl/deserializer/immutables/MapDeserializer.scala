@@ -13,5 +13,5 @@ import scala.reflect.runtime.universe._
 class MapDeserializer[K, V](private val deserializerFactory: DeserializerFactory, private val tpe: Type, context: Context)
   extends AbstractJsonMapDeserializer[K, V, Map[K, V]](deserializerFactory, tpe, context) {
 
-  override def deserialize(jsonIterator: StringIterator): Map[K, V] = readBuffer(jsonIterator).toMap
+  override def deserialize(jsonIterator: StringIterator): Map[K, V] = readInto(jsonIterator, Map.newBuilder[K, V])
 }

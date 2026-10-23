@@ -8,9 +8,9 @@ import io.mpjsons.impl.deserializer.jsontypes.AbstractIntegerDeserializer
  */
 
 object LongDeserializer extends AbstractIntegerDeserializer[Long] {
-  override def deserialize(jsonIterator: StringIterator) = readNumberString(jsonIterator).toLong
+  override def deserialize(jsonIterator: StringIterator): Long = readLong(jsonIterator)
 }
 
 object JavaLongDeserializer extends AbstractIntegerDeserializer[java.lang.Long] {
-  override def deserialize(jsonIterator: StringIterator): java.lang.Long = readNumberString(jsonIterator).toLong
+  override def deserialize(jsonIterator: StringIterator): java.lang.Long = readLong(jsonIterator)
 }

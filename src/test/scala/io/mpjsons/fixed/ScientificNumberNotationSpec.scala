@@ -1,14 +1,14 @@
 package io.mpjsons.fixed
 
 import io.mpjsons.MPJsons
-import org.scalatest.FlatSpec
-import org.scalatest.MustMatchers._
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers._
 
 object ScientificNumberNotationSpec {
   case class WithNumber(a: Int, b: Double, c: Double)
 }
 
-class ScientificNumberNotationSpec extends FlatSpec {
+class ScientificNumberNotationSpec extends AnyFlatSpec {
   import ScientificNumberNotationSpec._
 
   private val mpjsons = new MPJsons

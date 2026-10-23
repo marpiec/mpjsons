@@ -1,0 +1,41 @@
+Benchmark                                                               (impl)   Mode  Cnt        Score        Error   Units
+DeserializationBench.bean                                               legacy  thrpt   10   734762,271 ±  28878,637   ops/s
+DeserializationBench.bean:gc.alloc.rate                                 legacy  thrpt   10      880,002 ±     34,584  MB/sec
+DeserializationBench.bean:gc.alloc.rate.norm                            legacy  thrpt   10     1256,005 ±      0,001    B/op
+DeserializationBench.bean:gc.count                                      legacy  thrpt   10      143,000               counts
+DeserializationBench.bean:gc.time                                       legacy  thrpt   10      166,000                   ms
+DeserializationBench.numbers                                            legacy  thrpt   10     2540,151 ±    305,037   ops/s
+DeserializationBench.numbers:gc.alloc.rate                              legacy  thrpt   10     1177,545 ±    141,414  MB/sec
+DeserializationBench.numbers:gc.alloc.rate.norm                         legacy  thrpt   10   486145,393 ±      0,176    B/op
+DeserializationBench.numbers:gc.count                                   legacy  thrpt   10      142,000               counts
+DeserializationBench.numbers:gc.time                                    legacy  thrpt   10      173,000                   ms
+DeserializationBench.orders                                             legacy  thrpt   10     1635,858 ±     38,408   ops/s
+DeserializationBench.orders:gc.alloc.rate                               legacy  thrpt   10      607,816 ±     14,267  MB/sec
+DeserializationBench.orders:gc.alloc.rate.norm                          legacy  thrpt   10   389650,149 ±      0,049    B/op
+DeserializationBench.orders:gc.count                                    legacy  thrpt   10       98,000               counts
+DeserializationBench.orders:gc.time                                     legacy  thrpt   10      120,000                   ms
+DeserializationBench.ordersProjectionSkippingFields                     legacy  thrpt   10     2711,000 ±    123,458   ops/s
+DeserializationBench.ordersProjectionSkippingFields:gc.alloc.rate       legacy  thrpt   10     1268,172 ±    189,978  MB/sec
+DeserializationBench.ordersProjectionSkippingFields:gc.alloc.rate.norm  legacy  thrpt   10   489769,298 ±  54119,881    B/op
+DeserializationBench.ordersProjectionSkippingFields:gc.count            legacy  thrpt   10      134,000               counts
+DeserializationBench.ordersProjectionSkippingFields:gc.time             legacy  thrpt   10      167,000                   ms
+DeserializationBench.texts                                              legacy  thrpt   10    20567,808 ±   1192,113   ops/s
+DeserializationBench.texts:gc.alloc.rate                                legacy  thrpt   10     1192,596 ±     69,098  MB/sec
+DeserializationBench.texts:gc.alloc.rate.norm                           legacy  thrpt   10    60808,172 ±      0,010    B/op
+DeserializationBench.texts:gc.count                                     legacy  thrpt   10      132,000               counts
+DeserializationBench.texts:gc.time                                      legacy  thrpt   10      167,000                   ms
+DeserializationBench.typedDrawing                                       legacy  thrpt   10     3826,005 ±    153,229   ops/s
+DeserializationBench.typedDrawing:gc.alloc.rate                         legacy  thrpt   10     1020,506 ±     40,867  MB/sec
+DeserializationBench.typedDrawing:gc.alloc.rate.norm                    legacy  thrpt   10   279717,739 ±      0,481    B/op
+DeserializationBench.typedDrawing:gc.count                              legacy  thrpt   10      134,000               counts
+DeserializationBench.typedDrawing:gc.time                               legacy  thrpt   10      175,000                   ms
+DeserializationBench.userApi                                            legacy  thrpt   10  1770134,824 ±  59634,398   ops/s
+DeserializationBench.userApi:gc.alloc.rate                              legacy  thrpt   10      742,696 ±     25,020  MB/sec
+DeserializationBench.userApi:gc.alloc.rate.norm                         legacy  thrpt   10      440,008 ±      0,001    B/op
+DeserializationBench.userApi:gc.count                                   legacy  thrpt   10      120,000               counts
+DeserializationBench.userApi:gc.time                                    legacy  thrpt   10      151,000                   ms
+DeserializationBench.userStaticDeserializer                             legacy  thrpt   10  2201963,788 ± 138660,887   ops/s
+DeserializationBench.userStaticDeserializer:gc.alloc.rate               legacy  thrpt   10      722,295 ±     45,486  MB/sec
+DeserializationBench.userStaticDeserializer:gc.alloc.rate.norm          legacy  thrpt   10      344,002 ±      0,001    B/op
+DeserializationBench.userStaticDeserializer:gc.count                    legacy  thrpt   10      116,000               counts
+DeserializationBench.userStaticDeserializer:gc.time                     legacy  thrpt   10      138,000                   ms

@@ -1,0 +1,121 @@
+Benchmark                                               Mode  Cnt        Score        Error   Units
+Utf8OutputBench.beanString                             thrpt   10  1490125,426 ± 114372,923   ops/s
+Utf8OutputBench.beanString:gc.alloc.rate               thrpt   10     1227,686 ±     94,212  MB/sec
+Utf8OutputBench.beanString:gc.alloc.rate.norm          thrpt   10      864,002 ±      0,001    B/op
+Utf8OutputBench.beanString:gc.count                    thrpt   10      141,000               counts
+Utf8OutputBench.beanString:gc.time                     thrpt   10      169,000                   ms
+Utf8OutputBench.beanStringBytes                        thrpt   10  1407014,948 ±  16270,832   ops/s
+Utf8OutputBench.beanStringBytes:gc.alloc.rate          thrpt   10     1610,012 ±     18,628  MB/sec
+Utf8OutputBench.beanStringBytes:gc.alloc.rate.norm     thrpt   10     1200,002 ±      0,001    B/op
+Utf8OutputBench.beanStringBytes:gc.count               thrpt   10      146,000               counts
+Utf8OutputBench.beanStringBytes:gc.time                thrpt   10      179,000                   ms
+Utf8OutputBench.beanUtf8                               thrpt   10  1742372,199 ±  20255,098   ops/s
+Utf8OutputBench.beanUtf8:gc.alloc.rate                 thrpt   10     1382,348 ±     16,061  MB/sec
+Utf8OutputBench.beanUtf8:gc.alloc.rate.norm            thrpt   10      832,002 ±      0,001    B/op
+Utf8OutputBench.beanUtf8:gc.count                      thrpt   10      135,000               counts
+Utf8OutputBench.beanUtf8:gc.time                       thrpt   10      168,000                   ms
+Utf8OutputBench.beanUtf8String                         thrpt   10  1788792,197 ±  20503,016   ops/s
+Utf8OutputBench.beanUtf8String:gc.alloc.rate           thrpt   10     1460,094 ±     16,738  MB/sec
+Utf8OutputBench.beanUtf8String:gc.alloc.rate.norm      thrpt   10      856,002 ±      0,001    B/op
+Utf8OutputBench.beanUtf8String:gc.count                thrpt   10      131,000               counts
+Utf8OutputBench.beanUtf8String:gc.time                 thrpt   10      162,000                   ms
+Utf8OutputBench.drawingString                          thrpt   10    11821,749 ±     85,358   ops/s
+Utf8OutputBench.drawingString:gc.alloc.rate            thrpt   10      515,625 ±      3,793  MB/sec
+Utf8OutputBench.drawingString:gc.alloc.rate.norm       thrpt   10    45744,298 ±      0,003    B/op
+Utf8OutputBench.drawingString:gc.count                 thrpt   10       84,000               counts
+Utf8OutputBench.drawingString:gc.time                  thrpt   10      107,000                   ms
+Utf8OutputBench.drawingStringBytes                     thrpt   10    11797,743 ±     59,191   ops/s
+Utf8OutputBench.drawingStringBytes:gc.alloc.rate       thrpt   10      771,219 ±      3,862  MB/sec
+Utf8OutputBench.drawingStringBytes:gc.alloc.rate.norm  thrpt   10    68552,693 ±     16,665    B/op
+Utf8OutputBench.drawingStringBytes:gc.count            thrpt   10      126,000               counts
+Utf8OutputBench.drawingStringBytes:gc.time             thrpt   10      158,000                   ms
+Utf8OutputBench.drawingUtf8                            thrpt   10    11420,327 ±    340,361   ops/s
+Utf8OutputBench.drawingUtf8:gc.alloc.rate              thrpt   10      498,591 ±     14,861  MB/sec
+Utf8OutputBench.drawingUtf8:gc.alloc.rate.norm         thrpt   10    45784,309 ±      0,010    B/op
+Utf8OutputBench.drawingUtf8:gc.count                   thrpt   10       82,000               counts
+Utf8OutputBench.drawingUtf8:gc.time                    thrpt   10      104,000                   ms
+Utf8OutputBench.drawingUtf8String                      thrpt   10    11261,748 ±    568,684   ops/s
+Utf8OutputBench.drawingUtf8String:gc.alloc.rate        thrpt   10      491,925 ±     24,838  MB/sec
+Utf8OutputBench.drawingUtf8String:gc.alloc.rate.norm   thrpt   10    45808,313 ±      0,016    B/op
+Utf8OutputBench.drawingUtf8String:gc.count             thrpt   10       73,000               counts
+Utf8OutputBench.drawingUtf8String:gc.time              thrpt   10       93,000                   ms
+Utf8OutputBench.numbersString                          thrpt   10     9635,719 ±    126,917   ops/s
+Utf8OutputBench.numbersString:gc.alloc.rate            thrpt   10      925,306 ±     12,183  MB/sec
+Utf8OutputBench.numbersString:gc.alloc.rate.norm       thrpt   10   100704,366 ±      0,007    B/op
+Utf8OutputBench.numbersString:gc.count                 thrpt   10      143,000               counts
+Utf8OutputBench.numbersString:gc.time                  thrpt   10      185,000                   ms
+Utf8OutputBench.numbersStringBytes                     thrpt   10     9226,382 ±     90,584   ops/s
+Utf8OutputBench.numbersStringBytes:gc.alloc.rate       thrpt   10     1328,445 ±     13,051  MB/sec
+Utf8OutputBench.numbersStringBytes:gc.alloc.rate.norm  thrpt   10   150996,898 ±     16,635    B/op
+Utf8OutputBench.numbersStringBytes:gc.count            thrpt   10      122,000               counts
+Utf8OutputBench.numbersStringBytes:gc.time             thrpt   10      161,000                   ms
+Utf8OutputBench.numbersUtf8                            thrpt   10     9063,910 ±    167,732   ops/s
+Utf8OutputBench.numbersUtf8:gc.alloc.rate              thrpt   10      870,736 ±     16,115  MB/sec
+Utf8OutputBench.numbersUtf8:gc.alloc.rate.norm         thrpt   10   100744,390 ±      0,009    B/op
+Utf8OutputBench.numbersUtf8:gc.count                   thrpt   10      143,000               counts
+Utf8OutputBench.numbersUtf8:gc.time                    thrpt   10      180,000                   ms
+Utf8OutputBench.numbersUtf8String                      thrpt   10     9047,436 ±     49,479   ops/s
+Utf8OutputBench.numbersUtf8String:gc.alloc.rate        thrpt   10      869,351 ±      4,766  MB/sec
+Utf8OutputBench.numbersUtf8String:gc.alloc.rate.norm   thrpt   10   100768,391 ±      0,004    B/op
+Utf8OutputBench.numbersUtf8String:gc.count             thrpt   10      143,000               counts
+Utf8OutputBench.numbersUtf8String:gc.time              thrpt   10      177,000                   ms
+Utf8OutputBench.ordersString                           thrpt   10     3273,286 ±     27,997   ops/s
+Utf8OutputBench.ordersString:gc.alloc.rate             thrpt   10      781,247 ±      6,691  MB/sec
+Utf8OutputBench.ordersString:gc.alloc.rate.norm        thrpt   10   250297,075 ±      0,009    B/op
+Utf8OutputBench.ordersString:gc.count                  thrpt   10      128,000               counts
+Utf8OutputBench.ordersString:gc.time                   thrpt   10      169,000                   ms
+Utf8OutputBench.ordersStringBytes                      thrpt   10     3180,233 ±     46,461   ops/s
+Utf8OutputBench.ordersStringBytes:gc.alloc.rate        thrpt   10     1104,145 ±     16,128  MB/sec
+Utf8OutputBench.ordersStringBytes:gc.alloc.rate.norm   thrpt   10   364097,105 ±      0,016    B/op
+Utf8OutputBench.ordersStringBytes:gc.count             thrpt   10      123,000               counts
+Utf8OutputBench.ordersStringBytes:gc.time              thrpt   10      167,000                   ms
+Utf8OutputBench.ordersUtf8                             thrpt   10     3318,934 ±     34,549   ops/s
+Utf8OutputBench.ordersUtf8:gc.alloc.rate               thrpt   10      792,270 ±      8,244  MB/sec
+Utf8OutputBench.ordersUtf8:gc.alloc.rate.norm          thrpt   10   250337,059 ±      0,011    B/op
+Utf8OutputBench.ordersUtf8:gc.count                    thrpt   10      130,000               counts
+Utf8OutputBench.ordersUtf8:gc.time                     thrpt   10      172,000                   ms
+Utf8OutputBench.ordersUtf8String                       thrpt   10     3314,610 ±     33,549   ops/s
+Utf8OutputBench.ordersUtf8String:gc.alloc.rate         thrpt   10      791,311 ±      8,023  MB/sec
+Utf8OutputBench.ordersUtf8String:gc.alloc.rate.norm    thrpt   10   250361,060 ±      0,012    B/op
+Utf8OutputBench.ordersUtf8String:gc.count              thrpt   10      129,000               counts
+Utf8OutputBench.ordersUtf8String:gc.time               thrpt   10      172,000                   ms
+Utf8OutputBench.textsString                            thrpt   10    18094,081 ±    616,853   ops/s
+Utf8OutputBench.textsString:gc.alloc.rate              thrpt   10     1134,752 ±     38,685  MB/sec
+Utf8OutputBench.textsString:gc.alloc.rate.norm         thrpt   10    65768,194 ±      0,007    B/op
+Utf8OutputBench.textsString:gc.count                   thrpt   10      139,000               counts
+Utf8OutputBench.textsString:gc.time                    thrpt   10      169,000                   ms
+Utf8OutputBench.textsStringBytes                       thrpt   10    16603,959 ±   3727,140   ops/s
+Utf8OutputBench.textsStringBytes:gc.alloc.rate         thrpt   10     1879,575 ±    422,123  MB/sec
+Utf8OutputBench.textsStringBytes:gc.alloc.rate.norm    thrpt   10   118722,861 ±     10,214    B/op
+Utf8OutputBench.textsStringBytes:gc.count              thrpt   10      139,000               counts
+Utf8OutputBench.textsStringBytes:gc.time               thrpt   10      175,000                   ms
+Utf8OutputBench.textsUtf8                              thrpt   10    26641,144 ±   2548,514   ops/s
+Utf8OutputBench.textsUtf8:gc.alloc.rate                thrpt   10      694,196 ±     66,491  MB/sec
+Utf8OutputBench.textsUtf8:gc.alloc.rate.norm           thrpt   10    27328,132 ±      0,013    B/op
+Utf8OutputBench.textsUtf8:gc.count                     thrpt   10      113,000               counts
+Utf8OutputBench.textsUtf8:gc.time                      thrpt   10      142,000                   ms
+Utf8OutputBench.textsUtf8String                        thrpt   10    19187,227 ±    232,169   ops/s
+Utf8OutputBench.textsUtf8String:gc.alloc.rate          thrpt   10     1478,917 ±     17,913  MB/sec
+Utf8OutputBench.textsUtf8String:gc.alloc.rate.norm     thrpt   10    80832,183 ±      0,003    B/op
+Utf8OutputBench.textsUtf8String:gc.count               thrpt   10      129,000               counts
+Utf8OutputBench.textsUtf8String:gc.time                thrpt   10      163,000                   ms
+Utf8OutputBench.userString                             thrpt   10  4164846,889 ±  31205,405   ops/s
+Utf8OutputBench.userString:gc.alloc.rate               thrpt   10     1525,024 ±     11,414  MB/sec
+Utf8OutputBench.userString:gc.alloc.rate.norm          thrpt   10      384,001 ±      0,001    B/op
+Utf8OutputBench.userString:gc.count                    thrpt   10      107,000               counts
+Utf8OutputBench.userString:gc.time                     thrpt   10      135,000                   ms
+Utf8OutputBench.userStringBytes                        thrpt   10  3912542,581 ±  35012,123   ops/s
+Utf8OutputBench.userStringBytes:gc.alloc.rate          thrpt   10     1880,347 ±     16,829  MB/sec
+Utf8OutputBench.userStringBytes:gc.alloc.rate.norm     thrpt   10      504,001 ±      0,001    B/op
+Utf8OutputBench.userStringBytes:gc.count               thrpt   10      133,000               counts
+Utf8OutputBench.userStringBytes:gc.time                thrpt   10      165,000                   ms
+Utf8OutputBench.userUtf8                               thrpt   10  4895104,402 ±  38859,972   ops/s
+Utf8OutputBench.userUtf8:gc.alloc.rate                 thrpt   10     1979,139 ±     15,712  MB/sec
+Utf8OutputBench.userUtf8:gc.alloc.rate.norm            thrpt   10      424,001 ±      0,001    B/op
+Utf8OutputBench.userUtf8:gc.count                      thrpt   10      140,000               counts
+Utf8OutputBench.userUtf8:gc.time                       thrpt   10      172,000                   ms
+Utf8OutputBench.userUtf8String                         thrpt   10  4879764,464 ±  58400,809   ops/s
+Utf8OutputBench.userUtf8String:gc.alloc.rate           thrpt   10     2084,603 ±     24,916  MB/sec
+Utf8OutputBench.userUtf8String:gc.alloc.rate.norm      thrpt   10      448,001 ±      0,001    B/op
+Utf8OutputBench.userUtf8String:gc.count                thrpt   10      132,000               counts
+Utf8OutputBench.userUtf8String:gc.time                 thrpt   10      169,000                   ms

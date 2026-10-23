@@ -29,6 +29,17 @@ abstract class BeanFieldWriter(val name: String, val field: Field, val nullable:
   protected val prefix: String = "\"" + name + "\":"
   protected val prefixWithComma: String = "," + prefix
 
+  /** Reads `field`; `slot` is the index of the field in `readers` (see FieldReaders). */
+  protected var readers: FieldReaders = new FieldReaders.Reflective(Array(field))
+  protected var slot: Int = 0
+
+  /** Makes this writer read the field through the given readers (shared by all fields of one bean class). */
+  private[serializer] def useReaders(fieldReaders: FieldReaders, index: Int): this.type = {
+    readers = fieldReaders
+    slot = index
+    this
+  }
+
   def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean
 
   protected final def appendPrefix(builder: java.lang.StringBuilder, notFirst: Boolean): Unit = {
@@ -85,7 +96,7 @@ object BeanFieldWriter {
                            nullMode: Int, typeName: String, omitDefault: Boolean, defaultValue: AnyRef) extends BeanFieldWriter(name, field, nullable) {
 
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.get(obj)
+      val value = readers.getObject(obj, slot)
       if (omitDefault && value == defaultValue) {
         false
       } else if (value == null) {
@@ -112,7 +123,7 @@ object BeanFieldWriter {
                            elementSerializer: JsonTypeSerializer[AnyRef], omitDefault: Boolean, defaultValue: AnyRef) extends BeanFieldWriter(name, field, true) {
 
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.get(obj)
+      val value = readers.getObject(obj, slot)
       if (omitDefault && value == defaultValue) {
         return false
       }
@@ -145,7 +156,7 @@ object BeanFieldWriter {
 
   final class IntWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Int) extends BeanFieldWriter(name, field, false) {
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.getInt(obj)
+      val value = readers.getInt(obj, slot)
       if (omitDefault && value == defaultValue) {
         return false
       }
@@ -158,7 +169,7 @@ object BeanFieldWriter {
 
   final class LongWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Long) extends BeanFieldWriter(name, field, false) {
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.getLong(obj)
+      val value = readers.getLong(obj, slot)
       if (omitDefault && value == defaultValue) {
         return false
       }
@@ -171,7 +182,7 @@ object BeanFieldWriter {
 
   final class BooleanWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Boolean) extends BeanFieldWriter(name, field, false) {
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.getBoolean(obj)
+      val value = readers.getBoolean(obj, slot)
       if (omitDefault && value == defaultValue) {
         return false
       }
@@ -184,7 +195,7 @@ object BeanFieldWriter {
 
   final class DoubleWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Double) extends BeanFieldWriter(name, field, false) {
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.getDouble(obj)
+      val value = readers.getDouble(obj, slot)
       if (omitDefault && value == defaultValue) {
         return false
       }
@@ -200,7 +211,7 @@ object BeanFieldWriter {
 
   final class FloatWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Float) extends BeanFieldWriter(name, field, false) {
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.getFloat(obj)
+      val value = readers.getFloat(obj, slot)
       if (omitDefault && value == defaultValue) {
         return false
       }
@@ -216,7 +227,7 @@ object BeanFieldWriter {
 
   final class ShortWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Short) extends BeanFieldWriter(name, field, false) {
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.getShort(obj)
+      val value = readers.getShort(obj, slot)
       if (omitDefault && value == defaultValue) {
         return false
       }
@@ -229,7 +240,7 @@ object BeanFieldWriter {
 
   final class ByteWriter(name: String, field: Field, omitDefault: Boolean, defaultValue: Byte) extends BeanFieldWriter(name, field, false) {
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
-      val value = field.getByte(obj)
+      val value = readers.getByte(obj, slot)
       if (omitDefault && value == defaultValue) {
         return false
       }
@@ -262,7 +273,10 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
   private lazy val writers: Array[BeanFieldWriter] = {
     val typeName = tpe.typeSymbol.fullName
     val template = if (config.omitDefaults) BeanSerializer.defaultInstance(tpe, fields, context) else null
-    fieldsWithSerializers.map(info => BeanFieldWriter(info, config, typeName, serializerFactory, context, template))
+    val readers = FieldReaders.forFields(fieldsWithSerializers.map(_.field))
+    fieldsWithSerializers.zipWithIndex.map { case (info, index) =>
+      BeanFieldWriter(info, config, typeName, serializerFactory, context, template).useReaders(readers, index)
+    }
   }
 
 

@@ -1,0 +1,41 @@
+Benchmark                                               (impl)   Mode  Cnt        Score       Error   Units
+DeserializationBench.userApi                            legacy  thrpt   15  1715631,935 ± 92430,577   ops/s
+DeserializationBench.userApi:gc.alloc.rate              legacy  thrpt   15      719,779 ±    38,817  MB/sec
+DeserializationBench.userApi:gc.alloc.rate.norm         legacy  thrpt   15      440,002 ±     0,001    B/op
+DeserializationBench.userApi:gc.count                   legacy  thrpt   15      174,000              counts
+DeserializationBench.userApi:gc.time                    legacy  thrpt   15      209,000                  ms
+DeserializationBench.userApi                           current  thrpt   15  2564696,880 ± 32814,665   ops/s
+DeserializationBench.userApi:gc.alloc.rate             current  thrpt   15      860,772 ±    11,051  MB/sec
+DeserializationBench.userApi:gc.alloc.rate.norm        current  thrpt   15      352,006 ±     0,001    B/op
+DeserializationBench.userApi:gc.count                  current  thrpt   15      208,000              counts
+DeserializationBench.userApi:gc.time                   current  thrpt   15      268,000                  ms
+DeserializationBench.userApiTagTpe                      legacy  thrpt   15  1703670,989 ± 11153,353   ops/s
+DeserializationBench.userApiTagTpe:gc.alloc.rate        legacy  thrpt   15      766,802 ±     5,020  MB/sec
+DeserializationBench.userApiTagTpe:gc.alloc.rate.norm   legacy  thrpt   15      472,009 ±     0,001    B/op
+DeserializationBench.userApiTagTpe:gc.count             legacy  thrpt   15      186,000              counts
+DeserializationBench.userApiTagTpe:gc.time              legacy  thrpt   15      242,000                  ms
+DeserializationBench.userApiTagTpe                     current  thrpt   15  2731996,136 ± 25550,535   ops/s
+DeserializationBench.userApiTagTpe:gc.alloc.rate       current  thrpt   15      917,020 ±     8,572  MB/sec
+DeserializationBench.userApiTagTpe:gc.alloc.rate.norm  current  thrpt   15      352,006 ±     0,001    B/op
+DeserializationBench.userApiTagTpe:gc.count            current  thrpt   15      223,000              counts
+DeserializationBench.userApiTagTpe:gc.time             current  thrpt   15      285,000                  ms
+SerializationBench.user                                 legacy  thrpt   15  3686683,537 ± 60865,923   ops/s
+SerializationBench.user:gc.alloc.rate                   legacy  thrpt   15     1349,857 ±    22,223  MB/sec
+SerializationBench.user:gc.alloc.rate.norm              legacy  thrpt   15      384,001 ±     0,001    B/op
+SerializationBench.user:gc.count                        legacy  thrpt   15      159,000              counts
+SerializationBench.user:gc.time                         legacy  thrpt   15      196,000                  ms
+SerializationBench.user                                current  thrpt   15  4177875,493 ± 52635,526   ops/s
+SerializationBench.user:gc.alloc.rate                  current  thrpt   15     1529,782 ±    19,287  MB/sec
+SerializationBench.user:gc.alloc.rate.norm             current  thrpt   15      384,001 ±     0,001    B/op
+SerializationBench.user:gc.count                       current  thrpt   15      170,000              counts
+SerializationBench.user:gc.time                        current  thrpt   15      211,000                  ms
+SerializationBench.userViaApi                           legacy  thrpt   15  2425240,648 ± 70267,970   ops/s
+SerializationBench.userViaApi:gc.alloc.rate             legacy  thrpt   15     1159,620 ±    48,535  MB/sec
+SerializationBench.userViaApi:gc.alloc.rate.norm        legacy  thrpt   15      501,339 ±     8,346    B/op
+SerializationBench.userViaApi:gc.count                  legacy  thrpt   15      165,000              counts
+SerializationBench.userViaApi:gc.time                   legacy  thrpt   15      218,000                  ms
+SerializationBench.userViaApi                          current  thrpt   15  2451434,904 ± 30526,118   ops/s
+SerializationBench.userViaApi:gc.alloc.rate            current  thrpt   15     1196,843 ±    14,904  MB/sec
+SerializationBench.userViaApi:gc.alloc.rate.norm       current  thrpt   15      512,006 ±     0,001    B/op
+SerializationBench.userViaApi:gc.count                 current  thrpt   15      161,000              counts
+SerializationBench.userViaApi:gc.time                  current  thrpt   15      210,000                  ms

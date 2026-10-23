@@ -156,7 +156,8 @@ against the 0.7.2 copy in four configurations):
   per skipped object or array when `maxDepth` is off.
 - `Option` / `Either` keys compared in place; `TypedDeserializer` no longer materialises `typeOf[String]` per value.
 - `deserialize[T]` resolves the TypeTag's `Type` by the class of its `TypeCreator` (cached when the creator captures
-  nothing), so the reflected type is not rebuilt on every call.
+  nothing), so the reflected type is not rebuilt on every call. *(Removed after 0.7.4: Scala 2.13 already caches
+  materialised TypeTags, so this only added a reflective call; see §4c.)*
 - Whitespace test with an ASCII fast path (still `Character.isWhitespace` semantics).
 
 Tried and rejected: comparing keys with `String.startsWith` or a char loop instead of `regionMatches` (slower), and
@@ -196,6 +197,69 @@ numeric arrays matters more than allocation.
 
 Tried and rejected: scratch arrays owned by the `StringIterator` — each call creates a new iterator, so they still grew
 by doubling and saved nothing for documents with one array of each type.
+
+## 4c. Serialization (after 0.7.4)
+
+Changes (research, sources and the remaining proposals in `serialization-research.md`, S1–S2):
+
+- **Field readers (S1)**: `BeanSerializer` reads fields through `FieldReaders`, a generated hidden class holding one
+  getter `MethodHandle` per field (`unreflectGetter`) as a `static final` constant, selected by a switch on the field
+  index; `Field.getX` is the fallback if the class cannot be defined. Mirror of `FieldWriters`.
+- **Primitive arrays (S2)**: `ArraySerializer` writes `Array[Int/Long/Double/Float/Short/Byte/Boolean]` with a loop
+  over the primitive array instead of boxing every element, when the built-in element serializer is in effect (a
+  custom converter still wins). Same text, same exception for non-finite numbers.
+- **Byte output (S3)** was implemented and removed again: as `serialize(obj).getBytes(UTF_8)` it saved nothing over
+  what callers already do.
+- `fuzz/SerializationDifferentialSpec` compares the output with the 0.7.2 copy for 12 models in 4 configurations,
+  the failures for non-finite numbers and nulls, and 16 threads on one instance. One run with `-Dfuzz.values=5000`
+  and 2 seeds compared 480,000 values: all identical.
+
+Results (JDK 25.0.4.1, `SerializationBench`, two forks, same session, 23/10/2026; measured;
+`bench-results/serialization-s1-s3.txt`, before: `serialization-baseline.txt`):
+
+| Benchmark | 0.7.2 ops/s | current ops/s | change | B/op 0.7.2 → current |
+|---|---:|---:|---:|---:|
+| `User`, static serializer | 3 731 417 | 4 302 594 | +15% | 384 → 384 |
+| `SimpleBean` | 1 275 817 | 1 520 217 | +19% | 952 → 864 |
+| typed shapes | 9 460 | 11 462 | +21% | 45 744 → 45 744 |
+| 200 orders | 3 044 | 3 273 | +8% | 250 297 → 250 297 |
+| 200 orders + `getBytes(UTF_8)` | 2 876 | 3 089 | +7% | 364 097 → 364 097 |
+| numbers | 9 170 | 9 661 | +5% | 148 768 → 100 704 |
+| strings | 16 438 | 17 842 | noise | 65 768 → 65 768 |
+| strings + `getBytes(UTF_8)` | 18 453 | 18 743 | noise | 118 744 → 118 744 |
+
+`serialize[T]` / `deserialize[T]` with a TypeTag (3 forks, `bench-results/api-paths*.txt`; the 0.7.2 and middle
+columns come from `api-paths.txt`, the current column from `api-paths-symbol-check.txt`, a separate run with the same
+settings on the same day):
+
+| Benchmark | 0.7.2 ops/s | 0.7.4 + S1–S2 | current | current vs 0.7.2 |
+|---|---:|---:|---:|---:|
+| `User`, `serialize[T]` | 2 425 241 | 2 451 435 | 2 631 281 | +8% |
+| `User`, `deserialize[T]` | 1 715 632 | 2 564 697 | 2 739 915 | +60% |
+| `User`, `deserialize(json, typeTag[User].tpe)` | 1 703 671 | 2 731 996 | 2 750 089 | +61% |
+
+- **TypeTag cache removed**: the `TypeTagTypes` cache from 0.7.3 (keyed by the `TypeCreator` class) is gone.
+  - Since 2.13.7, Scala returns the same TypeTag for every materialisation at a call site:
+    `TypeTag.apply` → `JavaMirror.typeTag`, a `ClassValue` per creator class
+    ([TypeTags.scala L292–305](https://github.com/scala/scala/blob/v2.13.16/src/reflect/scala/reflect/api/TypeTags.scala#L292-L305),
+    [JavaMirrors.scala L122–145](https://github.com/scala/scala/blob/v2.13.16/src/reflect/scala/reflect/runtime/JavaMirrors.scala#L122-L145)).
+  - So `tag.tpe` is already computed once, and the cache's reflective call only cost time. Removing it gave
+    +3.4% on `deserialize[T]` and +4.0% on `serialize[T]`.
+- **"No type given" check**: it now tests the resolved type's symbol. Comparing TypeTags with `==` compares mirrors and
+  types ([TypeTags.scala L264](https://github.com/scala/scala/blob/v2.13.16/src/reflect/scala/reflect/api/TypeTags.scala#L264)).
+  That gave another +3.3%, and `deserialize[T]` now runs as fast as passing `tag.tpe` directly. The error and its
+  message are unchanged (`BugFixesSpec`).
+- **TypeTag materialisation (`TypeTagBench`)**:
+  - Materialising `typeTag[User]` at the call costs 62 ns on one thread (16.1 M/s). A tag created once costs ~1 ns.
+  - Materialising takes Scala reflection's global lock. The generated code calls `runtimeMirror(<class>.getClassLoader)`
+    ([reify/package.scala L37–51](https://github.com/scala/scala/blob/v2.13.16/src/compiler/scala/reflect/reify/package.scala#L37-L51)),
+    which is `gilSynchronized`
+    ([JavaMirrors.scala L63–68](https://github.com/scala/scala/blob/v2.13.16/src/reflect/scala/reflect/runtime/JavaMirrors.scala#L63-L68)).
+    8 threads doing nothing else reach only 10.9 M/s in total.
+  - Callers on very hot paths can keep the TypeTag in a `val` or use `buildStaticSerializer`.
+
+The string benchmarks are not reliable to ±10%: in the baseline run, where both implementations had the same
+serializer code, `textsBytes` measured 18 498 vs 14 422 ops/s. The other rows differed by at most 2.4% in that run.
 
 ## 5. Constraints to respect while optimising
 

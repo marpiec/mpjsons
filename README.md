@@ -507,6 +507,16 @@ val back = des.deserialize(json)
 `StaticSerializer` also exposes `serializeToStringBuilder(obj): StringBuilder`, which
 avoids the char-array copy of `.toString()` when a `StringBuilder` can be consumed directly.
 
+### With Pekko HTTP
+
+Send the JSON as `application/json`; this encodes the `String` to UTF-8 once, with no further copy:
+
+```scala
+complete(HttpEntity(ContentTypes.`application/json`, ser.serialize(user)))
+```
+
+`complete(json: String)` would be sent as `text/plain`.
+
 ### Error handling
 
 Deserialization failures (malformed JSON, unknown fields in strict mode, type mismatches)

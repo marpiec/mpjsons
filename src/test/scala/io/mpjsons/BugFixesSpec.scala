@@ -103,6 +103,11 @@ class BugFixesSpec extends AnyFlatSpec with Matchers {
     }
   }
 
+  it must "reject a call without a type argument" in {
+    the[IllegalArgumentException] thrownBy new MPJsons().deserialize("{}") must have message
+      "Type for object deserialization was not specified, or was Nothing. Please specify object type."
+  }
+
   "Serializer" must "serialize tuples with elements of different types" in {
     val mpjsons = new MPJsons()
     val value: (Item, Int) = (Item("a"), 5)

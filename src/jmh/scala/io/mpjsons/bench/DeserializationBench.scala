@@ -86,6 +86,10 @@ class DeserializationBench {
   @Benchmark
   def userApi(): AnyRef = if (isLegacy) legacy.deserialize[User](userJson) else current.deserialize[User](userJson)
 
+  /** The type resolved by the caller from a TypeTag created at the call, as wrappers taking `tag.tpe` do. */
+  @Benchmark
+  def userApiTagTpe(): AnyRef = if (isLegacy) legacy.deserialize[User](userJson, typeTag[User].tpe) else current.deserialize[User](userJson, typeTag[User].tpe)
+
   @Benchmark
   def userStaticDeserializer(): AnyRef = userStatic(userJson)
 

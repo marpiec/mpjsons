@@ -50,52 +50,6 @@ private object ErrorMessageFormatter {
 }
 
 /**
- * Resolves a TypeTag to its reflected Type without re-creating the Type on every call.
- *
- * The compiler materialises `TypeTag[T]` for a concrete `T` as a new TypeTag at every call, holding an instance of a
- * call-site specific TypeCreator class; `tag.tpe` runs that creator, which looks symbols up by name. When the creator
- * class has no instance fields it captures nothing, so it always creates the same Type for the same mirror, and the
- * Type can be cached by the creator class. Other tags (predefined ones, or tags built from other tags in generic
- * code) fall back to `tag.tpe`.
- */
-private[mpjsons] final class TypeTagTypes {
-
-  private final class Entry(val mirror: AnyRef, val tpe: Type)
-
-  private val types = new ConcurrentHashMap[Class[_], Entry]()
-  /** Creator classes that capture state, so they cannot be used as cache keys. */
-  private val notCacheable = ConcurrentHashMap.newKeySet[Class[_]]()
-
-  private val tpecMethod: java.lang.reflect.Method = try {
-    Class.forName("scala.reflect.api.TypeTags$WeakTypeTagImpl").getMethod("tpec")
-  } catch {
-    case _: ReflectiveOperationException => null
-  }
-
-  def typeOf(tag: TypeTag[_]): Type = {
-    val creator = if (tpecMethod != null && tpecMethod.getDeclaringClass.isInstance(tag)) tpecMethod.invoke(tag) else null
-    if (creator == null) {
-      tag.tpe
-    } else {
-      val creatorClass = creator.getClass
-      val entry = types.get(creatorClass)
-      if (entry != null && (entry.mirror eq tag.mirror)) {
-        entry.tpe
-      } else if (notCacheable.contains(creatorClass)) {
-        tag.tpe
-      } else if (creatorClass.getDeclaredFields.exists(f => !java.lang.reflect.Modifier.isStatic(f.getModifiers))) {
-        notCacheable.add(creatorClass)
-        tag.tpe
-      } else {
-        val tpe = tag.tpe
-        types.put(creatorClass, new Entry(tag.mirror, tpe))
-        tpe
-      }
-    }
-  }
-}
-
-/**
  * Remembers the length of the last output produced for one type, so the next output buffer can be
  * allocated at the right size instead of growing from the default capacity in several steps.
  * Races between threads only make the hint slightly stale, which is harmless.
@@ -189,12 +143,14 @@ class MPJsons(val config: MPJsonsConfig) {
 
   private val nothingTypeTag = typeTag[Nothing]
 
-  private val typeTagTypes = new TypeTagTypes
   private val rootContext = Context(List.empty, Map.empty)
 
-  // A materialised TypeTag is a fresh object on every call, so the reflected type is looked up by the class of its
-  // TypeCreator instead (see TypeTagTypes); this avoids re-creating the type on every deserialize[T] call.
-  private def extractType[T](tag: TypeTag[T]): Type = typeTagTypes.typeOf(tag)
+  // Scala 2.13 (since 2.13.7) returns the same TypeTag for every materialisation at a call site (cached per
+  // TypeCreator class in the runtime mirror), so `tag.tpe` is computed once; a cache here would only add a lookup.
+  private def extractType[T](tag: TypeTag[T]): Type = tag.tpe
+
+  // Per-call paths test the resolved type: comparing tags (`tag == nothingTypeTag`) compares mirrors and types.
+  private def isNothing(tpe: Type): Boolean = tpe.typeSymbol == definitions.NothingClass
 
   private def extractTypeFromName[T](typeName: String): Type = {
     val cached = extractTypeFromNameCache.get(typeName)
@@ -222,10 +178,11 @@ class MPJsons(val config: MPJsonsConfig) {
    * Creates object from gives json String, based on a declared type.
    */
   def deserialize[T](json: String)(implicit tag: TypeTag[T]): T = {
-    if (tag == nothingTypeTag) {
+    val tpe = extractType(tag)
+    if (isNothing(tpe)) {
       throw new IllegalArgumentException("Type for object deserialization was not specified, or was Nothing. Please specify object type.")
     } else {
-      deserialize(json, extractType(tag))
+      deserialize(json, tpe)
     }
   }
 
@@ -296,10 +253,11 @@ class MPJsons(val config: MPJsonsConfig) {
    * @return JSON representation of given object
    */
   def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
-    if (tag == nothingTypeTag) {
+    val tpe = extractType(tag)
+    if (isNothing(tpe)) {
       throw new IllegalArgumentException("Type for object serialization was not specified, or was Nothing. Please specify object type.")
     } else {
-      serialize(obj, extractType(tag))
+      serialize(obj, tpe)
     }
   }
 
@@ -318,7 +276,7 @@ class MPJsons(val config: MPJsonsConfig) {
     } else {
       val hint = outputSizeHint(tpe)
       val json = hint.newBuilder()
-      serializerFactory.getSerializer(tpe, Context(List.empty, Map.empty)).serialize(obj, json)
+      serializerFactory.getSerializer(tpe, rootContext).serialize(obj, json)
       hint.update(json)
       json.toString()
     }

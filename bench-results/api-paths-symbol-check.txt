@@ -1,0 +1,16 @@
+Benchmark                                               (impl)   Mode  Cnt        Score       Error   Units
+DeserializationBench.userApi                           current  thrpt   15  2739914,874 ± 18910,157   ops/s
+DeserializationBench.userApi:gc.alloc.rate             current  thrpt   15      919,659 ±     6,342  MB/sec
+DeserializationBench.userApi:gc.alloc.rate.norm        current  thrpt   15      352,006 ±     0,001    B/op
+DeserializationBench.userApi:gc.count                  current  thrpt   15      220,000              counts
+DeserializationBench.userApi:gc.time                   current  thrpt   15      274,000                  ms
+DeserializationBench.userApiTagTpe                     current  thrpt   15  2750089,086 ± 17655,640   ops/s
+DeserializationBench.userApiTagTpe:gc.alloc.rate       current  thrpt   15      923,089 ±     5,927  MB/sec
+DeserializationBench.userApiTagTpe:gc.alloc.rate.norm  current  thrpt   15      352,006 ±     0,001    B/op
+DeserializationBench.userApiTagTpe:gc.count            current  thrpt   15      216,000              counts
+DeserializationBench.userApiTagTpe:gc.time             current  thrpt   15      271,000                  ms
+SerializationBench.userViaApi                          current  thrpt   15  2631281,441 ± 14284,455   ops/s
+SerializationBench.userViaApi:gc.alloc.rate            current  thrpt   15     1284,651 ±     6,974  MB/sec
+SerializationBench.userViaApi:gc.alloc.rate.norm       current  thrpt   15      512,006 ±     0,001    B/op
+SerializationBench.userViaApi:gc.count                 current  thrpt   15      167,000              counts
+SerializationBench.userViaApi:gc.time                  current  thrpt   15      217,000                  ms

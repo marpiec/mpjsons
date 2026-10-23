@@ -9,8 +9,8 @@ Guidance for working in this repository. This is a deep, factual map of the code
 `mpjsons` is a Scala object ⇄ JSON conversion library (`io.mpjsons`, version `0.7.0`). The selling point is a minimal API: `mpjsons.serialize[T](obj)` / `mpjsons.deserialize[T](json)` with no hand-written serializers required. It uses **Scala 2.13 runtime reflection** (`scala-reflect`, `scala.reflect.runtime.universe`) to inspect types and build per-type (de)serializers, which are then cached.
 
 - Build tool: sbt `1.11.7` (`project/build.properties`), Scala `2.13.16`, **Java 25 or newer** (the build refuses older JDKs).
-- `src/main/java` holds `FieldWritersGenerator` (bytecode generation with `java.lang.classfile`, which scalac 2.13 cannot read), so main sources compile Java first (`Compile / compileOrder := JavaThenScala`).
-- `src/legacy/scala` is a frozen copy of 0.7.2 under `io.mpjsons.legacy` (with the `-0` fix applied), used as the reference by `fuzz/DifferentialFuzzSpec` and by `DeserializationBench`. Behaviour changes must show up there.
+- `src/main/java` holds `FieldWritersGenerator` and `FieldReadersGenerator` (bytecode generation with `java.lang.classfile`, which scalac 2.13 cannot read), so main sources compile Java first (`Compile / compileOrder := JavaThenScala`).
+- `src/legacy/scala` is a frozen copy of 0.7.2 under `io.mpjsons.legacy` (with the `-0` fix applied), used as the reference by `fuzz/DifferentialFuzzSpec`, `fuzz/SerializationDifferentialSpec`, `DeserializationBench` and `SerializationBench`. Behaviour changes must show up there.
 - Current branch is `scala_2.13`; main/PR branch is `master`.
 - Runtime deps: `scala-reflect` only. Test: `scalatest 3.2.15` (FlatSpec + MustMatchers). Benchmarks: `sbt-jmh` (`src/jmh`).
 
@@ -36,7 +36,7 @@ Tests live in `src/test/scala/io/mpjsons/`, one spec per feature area (Collectio
 - `postDeserializationTransform[T](f)` — post-process the deserialized object.
 - `@nullable` annotation (`final class nullable extends StaticAnnotation`) — marks a bean field allowed to be null (skipped instead of throwing on serialize). `@jsonName("key")` (`jsonName.scala`) overrides the JSON key; on read the Scala field name is still accepted as a fallback unless another field owns it as its JSON name. `@skipSerialization` (`skipSerialization.scala`) leaves a field out on write only; `BeanDeserializer` still reads it. All are found on the field, the constructor parameter or the getter, so case class parameters need no `@field` meta-annotation.
 
-`MPJsons` also keeps two `var` caches: `extractTypeCache` (TypeTag→Type) and `extractTypeFromNameCache` (class name→Type).
+`MPJsons` also keeps `extractTypeFromNameCache` (class name→Type) and `outputSizeHints` (Type→last output length). `extractType` is plain `tag.tpe`: Scala 2.13 (since 2.13.7) caches a call site's materialised TypeTag per `TypeCreator` class, so the type is built once (an own cache keyed the same way cost 3–4% on `serialize[T]`/`deserialize[T]` and was removed). The `Nothing` guard on those per-call paths tests the resolved type's symbol rather than comparing TypeTags.
 
 ### Factory layering (per direction)
 There is parallel structure for serialize and deserialize:
@@ -80,7 +80,7 @@ Maps serialize as a **JSON array of `[key,value]` pairs** (`MapSerializer` / `Ab
 ## Concurrency / state model (important for bug-hunting)
 
 Caches are `ConcurrentHashMap`s filled with get-then-`putIfAbsent` (never `computeIfAbsent`: building a (de)serializer re-enters the factory for element types):
-- `MPJsons.extractTypeFromNameCache` (`extractType` is plain `tag.tpe`)
+- `MPJsons.extractTypeFromNameCache` and `outputSizeHints`
 - the two maps in `DeserializerFactoryMemoizer` / `SerializerFactoryMemoizer` (keyed by the fully substituted `Type`)
 - `ReflectionUtil.getAllAccessibleFieldsCache`, the three caches in `TypesUtil`
 - `TypedConverter.TypedSerializer.serializers` / `TypedDeserializer.deserializers`
@@ -90,7 +90,7 @@ Still plain `var Map`s, written only at registration time: `DeserializerFactoryI
 ## Performance-sensitive hot paths
 
 When evaluating perf changes, these are the paths exercised per call (after warm-up the factory lookups are cached, so the real cost is the inner loops). All of them are now allocation-conscious; measure with the JMH module (`sbt "Jmh/run -f1 -wi 3 -w 1 -i 5 -r 1 -prof gc .*MpjsonsBenchmark.*"`) before and after any change:
-- `BeanSerializer.serialize` — one thread-local depth counter per bean for cycle detection (identity tracking only beyond 100 nested beans), then a `while` loop over per-field `BeanFieldWriter`s: typed `Field.getInt/getLong/...` + direct primitive append, precomputed `"name":` prefixes; reference fields delegate to the field's serializer.
+- `BeanSerializer.serialize` — one thread-local depth counter per bean for cycle detection (identity tracking only beyond 100 nested beans), then a `while` loop over per-field `BeanFieldWriter`s: typed reads through the bean's `FieldReaders` (a generated hidden class holding one constant getter `MethodHandle` per field; falls back to `Field.getX`) + direct primitive append, precomputed `"name":` prefixes; reference fields delegate to the field's serializer. `ArraySerializer` writes arrays of `Int/Long/Double/Float/Short/Byte/Boolean` without boxing when the built-in element serializer is in effect.
 - `BeanDeserializer.deserialize` — `BeanFieldTable.find` matches keys in place on the raw input (no `String` per key), then typed `BeanField.set` writing through the bean's `FieldWriters` (a generated hidden class holding one constant setter `MethodHandle` per field, so writes compile to plain field stores; falls back to `Field.setX`).
 - `readString` finds the closing quote with `String.indexOf` and a cached next-backslash index; escapes are decoded into a char buffer owned by the `StringIterator`. Skipped strings, keys and literals are not materialised.
 - `readDouble`/`readFloat` — Clinger fast path, then Eisel–Lemire (`EiselLemire.scala`), `parseDouble` only as fallback; results are bit-identical to `Double.parseDouble` (`FastNumberParsingSpec`).

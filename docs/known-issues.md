@@ -148,7 +148,8 @@ warm root lookup is one hash probe with no allocation. The remaining TypeTag-API
   constructor with parsed arguments instead of mutating an allocated blank).
 - Bean fields are written through setter method handles created with `unreflectSetter` and held as
   constants in a generated hidden class (`FieldWriters`), falling back to `Field.set` if that class cannot be defined.
-  Both are deep reflection in the sense of JEP 500, so the notes below apply unchanged.
+  Both are deep reflection in the sense of JEP 500, so the notes below apply unchanged. Serialization reads fields the
+  same way (`FieldReaders`, getters from `unreflectGetter`, fallback `Field.get`); reading is not affected by JEP 500.
 - Writing `final` fields through `Field.set` (what deserializing a case class does by default) is the subject of
   JEP 500 ("Prepare to Make Final Mean Final", proposed for JDK 26): first a warning, later disallowed unless
   `--enable-final-field-mutation`. **Mitigation available**: `MPJsonsConfig(caseClassesViaConstructor = true)`

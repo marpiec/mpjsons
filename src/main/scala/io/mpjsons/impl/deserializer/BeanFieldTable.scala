@@ -63,7 +63,7 @@ final class BeanFieldTable(fields: Array[BeanField]) {
       }
       throw new IllegalArgumentException("Unexpected end of Json")
     } else {
-      while (index < length && input.charAt(index) != ':' && !Character.isWhitespace(input.charAt(index))) {
+      while (index < length && input.charAt(index) != ':' && !StringIterator.isWhitespace(input.charAt(index))) {
         hash = 31 * hash + input.charAt(index)
         index += 1
       }

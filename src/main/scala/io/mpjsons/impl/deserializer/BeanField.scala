@@ -31,6 +31,17 @@ abstract class BeanField(val name: String, val field: Field, nullValue: NullValu
 
   protected final def setNull(instance: AnyRef): Unit = field.set(instance, nullValue.get())
 
+  /** Writes values into `field`; `slot` is the index of the field in `writers` (see FieldWriters). */
+  protected var writers: FieldWriters = new FieldWriters.Reflective(Array(field))
+  protected var slot: Int = 0
+
+  /** Makes this field write through the given writers (shared by all fields of one bean class). */
+  private[deserializer] def useWriters(fieldWriters: FieldWriters, index: Int): this.type = {
+    writers = fieldWriters
+    slot = index
+    this
+  }
+
   protected final def nullArgument(): AnyRef = nullValue.get()
 }
 
@@ -72,8 +83,9 @@ object BeanField {
   }
 
   final class ObjectField(name: String, field: Field, nullValue: NullValue, deserializer: JsonTypeDeserializer[AnyRef], argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
+    private val primitive = field.getType.isPrimitive
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.set(instance, deserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else if (primitive) field.set(instance, deserializer.deserialize(jsonIterator)) else writers.setObject(instance, slot, deserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else deserializer.deserialize(jsonIterator)
@@ -82,7 +94,7 @@ object BeanField {
 
   final class IntField(name: String, field: Field, nullValue: NullValue, argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.setInt(instance, IntDeserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else writers.setInt(instance, slot, IntDeserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else java.lang.Integer.valueOf(IntDeserializer.deserialize(jsonIterator))
@@ -91,7 +103,7 @@ object BeanField {
 
   final class LongField(name: String, field: Field, nullValue: NullValue, argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.setLong(instance, LongDeserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else writers.setLong(instance, slot, LongDeserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else java.lang.Long.valueOf(LongDeserializer.deserialize(jsonIterator))
@@ -100,7 +112,7 @@ object BeanField {
 
   final class BooleanField(name: String, field: Field, nullValue: NullValue, argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.setBoolean(instance, BooleanDeserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else writers.setBoolean(instance, slot, BooleanDeserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else java.lang.Boolean.valueOf(BooleanDeserializer.deserialize(jsonIterator))
@@ -109,7 +121,7 @@ object BeanField {
 
   final class DoubleField(name: String, field: Field, nullValue: NullValue, argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.setDouble(instance, DoubleDeserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else writers.setDouble(instance, slot, DoubleDeserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else java.lang.Double.valueOf(DoubleDeserializer.deserialize(jsonIterator))
@@ -118,7 +130,7 @@ object BeanField {
 
   final class FloatField(name: String, field: Field, nullValue: NullValue, argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.setFloat(instance, FloatDeserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else writers.setFloat(instance, slot, FloatDeserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else java.lang.Float.valueOf(FloatDeserializer.deserialize(jsonIterator))
@@ -127,7 +139,7 @@ object BeanField {
 
   final class ShortField(name: String, field: Field, nullValue: NullValue, argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.setShort(instance, ShortDeserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else writers.setShort(instance, slot, ShortDeserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else java.lang.Short.valueOf(ShortDeserializer.deserialize(jsonIterator))
@@ -136,7 +148,7 @@ object BeanField {
 
   final class ByteField(name: String, field: Field, nullValue: NullValue, argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.setByte(instance, ByteDeserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else writers.setByte(instance, slot, ByteDeserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else java.lang.Byte.valueOf(ByteDeserializer.deserialize(jsonIterator))
@@ -145,7 +157,7 @@ object BeanField {
 
   final class CharField(name: String, field: Field, nullValue: NullValue, argIndex: Int) extends BeanField(name, field, nullValue, argIndex) {
     override def set(instance: AnyRef, jsonIterator: StringIterator): Unit = {
-      if (jsonIterator.tryConsumeNull()) setNull(instance) else field.setChar(instance, CharDeserializer.deserialize(jsonIterator))
+      if (jsonIterator.tryConsumeNull()) setNull(instance) else writers.setChar(instance, slot, CharDeserializer.deserialize(jsonIterator))
     }
     override def readValue(jsonIterator: StringIterator): AnyRef = {
       if (jsonIterator.tryConsumeNull()) nullArgument() else java.lang.Character.valueOf(CharDeserializer.deserialize(jsonIterator))

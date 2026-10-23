@@ -41,7 +41,7 @@ For most use cases, `serialize` and `deserialize` are all you will ever need.
 ## Requirements
 
 - Scala **2.13.16**
-- A JVM (deserialization can fall back to `sun.misc.Unsafe` for constructor-less classes — see [Limitations](#limitations--notes))
+- Java **25** or newer (deserialization can fall back to `sun.misc.Unsafe` for constructor-less classes — see [Limitations](#limitations--notes))
 
 ## Installation
 

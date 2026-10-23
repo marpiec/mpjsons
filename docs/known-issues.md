@@ -79,6 +79,19 @@ Number readers now report `Expected a number but found '"'` (or `'t'`, `end of i
 and overflow as `NumberFormatException` quoting the offending digits (`NumberParsingSpec`). A `1.5` for an `Int`
 field still stops after `1` and fails on the following `.5` with a separator error.
 
+### 12a. Deeply nested input escaped as `StackOverflowError` — FIXED
+
+Without `MPJsonsConfig(maxDepth = ...)`, input nested deeper than the thread stack allows (e.g. 200 000 nested
+arrays in a skipped field, or a deep recursive type) threw a raw `StackOverflowError` past the `RuntimeException`
+wrapper. It is now reported as `JsonInnerException` by `MPJsons.deserialize` and `StaticDeserializer.deserialize`
+(`BugFixesSpec`).
+
+### 12b. `-0` read as `+0.0` — FIXED
+
+The integer shortcut of `readDouble`/`readFloat` returned `+0.0` for the literal `-0`, unlike `Double.parseDouble`.
+It now returns `-0.0` (`FastNumberParsingSpec`). The serializer writes `-0.0` as `-0.0`, so round trips were not
+affected; only hand-written `-0` reads differently.
+
 ## Limitations and sharp edges
 
 ### 13. Parser is lenient, not validating — ADDRESSED by an opt-in lever
@@ -133,6 +146,9 @@ warm root lookup is one hash probe with no allocation. The remaining TypeTag-API
   Alternatives: `sun.reflect.ReflectionFactory.newConstructorForSerialization` (kept in a comment at `:78-86`,
   itself `jdk.unsupported`), or generating constructors via `MethodHandles` for case classes (call the primary
   constructor with parsed arguments instead of mutating an allocated blank).
+- Bean fields are written through setter method handles created with `unreflectSetter` and held as
+  constants in a generated hidden class (`FieldWriters`), falling back to `Field.set` if that class cannot be defined.
+  Both are deep reflection in the sense of JEP 500, so the notes below apply unchanged.
 - Writing `final` fields through `Field.set` (what deserializing a case class does by default) is the subject of
   JEP 500 ("Prepare to Make Final Mean Final", proposed for JDK 26): first a warning, later disallowed unless
   `--enable-final-field-mutation`. **Mitigation available**: `MPJsonsConfig(caseClassesViaConstructor = true)`

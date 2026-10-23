@@ -97,7 +97,7 @@ unchanged except that `{ }` with inner whitespace is now accepted for beans.
 
 Per-call costs after the work above (quiet single-fork runs):
 
-- **Reflection per field** (`Field.getX`/`setX` with access checks): roughly 10-15 ns per field. Replacing it with
+- **Reflection per field** (`Field.getX`/`setX` with access checks; writes on the read side addressed in §4a by `FieldWriters`): roughly 10-15 ns per field. Replacing it with
   `MethodHandle` setters (`privateLookupIn` + `unreflectSetter`, `invokeExact` through generated adapters) or
   `Unsafe.putInt(obj, offset, v)` (Unsafe is already a dependency) would roughly halve the per-field cost of flat beans.
   Constructor-based construction of case classes (call the primary constructor with parsed arguments) would remove
@@ -107,13 +107,60 @@ Per-call costs after the work above (quiet single-fork runs):
 - **`Option`**: `{}` / `{"value":x}` costs an object parse with a key match per Option; the compact format in
   roadmap §4.2 removes it.
 - **`TypedConverter`**: `getSimpleName` and the per-class map lookup per value; fine unless polymorphic collections dominate.
-- **`Double`/`Float` text**: `parseDouble` and `append(double)` are the JDK's; only a format change (fewer digits) helps.
+- **`Double`/`Float` text**: reading is addressed in §4a (Eisel–Lemire); `append(double)` on write is the JDK's.
 - **`String(225)` serialize** still allocates 576 B: the output `String` (232 B) plus the pre-sized builder; unavoidable
   without `serializeToStringBuilder`.
-- **Root `MPJsons.serialize[T]`/`deserialize[T]` API**: ~100 ns and ~100 B per call for the `TypeTag` materialisation
+- **Root `MPJsons.serialize[T]`/`deserialize[T]` API** (partly addressed in §4a): ~100 ns and ~100 B per call for the `TypeTag` materialisation
   at the call site; `buildStaticSerializer`/`buildStaticDeserializer` avoid it.
 
 Format-level levers (smaller output and fewer tokens to parse) are in roadmap.md §4 and need the owner's decisions.
+
+## 4a. Deserialization, second round (after 0.7.2)
+
+Harness: `src/jmh/scala/io/mpjsons/bench/DeserializationBench.scala` runs every benchmark against both this code
+(`impl=current`) and the frozen 0.7.2 copy in `src/legacy` (`impl=legacy`) in one JMH run, so both sides are measured
+under the same machine state:
+
+```bash
+sbt "Jmh/run -f 2 -prof gc .*DeserializationBench.*"
+```
+
+Fixtures: a small case class `User` (7 fields) through `deserialize[T]` and through a static deserializer, the
+`SimpleDataObject` bean, 200 orders (~100 KB: nested case classes, `List`, `Set`, `Map`, `Option`), the same orders read
+into a 2-field projection with `ignoreNonExistingFields`, numbers (1000 doubles, 1000 longs, 1000 ints), 300 strings
+(a third with escapes and non-ASCII characters), and 500 typed shapes (`markTypedClass`).
+
+Results (JDK 25.0.4.1, Windows 10, two forks, 23/10/2026; measured, not estimated):
+
+| Benchmark | 0.7.2 ops/s | current ops/s | Speed-up | 0.7.2 B/op | current B/op |
+|---|---:|---:|---:|---:|---:|
+| `User`, `deserialize[T]` | 1 817 136 | 2 287 150 | 1.26x | 440 | 352 |
+| `User`, static deserializer | 2 295 336 | 3 177 922 | 1.38x | 344 | 256 |
+| `SimpleDataObject` bean | 742 361 | 1 017 821 | 1.37x | 1 256 | 1 192 |
+| 200 orders | 1 740 | 2 522 | 1.45x | 386 450 | 242 201 |
+| orders into a projection (skipping) | 2 804 | 5 149 | 1.84x | 523 729 | 7 793 |
+| strings | 20 442 | 39 908 | 1.95x | 60 808 | 42 464 |
+| numbers | 2 783 | 4 861 | 1.75x | 486 145 | 89 001 |
+| typed shapes | 3 928 | 9 241 | 2.35x | 279 717 | 58 064 |
+
+What changed (reading side only; output and accepted input unchanged, verified by `fuzz/DifferentialFuzzSpec`
+against the 0.7.2 copy in four configurations):
+
+- Field writes go through `FieldWriters`: a hidden class per bean holding each field's setter `MethodHandle` as a
+  `static final` constant, so the JIT inlines it to a field store (was `Field.setX` through a non-constant method handle).
+- `readString`: closing quote found with `String.indexOf` and a cached next-backslash index; escapes decoded into a
+  char buffer owned by the `StringIterator` (one per document) instead of a `StringBuilder` per string.
+- Doubles: Clinger fast path and Eisel–Lemire instead of `Double.parseDouble(substring)`; results bit-identical.
+- Arrays of `Int`/`Long`/`Double` filled without boxing each element.
+- Skipping unknown values: strings, keys and `true`/`false`/`null` are not materialised, and no closure is allocated
+  per skipped object or array when `maxDepth` is off.
+- `Option` / `Either` keys compared in place; `TypedDeserializer` no longer materialises `typeOf[String]` per value.
+- `deserialize[T]` resolves the TypeTag's `Type` by the class of its `TypeCreator` (cached when the creator captures
+  nothing), so the reflected type is not rebuilt on every call.
+- Whitespace test with an ASCII fast path (still `Character.isWhitespace` semantics).
+
+Tried and rejected: comparing keys with `String.startsWith` or a char loop instead of `regionMatches` (slower), and
+a `StringBuilder` for escaped strings (half the throughput on escape-heavy text).
 
 ## 5. Constraints to respect while optimising
 

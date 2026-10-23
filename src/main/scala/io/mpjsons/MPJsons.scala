@@ -34,9 +34,64 @@ private object ErrorMessageFormatter {
         |$caret""".stripMargin
   }
 
+  /**
+   * Input nested deeper than the stack allows (without `MPJsonsConfig.maxDepth`) is reported like any other
+   * malformed input instead of letting a StackOverflowError escape.
+   */
+  def tooDeep(jsonIterator: StringIterator, e: StackOverflowError, tpe: Type): JsonInnerException = {
+    val cause = new IllegalArgumentException("JSON nesting is too deep for the thread stack; set MPJsonsConfig(maxDepth = ...) to limit it", e)
+    new JsonInnerException(formatDeserializationError(jsonIterator.stringValue, jsonIterator, cause, tpe), cause)
+  }
+
   /** Keeps the window on one line so the caret lines up. */
   private def printable(text: String): String = {
     text.map(c => if (c < ' ') ' ' else c)
+  }
+}
+
+/**
+ * Resolves a TypeTag to its reflected Type without re-creating the Type on every call.
+ *
+ * The compiler materialises `TypeTag[T]` for a concrete `T` as a new TypeTag at every call, holding an instance of a
+ * call-site specific TypeCreator class; `tag.tpe` runs that creator, which looks symbols up by name. When the creator
+ * class has no instance fields it captures nothing, so it always creates the same Type for the same mirror, and the
+ * Type can be cached by the creator class. Other tags (predefined ones, or tags built from other tags in generic
+ * code) fall back to `tag.tpe`.
+ */
+private[mpjsons] final class TypeTagTypes {
+
+  private final class Entry(val mirror: AnyRef, val tpe: Type)
+
+  private val types = new ConcurrentHashMap[Class[_], Entry]()
+  /** Creator classes that capture state, so they cannot be used as cache keys. */
+  private val notCacheable = ConcurrentHashMap.newKeySet[Class[_]]()
+
+  private val tpecMethod: java.lang.reflect.Method = try {
+    Class.forName("scala.reflect.api.TypeTags$WeakTypeTagImpl").getMethod("tpec")
+  } catch {
+    case _: ReflectiveOperationException => null
+  }
+
+  def typeOf(tag: TypeTag[_]): Type = {
+    val creator = if (tpecMethod != null && tpecMethod.getDeclaringClass.isInstance(tag)) tpecMethod.invoke(tag) else null
+    if (creator == null) {
+      tag.tpe
+    } else {
+      val creatorClass = creator.getClass
+      val entry = types.get(creatorClass)
+      if (entry != null && (entry.mirror eq tag.mirror)) {
+        entry.tpe
+      } else if (notCacheable.contains(creatorClass)) {
+        tag.tpe
+      } else if (creatorClass.getDeclaredFields.exists(f => !java.lang.reflect.Modifier.isStatic(f.getModifiers))) {
+        notCacheable.add(creatorClass)
+        tag.tpe
+      } else {
+        val tpe = tag.tpe
+        types.put(creatorClass, new Entry(tag.mirror, tpe))
+        tpe
+      }
+    }
   }
 }
 
@@ -104,6 +159,8 @@ class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(json, jsonIterator, e, tpe), e)
+      case e: StackOverflowError =>
+        throw ErrorMessageFormatter.tooDeep(jsonIterator, e, tpe)
     }
   }
 
@@ -132,9 +189,12 @@ class MPJsons(val config: MPJsonsConfig) {
 
   private val nothingTypeTag = typeTag[Nothing]
 
-  // A materialised TypeTag is a fresh object on every call and its equals/hashCode evaluate tag.tpe anyway,
-  // so caching by TypeTag cannot save that computation; tag.tpe itself is cheap for interned types.
-  private def extractType[T](tag: TypeTag[T]): Type = tag.tpe
+  private val typeTagTypes = new TypeTagTypes
+  private val rootContext = Context(List.empty, Map.empty)
+
+  // A materialised TypeTag is a fresh object on every call, so the reflected type is looked up by the class of its
+  // TypeCreator instead (see TypeTagTypes); this avoids re-creating the type on every deserialize[T] call.
+  private def extractType[T](tag: TypeTag[T]): Type = typeTagTypes.typeOf(tag)
 
   private def extractTypeFromName[T](typeName: String): Type = {
     val cached = extractTypeFromNameCache.get(typeName)
@@ -185,13 +245,15 @@ class MPJsons(val config: MPJsonsConfig) {
       val result = if (jsonIterator.tryConsumeNull()) {
         NullValues.forType(tpe, config).get().asInstanceOf[T]
       } else {
-        deserializerFactory.getDeserializer(tpe, Context(List.empty, Map.empty)).deserialize(jsonIterator)
+        deserializerFactory.getDeserializer(tpe, rootContext).deserialize(jsonIterator)
       }
       jsonIterator.expectEnd()
       result
     } catch {
       case e: RuntimeException =>
         throw new JsonInnerException(ErrorMessageFormatter.formatDeserializationError(jsonIterator.stringValue, jsonIterator, e, tpe), e)
+      case e: StackOverflowError =>
+        throw ErrorMessageFormatter.tooDeep(jsonIterator, e, tpe)
     }
   }
 

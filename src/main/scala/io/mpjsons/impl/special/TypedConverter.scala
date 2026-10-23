@@ -82,6 +82,8 @@ object TypedConverter {
       this(packageName + ".", Map.empty, packageName, classOf[AnyRef], deserializerFactory)
 
     private val deserializers = new ConcurrentHashMap[String, JsonTypeDeserializer[AnyRef]]()
+    private val stringType = typeOf[String]
+    private val rootContext = Context(List.empty, Map.empty)
     private val classLoader: ClassLoader = Option(markedClass.getClassLoader).getOrElse(getClass.getClassLoader)
 
     override def deserialize(jsonIterator: StringIterator): T = {
@@ -144,7 +146,7 @@ object TypedConverter {
       new TypedDeserializer[T](binaryNamePrefix, knownSubclasses, requiredTypeName, requiredClass, deserializerFactory)
 
     def extractTypeName(jsonIterator: StringIterator): String = {
-      val deserializer = deserializerFactory.getDeserializer[String](typeOf[String], Context(List.empty, Map.empty))
+      val deserializer = deserializerFactory.getDeserializer[String](stringType, rootContext)
       jsonIterator.skipWhitespaceChars()
       deserializer.deserialize(jsonIterator)
     }

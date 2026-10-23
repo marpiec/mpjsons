@@ -17,7 +17,7 @@ abstract class AbstractJsonArrayDeserializer[T, C]
 
   val elementsType: Type = getSubElementsType(tpe)
   val deserializer = deserializerFactory.getDeserializer[T](elementsType, context)
-  private val elementNull = NullValues.forType(elementsType, deserializerFactory.config)
+  protected val elementNull = NullValues.forType(elementsType, deserializerFactory.config)
 
   /** Reads a JSON array straight into the given builder, so no intermediate collection is created. */
   protected def deserializeInto[R](jsonIterator: StringIterator, builder: mutable.Builder[T, R]): R = {

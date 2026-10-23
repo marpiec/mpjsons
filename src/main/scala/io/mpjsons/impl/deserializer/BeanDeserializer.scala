@@ -56,6 +56,8 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   lazy val fieldTable: BeanFieldTable = {
     val typeName = tpe.toString
     val jsonNames = fields.map(_.jsonName).toSet
+    // Only when values are written into an allocated instance; the constructor path passes them as arguments.
+    val writers = if (useConstructor) null else FieldWriters.forFields(fields.map(_.field))
     val entries = fields.flatMap { field =>
       // A skipped field keeps its keys so that stored JSON still reads, but the value is discarded; no deserializer is
       // built, so its type may have no reader (e.g. an unmarked trait).
@@ -64,7 +66,8 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
           new BeanField.SkippedField(name, field.field, skipValue)
         } else {
           val argIndex = if (useConstructor) constructorParams.indexOf(field.field.getName) else -1
-          BeanField(name, field.field, field.tpe, typeName, deserializerFactory.getDeserializer(field.tpe, context), argIndex, field.nullable, config)
+          val beanField = BeanField(name, field.field, field.tpe, typeName, deserializerFactory.getDeserializer(field.tpe, context), argIndex, field.nullable, config)
+          if (writers == null) beanField else beanField.useWriters(writers, fields.indexOf(field))
         }
       val scalaName = field.field.getName
       if (scalaName != field.jsonName && !jsonNames.contains(scalaName)) {
@@ -156,11 +159,13 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   }
 
   private def skipOrFail(jsonIterator: StringIterator): Unit = {
-    val identifier = IdentifierDeserializer.deserialize(jsonIterator)
-    jsonIterator.consumeFieldValueSeparator()
     if (ignoreNonExistingFields) {
+      IdentifierDeserializer.skip(jsonIterator)
+      jsonIterator.consumeFieldValueSeparator()
       skipValue(jsonIterator)
     } else {
+      val identifier = IdentifierDeserializer.deserialize(jsonIterator)
+      jsonIterator.consumeFieldValueSeparator()
       throw new IllegalArgumentException(s"No field [${Messages.abbreviate(identifier)}] in type [$tpe]. Types: ${context.typesStackMessage}")
     }
   }
@@ -181,8 +186,8 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   private def skipValue(jsonIterator: StringIterator): Unit = {
     jsonIterator.skipWhitespaceChars()
     jsonIterator.currentChar match {
-      case '{' => DepthLimit.nested(jsonIterator, config.maxDepth)(skipObject(jsonIterator))
-      case '[' => DepthLimit.nested(jsonIterator, config.maxDepth)(skipArray(jsonIterator))
+      case '{' => if (config.maxDepth > 0) DepthLimit.nested(jsonIterator, config.maxDepth)(skipObject(jsonIterator)) else skipObject(jsonIterator)
+      case '[' => if (config.maxDepth > 0) DepthLimit.nested(jsonIterator, config.maxDepth)(skipArray(jsonIterator)) else skipArray(jsonIterator)
       case '"' => skipString(jsonIterator)
       case '-' | '0' | '1' | '2'| '3'| '4'| '5'| '6'| '7'| '8'| '9' => skipNumber(jsonIterator)
       case 'f' | 't' | 'n'  => skipBooleanOrNull(jsonIterator)
@@ -196,7 +201,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     jsonIterator.consumeObjectStart()
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
-      IdentifierDeserializer.deserialize(jsonIterator)
+      IdentifierDeserializer.skip(jsonIterator)
       jsonIterator.consumeFieldValueSeparator()
       skipValue(jsonIterator)
       jsonIterator.afterValue('}')
@@ -215,7 +220,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   }
 
   def skipString(jsonIterator: StringIterator): Unit = {
-    AbstractStringDeserializer.readString(jsonIterator)
+    AbstractStringDeserializer.skipString(jsonIterator)
   }
 
   def skipNumber(jsonIterator: StringIterator): Unit = {
@@ -223,18 +228,19 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   }
 
   def skipBooleanOrNull(jsonIterator: StringIterator): Unit = {
-    val booleanString = new StringBuilder()
-
     jsonIterator.skipWhitespaceChars()
 
-    while (jsonIterator.isCurrentCharASmallLetter) {
-      booleanString.append(jsonIterator.currentChar)
-      jsonIterator.nextChar()
+    val input = jsonIterator.stringValue
+    val length = jsonIterator.stringLength
+    val start = jsonIterator.nextIndex - 1
+    var end = start
+    while (end < length && { val c = input.charAt(end); c >= 'a' && c <= 'z' }) {
+      end += 1
     }
+    jsonIterator.seek(end)
 
-    booleanString.toString() match {
-      case "true" | "false" | "null" => ()
-      case _ => throw new IllegalArgumentException(s"Invalid boolean value: ${Messages.abbreviate(booleanString.toString)}")
+    if (!jsonIterator.rangeEquals(start, end, "true") && !jsonIterator.rangeEquals(start, end, "false") && !jsonIterator.rangeEquals(start, end, "null")) {
+      throw new IllegalArgumentException(s"Invalid boolean value: ${Messages.abbreviate(input.substring(start, end))}")
     }
   }
 

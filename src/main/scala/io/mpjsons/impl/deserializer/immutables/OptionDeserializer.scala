@@ -53,9 +53,10 @@ class OptionDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type,
     val option = if (jsonIterator.currentChar == '}') {
       None
     } else {
-      val identifier = IdentifierDeserializer.deserialize(jsonIterator)
-
-      if (identifier != "value") {
+      val keyStart = jsonIterator.nextIndex - 1
+      if (!IdentifierDeserializer.matches(jsonIterator, "value")) {
+        jsonIterator.seek(keyStart)
+        val identifier = IdentifierDeserializer.deserialize(jsonIterator)
         throw new IllegalArgumentException("Expected 'value' but was = " + Messages.abbreviate(identifier))
       }
 

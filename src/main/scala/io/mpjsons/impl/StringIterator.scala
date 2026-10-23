@@ -34,9 +34,44 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
   }
 
   def skipWhitespaceChars(): Unit = {
-    while (currentChar.isWhitespace) {
+    while (StringIterator.isWhitespace(currentChar)) {
       nextChar()
     }
+  }
+
+  /** Position from which `backslashIndex` was searched, -1 if not searched yet. */
+  private var backslashSearchFrom = -1
+  /** Index of the first backslash at or after `backslashSearchFrom`, or `stringLength` if there is none. */
+  private var backslashIndex = 0
+  /** Buffer reused for decoding string literals with escape sequences. */
+  private var charBuffer: Array[Char] = null
+
+  /**
+   * Index of the first backslash at or after `index`, or `stringLength` if there is none. The result is cached,
+   * so scanning a document with few backslashes costs one pass over the input in total.
+   */
+  final def backslashIndexFrom(index: Int): Int = {
+    if (backslashSearchFrom < 0 || backslashSearchFrom > index || backslashIndex < index) {
+      val found = stringValue.indexOf('\\', index)
+      backslashIndex = if (found < 0) stringLength else found
+      backslashSearchFrom = index
+    }
+    backslashIndex
+  }
+
+  /** Reusable buffer of at least `minSize` chars, with the first `keep` chars of the previous buffer preserved. */
+  final def charBuffer(minSize: Int, keep: Int): Array[Char] = {
+    if (charBuffer == null || charBuffer.length < minSize) {
+      val newBuffer = new Array[Char](if (charBuffer == null) minSize else Math.max(minSize, charBuffer.length * 2))
+      if (keep > 0) System.arraycopy(charBuffer, 0, newBuffer, 0, keep)
+      charBuffer = newBuffer
+    }
+    charBuffer
+  }
+
+  /** True if characters from `start` (inclusive) to `end` (exclusive) are equal to `text`. */
+  final def rangeEquals(start: Int, end: Int, text: String): Boolean = {
+    end - start == text.length && stringValue.regionMatches(start, text, 0, text.length)
   }
 
   def nextChar(): Unit = {
@@ -201,4 +236,16 @@ class StringIterator(val stringValue: String, val strict: Boolean) {
     stringValue.substring(0, Math.min(nextIndex - 1, stringLength))
   }
 
+}
+
+object StringIterator {
+
+  /** Same as Character.isWhitespace, with a fast path for ASCII characters. */
+  @inline final def isWhitespace(c: Char): Boolean = {
+    if (c > ' ') {
+      c >= '\u0080' && Character.isWhitespace(c)
+    } else {
+      c == ' ' || c == '\n' || c == '\t' || c == '\r' || Character.isWhitespace(c)
+    }
+  }
 }

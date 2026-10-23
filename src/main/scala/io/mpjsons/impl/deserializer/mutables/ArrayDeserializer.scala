@@ -38,55 +38,79 @@ class ArrayDeserializer[E](deserializerFactory: DeserializerFactory, tpe: Type, 
   }
 
   // The loops below mirror AbstractJsonArrayDeserializer.deserializeInto, including the handling of the null literal.
-  // Values are collected in the iterator's scratch array; only built-in readers run between writes, so no other
-  // array of the same type can be read from this iterator before the result is copied out.
+  // The array is allocated at the size counted by elementCountHint, so usually no growth and no final copy is needed.
+
+  /**
+   * Number of elements, counted as commas + 1 up to the first ']' (0 when there is no value). Only a capacity hint:
+   * the lenient reader accepts missing and trailing commas, so the loops still grow or trim the array. The count is
+   * capped so that malformed input such as "[,,,,..." cannot make it allocate a big array up front.
+   */
+  private def elementCountHint(jsonIterator: StringIterator): Int = {
+    // called after skipping whitespace, so ']' here means an empty array
+    if (jsonIterator.currentChar == ']' || jsonIterator.nextIndex > jsonIterator.stringLength) {
+      0
+    } else {
+      val input = jsonIterator.stringValue
+      val start = jsonIterator.nextIndex - 1
+      val closing = input.indexOf(']', start)
+      val end = if (closing < 0) jsonIterator.stringLength else closing
+      // String.indexOf is a JVM intrinsic, so this jumps from comma to comma
+      var count = 1
+      var index = input.indexOf(',', start, end)
+      while (index >= 0 && count < ArrayDeserializer.MaxInitialCapacity) {
+        count += 1
+        index = input.indexOf(',', index + 1, end)
+      }
+      count
+    }
+  }
 
   private def readInts(jsonIterator: StringIterator): Array[Int] = {
     jsonIterator.consumeArrayStart()
-    var array = jsonIterator.intScratch(16, 0)
-    var size = 0
     jsonIterator.skipWhitespaceChars()
+    var array = new Array[Int](elementCountHint(jsonIterator))
+    var size = 0
     while (jsonIterator.currentChar != ']') {
       val value = if (jsonIterator.tryConsumeNull()) elementNull.get().asInstanceOf[Int] else IntDeserializer.deserialize(jsonIterator)
-      if (size == array.length) array = jsonIterator.intScratch(size * 2, size)
+      if (size == array.length) array = java.util.Arrays.copyOf(array, Math.max(8, size * 2))
       array(size) = value
       size += 1
       jsonIterator.afterValue(']')
     }
     jsonIterator.nextChar()
-    java.util.Arrays.copyOf(array, size) // exact size, the scratch array stays with the iterator
+    if (size == array.length) array else java.util.Arrays.copyOf(array, size)
   }
 
   private def readLongs(jsonIterator: StringIterator): Array[Long] = {
     jsonIterator.consumeArrayStart()
-    var array = jsonIterator.longScratch(16, 0)
-    var size = 0
     jsonIterator.skipWhitespaceChars()
+    var array = new Array[Long](elementCountHint(jsonIterator))
+    var size = 0
     while (jsonIterator.currentChar != ']') {
       val value = if (jsonIterator.tryConsumeNull()) elementNull.get().asInstanceOf[Long] else LongDeserializer.deserialize(jsonIterator)
-      if (size == array.length) array = jsonIterator.longScratch(size * 2, size)
+      if (size == array.length) array = java.util.Arrays.copyOf(array, Math.max(8, size * 2))
       array(size) = value
       size += 1
       jsonIterator.afterValue(']')
     }
     jsonIterator.nextChar()
-    java.util.Arrays.copyOf(array, size) // exact size, the scratch array stays with the iterator
+    if (size == array.length) array else java.util.Arrays.copyOf(array, size)
   }
 
   private def readDoubles(jsonIterator: StringIterator): Array[Double] = {
     jsonIterator.consumeArrayStart()
-    var array = jsonIterator.doubleScratch(16, 0)
-    var size = 0
     jsonIterator.skipWhitespaceChars()
+    var array = new Array[Double](elementCountHint(jsonIterator))
+    var size = 0
     while (jsonIterator.currentChar != ']') {
       val value = if (jsonIterator.tryConsumeNull()) elementNull.get().asInstanceOf[Double] else DoubleDeserializer.deserialize(jsonIterator)
-      if (size == array.length) array = jsonIterator.doubleScratch(size * 2, size)
+      if (size == array.length) array = java.util.Arrays.copyOf(array, Math.max(8, size * 2))
       array(size) = value
       size += 1
       jsonIterator.afterValue(']')
     }
     jsonIterator.nextChar()
-    java.util.Arrays.copyOf(array, size) // exact size, the scratch array stays with the iterator
+    if (size == array.length) array else java.util.Arrays.copyOf(array, size)
   }
 }
 
@@ -95,4 +119,7 @@ private object ArrayDeserializer {
   final val IntKind = 1
   final val LongKind = 2
   final val DoubleKind = 3
+
+  /** Upper bound of the counted initial capacity; longer arrays grow from there. */
+  final val MaxInitialCapacity = 4096
 }

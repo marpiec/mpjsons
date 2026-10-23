@@ -162,6 +162,41 @@ against the 0.7.2 copy in four configurations):
 Tried and rejected: comparing keys with `String.startsWith` or a char loop instead of `regionMatches` (slower), and
 a `StringBuilder` for escaped strings (half the throughput on escape-heavy text).
 
+## 4b. Deserialization, third round (after 0.7.3)
+
+Changes (research and spikes in `deserialization-research.md`, proposals #1–#3):
+
+- **Key prediction**: `BeanFieldTable.find(jsonIterator, expected)` first compares the key with the next key in the
+  serializer's order (character by character, no hash); any other key takes the hash lookup, with the same result.
+  After a key that is not a field, prediction pauses until a field matches again.
+- **Absent `Option` fields** are set to `None` after the key loop from a local bitmask; instances allocated without a
+  constructor are not read reflectively.
+- **Primitive arrays** (`Int`/`Long`/`Double`) are allocated at the element count (commas up to `]`, counted with the
+  `String.indexOf` intrinsic, capped at 4096) instead of growing by doubling and trimming.
+- All per-call state is local; `BeanReadingSpec` covers key orders, `Option` defaults, nested deserialization from a
+  converter and 16 threads on one instance.
+
+Results (JDK 25.0.4.1, two forks, same session, 23/10/2026; measured). 0.7.3 was measured from commit `0182286` with the
+same benchmark source; the last two rows were re-measured after the "pause prediction after unknown keys" change:
+
+| Benchmark | 0.7.2 ops/s | 0.7.3 ops/s | current ops/s | vs 0.7.3 | B/op 0.7.3 → current |
+|---|---:|---:|---:|---:|---:|
+| `User`, static deserializer | 2 257 228 | 3 161 857 | 3 846 750 | +22% | 256 → 256 |
+| `User`, `deserialize[T]` | 1 788 853 | 2 244 289 | 2 585 681 | +15% | 352 → 352 |
+| `SimpleDataObject` bean | 746 170 | 947 657 | 1 076 408 | +14% | 1 192 → 1 064 |
+| typed shapes | 3 792 | 8 437 | 9 174 | +9% | 58 064 → 58 064 |
+| strings | 21 100 | 39 688 | 39 765 | ±0 | 42 464 → 42 464 |
+| numbers | 2 561 | 4 762 | 4 607 | −3% | 89 001 → 56 105 |
+| 200 orders | 1 652 | 2 468 | 2 965 | +20% | 242 201 → 242 201 |
+| orders into a projection (skipping) | 2 618 | 5 075 | 5 275 | +4% | 7 793 → 7 793 |
+
+Trade-off: counting array elements costs ~4% on the numbers benchmark (A/B repeated twice: 4 603 vs 4 795 ops/s) for
+37% less allocation per document (56 105 vs 89 001 B). Revert `elementCountHint` to the doubling code if raw speed on
+numeric arrays matters more than allocation.
+
+Tried and rejected: scratch arrays owned by the `StringIterator` — each call creates a new iterator, so they still grew
+by doubling and saved nothing for documents with one array of each type.
+
 ## 5. Constraints to respect while optimising
 
 - Public API: `JsonTypeSerializer.serialize(obj, jsonBuilder: scala.collection.mutable.StringBuilder)`,

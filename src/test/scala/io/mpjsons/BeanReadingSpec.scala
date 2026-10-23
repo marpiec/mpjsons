@@ -130,6 +130,15 @@ class BeanReadingSpec extends AnyFlatSpec with Matchers {
     val value = Arrays3(big, Array(Array(1.5), Array(), big.take(100)), Array(), Array.tabulate(5000)(identity), Array.tabulate(33)(_.toLong))
     Deep.repr(current.deserialize[Arrays3](current.serialize(value))) mustBe Deep.repr(value)
     outcome(current.deserialize[Array[Int]]("[1, null, 3]")) mustBe outcome(legacy.deserialize[Array[Int]]("[1, null, 3]"))
+    val lenient = Seq("[]", "[ ]", "[1,2,]", "[1 2 3]", "[1 2,3 4 5 6 7 8 9 10]", "[,]", "[1,,2]", "[1,2", "[" + "," * 10000 + "]",
+      "[" + (1 to 5000).mkString(" ") + "]", "[" + (1 to 9000).mkString(",") + "]")
+    for (json <- lenient) {
+      withClue(json.take(40)) {
+        outcome(current.deserialize[Array[Int]](json)) mustBe outcome(legacy.deserialize[Array[Int]](json))
+        outcome(current.deserialize[Array[Long]](json)) mustBe outcome(legacy.deserialize[Array[Long]](json))
+        outcome(current.deserialize[Array[Double]](json)) mustBe outcome(legacy.deserialize[Array[Double]](json))
+      }
+    }
   }
 
   private def withEmbeddedConverter(mpjsons: MPJsons): MPJsons = {

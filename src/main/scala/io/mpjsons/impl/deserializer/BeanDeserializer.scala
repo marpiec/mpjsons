@@ -121,6 +121,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         expected = field.order + 1
       } else {
         skipOrFail(jsonIterator)
+        expected = -1 // input not written by mpjsons for this type: no prediction until a field matches again
       }
 
       jsonIterator.afterValue('}')
@@ -159,6 +160,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         }
       } else {
         skipOrFail(jsonIterator)
+        expected = -1 // input not written by mpjsons for this type: no prediction until a field matches again
       }
 
       jsonIterator.afterValue('}')

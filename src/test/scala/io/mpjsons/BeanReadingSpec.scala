@@ -60,6 +60,17 @@ class BeanReadingSpec extends AnyFlatSpec with Matchers {
     }
   }
 
+  it must "read objects whose key order changes from one to the next, in Latin-1 and UTF-16 input" in {
+    // the key learned after each field is wrong for every other object
+    val orders = members.permutations.take(12).toVector
+    for (value <- Seq("x", "zażółć")) {
+      val objects = (0 until 60).map(i => orders(i % orders.length).map(_.replace("\"x\"", "\"" + value + "\"")).mkString("{", ",", "}"))
+      val json = objects.mkString("[", ", ", "]")
+      current.deserialize[List[Five]](json) mustBe List.fill(60)(Five(1, value, Some(5L), d = true, List(1, 2)))
+      Deep.repr(current.deserialize[List[Five]](json)) mustBe Deep.repr(legacy.deserialize[List[Five]](json))
+    }
+  }
+
   it must "give the same result as 0.7.2 for missing, duplicated, unknown, escaped and bare keys" in {
     for (permutation <- members.permutations.take(24); drop <- members.indices) {
       sameAsLegacy(permutation.patch(drop, Nil, 1).mkString("{", ",", "}"))

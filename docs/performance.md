@@ -376,6 +376,7 @@ Changes, all with `sbt test` green (310 specs, including the differential fuzzer
   `find`.
   - A first version kept the prediction in one bigger method. In one harness C2 compiled it standalone first and then
     would not inline it ("already compiled into a big method"), which hid the whole gain.
+  - Replaced after 0.7.7 by learned hints, see §4g.
 - **`matchKey` uses `String.regionMatches`** instead of comparing char by char. Measured +5 to +19% in the standalone
   harness, −3 to −5% in the in-repo one (`round5-key-compare.txt`); kept.
 - **Escaped strings**: bulk copies between escapes, `\u` decoded without a substring.
@@ -436,6 +437,66 @@ The lesson for later work: results moved by 15–25% between harnesses with byte
 `JsonbShapeBench` vs the standalone project, and even the standalone benchmark class copied into the repo). The
 cause was C2 compile order and inlining, not the code under test. Check a change in both harnesses with several forks
 before trusting a few percent.
+
+## 4g. After 0.7.7: key order and Polish text without a penalty
+
+What prompted it: Neula's profile of 0.7.7 showed key matching no faster than in 0.7.6. Its explanation was Polish
+letters: they make Java store the whole input as UTF-16, and `regionMatches` against Latin-1 field names then takes a
+char-by-char path in the JDK. The owner's goals were no penalty for Polish text or for key order, and no complexity
+that does not pay for itself.
+
+What changed, all with `sbt test` green (311 specs, including the differential fuzzers against the 0.7.2 copy):
+- **Learned key hints replace the two fixed orders.**
+  - The table remembers the first key and, in each field, the key that followed it in an object read earlier.
+  - Any consistent order then predicts well after the first object: mpjsons', jsonb's sorted one, 0.6.x's reversed
+    one, or a client's own.
+  - Hints are plain fields written by any thread. They only point to fields `find` returned for that name, so a stale
+    hint costs one compare, never a wrong field. The 16-thread spec reads all key permutations of one type at once.
+  - Net code is smaller than 0.7.7's prediction: no order encoding and no jsonb sorting.
+- **Order-independent lookup on a miss**:
+  - the end of a quoted key comes from `String.indexOf`;
+  - the slot comes from the key's length and its first and last characters;
+  - keys are compared with `regionMatches`.
+
+What the measurements decided (`round6-variants.txt`, both harnesses, 2 forks):
+- **Lookup only, no prediction**: order-independent, but 13–23% slower on keys in the expected order. Prediction pays
+  for itself.
+- **Hints compared char by char instead of `regionMatches`**: 3–9% slower than `regionMatches`. Polish input
+  included; Neula's concern did not reproduce here.
+- **Typed-name matching in place, kept**: without it a tiny typed event took 18–28 ns more (+28–36%), and typed shapes
+  read 4–8% slower.
+
+Result against 0.7.7 (standalone harness, 24/10/2026, JDK 25.0.4.1, 2 forks, `-prof gc`; `round6-0.7.7.txt`,
+`round6-learned-hints.txt`). No benchmark got slower, and allocation is unchanged.
+
+| Read | 0.7.7 ops/s | now ops/s | change |
+|---|---:|---:|---:|
+| `User`, compact | 3 331 309 | 3 485 469 | +4.6% |
+| `User`, old (reversed) key order | 2 466 224 | 3 460 341 | +40.3% |
+| `User`, jsonb shape | 2 770 595 | 3 288 154 | +18.7% |
+| `User`, Polish text | 3 268 954 | 3 429 572 | +4.9% |
+| `User`, Polish text, jsonb shape | 2 772 571 | 3 228 261 | +16.4% |
+| 200 orders, compact | 2 730 | 2 840 | +4.0% |
+| 200 orders, old key order | 2 088 (±7%) | 2 855 | +36.7% |
+| 200 orders, jsonb shape | 2 226 | 2 438 | +9.5% |
+| 200 orders, Polish text | 2 590 | 2 685 | +3.6% |
+| 200 orders, Polish text, jsonb shape | 2 161 | 2 349 | +8.7% |
+| typed shapes / jsonb shape | 8 807 / 7 379 | 9 232 / 8 222 | +4.8% / +11.4% |
+| projection, escaped documents, strings | | | +0.2% to +2.6% |
+| tiny documents (`TinyBench`, ns/op) | | | 0 to −10.5% |
+
+What is left:
+- **Key order no longer costs anything**: `User` reads at 3.49 M ops/s in mpjsons' order and 3.46 M in reversed order;
+  orders at 2 840 and 2 855 ops/s.
+- **jsonb shape** is still 6–14% slower than compact. Those are the spaces after `,` and `:`, one more character per
+  token to skip.
+- **Polish text** costs nothing on `User` (−1.6%, within noise) and 5.5% on orders. That remainder is in the strings,
+  not the keys: a `substring` of a UTF-16 input goes through `StringUTF16.newString`, which first tries to compress
+  each value back to Latin-1. Every Java JSON library that returns compact Strings pays this. Avoiding it would mean
+  copying the input to a `char[]` per document, which is not worth it for 5%.
+- **Reference field writes** (Neula's request 5) were not changed. The generated writers already hold constant method
+  handles. A `VarHandle` performs the same receiver and type checks, and a direct `putfield` cannot write the final
+  fields of case classes, so there is no simple win.
 
 ## 5. Constraints to respect while optimising
 

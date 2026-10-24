@@ -76,9 +76,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         Array(entry(field.jsonName))
       }
     }
-    // The keys the serializer writes, in its order: the JSON name of every field that is not skipped on write.
-    val ordered = entries.filter(entry => !entry.skipped && fields.exists(f => f.field == entry.field && f.jsonName == entry.name))
-    new BeanFieldTable(entries, ordered)
+    new BeanFieldTable(entries)
   }
   /**
    * Writers of all fields, in `fields` order (see FieldWriters); only when values are written into an allocated
@@ -111,18 +109,22 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     }
     // Per-call state lives in locals only: the deserializer is shared between threads.
     var assignedOptions = 0L
-    var expected = table.start
+
+    var previous: BeanField = null // the last field read, which predicts the next key (see BeanFieldTable)
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
 
-      var field = table.matchPredicted(jsonIterator, expected)
+      var field = table.matchExpected(jsonIterator, if (previous == null) table.first else previous.next)
       if (field == null) {
-        field = table.find(jsonIterator, expected)
+        field = table.find(jsonIterator)
+        if (field != null) {
+          table.learn(previous, field)
+        }
       }
 
       if (field != null) {
-        expected = table.next(field, expected)
+        previous = field
         jsonIterator.consumeFieldValueSeparator()
         field.set(instance.asInstanceOf[AnyRef], jsonIterator)
         if (field.optionSlot >= 0) {
@@ -130,7 +132,6 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         }
       } else {
         skipOrFail(jsonIterator)
-        expected = -1 // input not written by mpjsons for this type: no prediction until a field matches again
       }
 
       jsonIterator.afterValue('}')
@@ -151,19 +152,23 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     val table = fieldTable
     val arguments = argumentDefaults.clone()
     var lateFields: List[(BeanField, AnyRef)] = Nil
-    var expected = table.start
+
+    var previous: BeanField = null // the last field read, which predicts the next key (see BeanFieldTable)
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
 
-      var field = table.matchPredicted(jsonIterator, expected)
+      var field = table.matchExpected(jsonIterator, if (previous == null) table.first else previous.next)
       if (field == null) {
-        field = table.find(jsonIterator, expected)
+        field = table.find(jsonIterator)
+        if (field != null) {
+          table.learn(previous, field)
+        }
       }
 
       if (field != null) {
+        previous = field
         jsonIterator.consumeFieldValueSeparator()
-        expected = table.next(field, expected)
         val value = field.readValue(jsonIterator)
         if (field.argIndex >= 0) {
           arguments(field.argIndex) = value
@@ -172,7 +177,6 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         }
       } else {
         skipOrFail(jsonIterator)
-        expected = -1 // input not written by mpjsons for this type: no prediction until a field matches again
       }
 
       jsonIterator.afterValue('}')

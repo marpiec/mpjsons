@@ -40,18 +40,29 @@ object JsonbShape {
 
   def apply(json: String): String = apply(json, sortKeys = true, spaces = true)
 
+  /** Keys of every object in reverse order (as 0.6.x wrote them), compact. */
+  def reversed(json: String): String = {
+    val out = new java.lang.StringBuilder
+    render(new Parser(json).value(), out, KeyOrder.Reversed, ",", ":")
+    out.toString
+  }
+
+  private object KeyOrder extends Enumeration {
+    val AsIs, Sorted, Reversed = Value
+  }
+
   /** Only one aspect of the jsonb shape, to measure each on its own. */
   def apply(json: String, sortKeys: Boolean, spaces: Boolean): String = {
     val parser = new Parser(json)
     val value = parser.value()
     val out = new java.lang.StringBuilder
-    render(value, out, sortKeys, if (spaces) ", " else ",", if (spaces) ": " else ":")
+    render(value, out, if (sortKeys) KeyOrder.Sorted else KeyOrder.AsIs, if (spaces) ", " else ",", if (spaces) ": " else ":")
     out.toString
   }
 
-  private def render(value: J, out: java.lang.StringBuilder, sortKeys: Boolean, comma: String, colon: String): Unit = value match {
+  private def render(value: J, out: java.lang.StringBuilder, order: KeyOrder.Value, comma: String, colon: String): Unit = value match {
     case JObj(fields) =>
-      val sorted = if (!sortKeys) fields else fields.sortWith { case ((a, _), (b, _)) =>
+      val sorted = if (order == KeyOrder.Reversed) fields.reverse else if (order == KeyOrder.AsIs) fields else fields.sortWith { case ((a, _), (b, _)) =>
         val ab = a.getBytes("UTF-8")
         val bb = b.getBytes("UTF-8")
         if (ab.length != bb.length) ab.length < bb.length else java.util.Arrays.compareUnsigned(ab, bb) < 0
@@ -61,14 +72,14 @@ object JsonbShape {
         if (i > 0) out.append(comma)
         renderString(key, out)
         out.append(colon)
-        render(v, out, sortKeys, comma, colon)
+        render(v, out, order, comma, colon)
       }
       out.append('}')
     case JArr(values) =>
       out.append('[')
       values.zipWithIndex.foreach { case (v, i) =>
         if (i > 0) out.append(comma)
-        render(v, out, sortKeys, comma, colon)
+        render(v, out, order, comma, colon)
       }
       out.append(']')
     case JStr(s) => renderString(s, out)
@@ -185,9 +196,22 @@ class JsonbShapeBench {
   @Param(Array("legacy", "current"))
   var impl: String = _
 
-  /** compact: as mpjsons writes; spaced: jsonb separators only; sorted: jsonb key order only; jsonb: both. */
-  @Param(Array("compact", "spaced", "sorted", "jsonb"))
+  /**
+   * compact: as mpjsons writes; spaced: jsonb separators only; sorted: jsonb key order only; jsonb: both; reversed:
+   * compact with every object's keys in reverse order (as 0.6.x wrote them).
+   */
+  @Param(Array("compact", "spaced", "sorted", "jsonb", "reversed"))
   var shape: String = _
+
+  /**
+   * latin1: the fixtures as they are; polish: one Polish letter in a string value, which makes Java store the whole
+   * input as UTF-16 (the escaped documents always contain Polish letters).
+   */
+  @Param(Array("latin1", "polish"))
+  var text: String = _
+
+  var userData: User = _
+  var ordersData: Orders = _
 
   var userJson: String = _
   var ordersJson: String = _
@@ -209,9 +233,12 @@ class JsonbShapeBench {
       case "spaced" => JsonbShape(json, sortKeys = false, spaces = true)
       case "sorted" => JsonbShape(json, sortKeys = true, spaces = false)
       case "jsonb" => JsonbShape(json)
+      case "reversed" => JsonbShape.reversed(json)
     }
-    userJson = input(writer.serialize(Data.smallUser))
-    ordersJson = input(writer.serialize(Data.orders))
+    userData = if (text == "polish") Data.smallUser.copy(firstName = "Paweł") else Data.smallUser
+    ordersData = if (text == "polish") Orders(Data.orders.orders.updated(0, Data.orders.orders(0).copy(note = Some("zażółć")))) else Data.orders
+    userJson = input(writer.serialize(userData))
+    ordersJson = input(writer.serialize(ordersData))
     drawingJson = input(writer.serialize(Data.drawing))
     docsJson = input(writer.serialize(EscapedData.docs))
 
@@ -236,10 +263,10 @@ class JsonbShapeBench {
     }
 
     // both shapes must read the same values
-    require(orders(ordersJson) == Data.orders, "orders differ for " + impl + "/" + shape)
+    require(orders(ordersJson) == ordersData, "orders differ for " + impl + "/" + shape)
     require(drawing(drawingJson) == Data.drawing, "drawing differs for " + impl + "/" + shape)
     require(docs(docsJson) == EscapedData.docs, "docs differ for " + impl + "/" + shape)
-    require(user(userJson) == Data.smallUser, "user differs for " + impl + "/" + shape)
+    require(user(userJson) == userData, "user differs for " + impl + "/" + shape)
   }
 
   private def staticOf[T](d: io.mpjsons.legacy.StaticDeserializer[T]): String => AnyRef = json => d.deserialize(json).asInstanceOf[AnyRef]

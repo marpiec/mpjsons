@@ -92,6 +92,12 @@ The integer shortcut of `readDouble`/`readFloat` returned `+0.0` for the literal
 It now returns `-0.0` (`FastNumberParsingSpec`). The serializer writes `-0.0` as `-0.0`, so round trips were not
 affected; only hand-written `-0` reads differently.
 
+### 12c. Error message line breaks depended on the build machine — FIXED
+
+The `JsonInnerException` message was built from a multi-line string literal, so its line breaks were the line endings
+of the checked-out `MPJsons.scala`: `\r\n` when built on Windows with `core.autocrlf=true`, `\n` elsewhere. It now
+always uses `\n` (found by `ReshapedInputDifferentialSpec`, which compares error messages with the 0.7.2 copy).
+
 ## Limitations and sharp edges
 
 ### 13. Parser is lenient, not validating — ADDRESSED by an opt-in lever

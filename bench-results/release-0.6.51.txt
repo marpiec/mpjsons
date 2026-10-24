@@ -1,0 +1,101 @@
+Benchmark                                               Mode  Cnt        Score       Error   Units
+ReadBench.numberArrays                                 thrpt   10     1560,893 ±    12,523   ops/s
+ReadBench.numberArrays:gc.alloc.rate                   thrpt   10     1268,840 ±    10,174  MB/sec
+ReadBench.numberArrays:gc.alloc.rate.norm              thrpt   10   852466,251 ±     0,018    B/op
+ReadBench.numberArrays:gc.count                        thrpt   10      116,000              counts
+ReadBench.numberArrays:gc.time                         thrpt   10      173,000                  ms
+ReadBench.orders200                                    thrpt   10      956,318 ±    18,164   ops/s
+ReadBench.orders200:gc.alloc.rate                      thrpt   10     1555,618 ±    29,540  MB/sec
+ReadBench.orders200:gc.alloc.rate.norm                 thrpt   10  1705875,681 ±     0,082    B/op
+ReadBench.orders200:gc.count                           thrpt   10      141,000              counts
+ReadBench.orders200:gc.time                            thrpt   10      176,000                  ms
+ReadBench.orders200OldKeyOrder                         thrpt   10      966,607 ±     7,326   ops/s
+ReadBench.orders200OldKeyOrder:gc.alloc.rate           thrpt   10     1572,366 ±    11,914  MB/sec
+ReadBench.orders200OldKeyOrder:gc.alloc.rate.norm      thrpt   10  1705875,646 ±     0,048    B/op
+ReadBench.orders200OldKeyOrder:gc.count                thrpt   10      140,000              counts
+ReadBench.orders200OldKeyOrder:gc.time                 thrpt   10      175,000                  ms
+ReadBench.ordersProjectionSkipping                     thrpt   10     1697,458 ±     6,755   ops/s
+ReadBench.ordersProjectionSkipping:gc.alloc.rate       thrpt   10     1638,164 ±     6,519  MB/sec
+ReadBench.ordersProjectionSkipping:gc.alloc.rate.norm  thrpt   10  1012058,070 ±     0,010    B/op
+ReadBench.ordersProjectionSkipping:gc.count            thrpt   10      127,000              counts
+ReadBench.ordersProjectionSkipping:gc.time             thrpt   10      167,000                  ms
+ReadBench.simpleBean                                   thrpt   10   343507,692 ±  2279,712   ops/s
+ReadBench.simpleBean:gc.alloc.rate                     thrpt   10     1577,497 ±    10,455  MB/sec
+ReadBench.simpleBean:gc.alloc.rate.norm                thrpt   10     4816,010 ±     0,001    B/op
+ReadBench.simpleBean:gc.count                          thrpt   10      141,000              counts
+ReadBench.simpleBean:gc.time                           thrpt   10      177,000                  ms
+ReadBench.strings                                      thrpt   10    14154,729 ±   119,237   ops/s
+ReadBench.strings:gc.alloc.rate                        thrpt   10     1569,381 ±    13,211  MB/sec
+ReadBench.strings:gc.alloc.rate.norm                   thrpt   10   116272,540 ±     0,929    B/op
+ReadBench.strings:gc.count                             thrpt   10      139,000              counts
+ReadBench.strings:gc.time                              thrpt   10      173,000                  ms
+ReadBench.typedShapes                                  thrpt   10     2349,941 ±    33,777   ops/s
+ReadBench.typedShapes:gc.alloc.rate                    thrpt   10     1514,810 ±    21,795  MB/sec
+ReadBench.typedShapes:gc.alloc.rate.norm               thrpt   10   676008,680 ±     0,302    B/op
+ReadBench.typedShapes:gc.count                         thrpt   10      138,000              counts
+ReadBench.typedShapes:gc.time                          thrpt   10      182,000                  ms
+ReadBench.userApi                                      thrpt   10   783410,920 ±  9621,692   ops/s
+ReadBench.userApi:gc.alloc.rate                        thrpt   10     1488,081 ±    18,291  MB/sec
+ReadBench.userApi:gc.alloc.rate.norm                   thrpt   10     1992,014 ±     0,001    B/op
+ReadBench.userApi:gc.count                             thrpt   10      136,000              counts
+ReadBench.userApi:gc.time                              thrpt   10      178,000                  ms
+ReadBench.userOldKeyOrder                              thrpt   10   950619,437 ±  5816,612   ops/s
+ReadBench.userOldKeyOrder:gc.alloc.rate                thrpt   10     1718,667 ±    10,507  MB/sec
+ReadBench.userOldKeyOrder:gc.alloc.rate.norm           thrpt   10     1896,004 ±     0,001    B/op
+ReadBench.userOldKeyOrder:gc.count                     thrpt   10      128,000              counts
+ReadBench.userOldKeyOrder:gc.time                      thrpt   10      164,000                  ms
+ReadBench.userStatic                                   thrpt   10   950640,268 ± 29928,170   ops/s
+ReadBench.userStatic:gc.alloc.rate                     thrpt   10     1718,549 ±    54,044  MB/sec
+ReadBench.userStatic:gc.alloc.rate.norm                thrpt   10     1896,004 ±     0,001    B/op
+ReadBench.userStatic:gc.count                          thrpt   10      148,000              counts
+ReadBench.userStatic:gc.time                           thrpt   10      183,000                  ms
+WriteBench.numberArrays                                thrpt   10     6074,371 ±    59,447   ops/s
+WriteBench.numberArrays:gc.alloc.rate                  thrpt   10     2720,549 ±    26,588  MB/sec
+WriteBench.numberArrays:gc.alloc.rate.norm             thrpt   10   469688,578 ±     0,006    B/op
+WriteBench.numberArrays:gc.count                       thrpt   10      152,000              counts
+WriteBench.numberArrays:gc.time                        thrpt   10      203,000                  ms
+WriteBench.orders200                                   thrpt   10     1980,530 ±    11,408   ops/s
+WriteBench.orders200:gc.alloc.rate                     thrpt   10     1325,348 ±     7,603  MB/sec
+WriteBench.orders200:gc.alloc.rate.norm                thrpt   10   701777,773 ±     0,009    B/op
+WriteBench.orders200:gc.count                          thrpt   10      125,000              counts
+WriteBench.orders200:gc.time                           thrpt   10      165,000                  ms
+WriteBench.orders200Bytes                              thrpt   10     1935,867 ±    45,017   ops/s
+WriteBench.orders200Bytes:gc.alloc.rate                thrpt   10     1505,527 ±    35,015  MB/sec
+WriteBench.orders200Bytes:gc.alloc.rate.norm           thrpt   10   815577,816 ±     0,046    B/op
+WriteBench.orders200Bytes:gc.count                     thrpt   10      137,000              counts
+WriteBench.orders200Bytes:gc.time                      thrpt   10      182,000                  ms
+WriteBench.simpleBean                                  thrpt   10   908573,997 ± 21507,460   ops/s
+WriteBench.simpleBean:gc.alloc.rate                    thrpt   10     2238,721 ±    53,044  MB/sec
+WriteBench.simpleBean:gc.alloc.rate.norm               thrpt   10     2584,004 ±     0,001    B/op
+WriteBench.simpleBean:gc.count                         thrpt   10      130,000              counts
+WriteBench.simpleBean:gc.time                          thrpt   10      166,000                  ms
+WriteBench.strings                                     thrpt   10    16999,136 ±  3249,902   ops/s
+WriteBench.strings:gc.alloc.rate                       thrpt   10     1625,410 ±   310,235  MB/sec
+WriteBench.strings:gc.alloc.rate.norm                  thrpt   10   100276,210 ±    31,913    B/op
+WriteBench.strings:gc.count                            thrpt   10      108,000              counts
+WriteBench.strings:gc.time                             thrpt   10      144,000                  ms
+WriteBench.stringsBytes                                thrpt   10    13884,032 ±  2184,623   ops/s
+WriteBench.stringsBytes:gc.alloc.rate                  thrpt   10     2028,696 ±   318,776  MB/sec
+WriteBench.stringsBytes:gc.alloc.rate.norm             thrpt   10   153233,473 ±    37,380    B/op
+WriteBench.stringsBytes:gc.count                       thrpt   10      126,000              counts
+WriteBench.stringsBytes:gc.time                        thrpt   10      162,000                  ms
+WriteBench.typedShapes                                 thrpt   10     5994,154 ±   107,198   ops/s
+WriteBench.typedShapes:gc.alloc.rate                   thrpt   10     1924,233 ±    87,758  MB/sec
+WriteBench.typedShapes:gc.alloc.rate.norm              thrpt   10   336592,587 ±  9561,815    B/op
+WriteBench.typedShapes:gc.count                        thrpt   10      123,000              counts
+WriteBench.typedShapes:gc.time                         thrpt   10      164,000                  ms
+WriteBench.userApi                                     thrpt   10  1585416,862 ± 10159,978   ops/s
+WriteBench.userApi:gc.alloc.rate                       thrpt   10     1390,849 ±     8,915  MB/sec
+WriteBench.userApi:gc.alloc.rate.norm                  thrpt   10      920,002 ±     0,001    B/op
+WriteBench.userApi:gc.count                            thrpt   10      116,000              counts
+WriteBench.userApi:gc.time                             thrpt   10      151,000                  ms
+WriteBench.userBytes                                   thrpt   10  2134297,714 ± 11583,278   ops/s
+WriteBench.userBytes:gc.alloc.rate                     thrpt   10     1921,207 ±    10,418  MB/sec
+WriteBench.userBytes:gc.alloc.rate.norm                thrpt   10      944,002 ±     0,001    B/op
+WriteBench.userBytes:gc.count                          thrpt   10      140,000              counts
+WriteBench.userBytes:gc.time                           thrpt   10      177,000                  ms
+WriteBench.userStatic                                  thrpt   10  2167120,636 ± 12500,518   ops/s
+WriteBench.userStatic:gc.alloc.rate                    thrpt   10     1702,777 ±     9,842  MB/sec
+WriteBench.userStatic:gc.alloc.rate.norm               thrpt   10      824,002 ±     0,001    B/op
+WriteBench.userStatic:gc.count                         thrpt   10      132,000              counts
+WriteBench.userStatic:gc.time                          thrpt   10      165,000                  ms

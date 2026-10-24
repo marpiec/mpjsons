@@ -53,7 +53,9 @@ object AbstractStringDeserializer {
 
   /**
    * Slow path, entered at the first backslash; `escapeIndex` points at that backslash.
-   * Decodes into a buffer owned by the iterator, so only the resulting String is allocated.
+   * Decodes into a buffer owned by the iterator, so only the resulting String is allocated. The next quote and the
+   * next backslash are found with `indexOf` (vectorized) and the runs between them are copied in bulk; the input is
+   * still processed in order, so errors are the same as with a char-by-char scan.
    */
   private def readStringWithEscapes(jsonIterator: StringIterator, input: String, start: Int, escapeIndex: Int): String = {
     val length = input.length
@@ -61,50 +63,70 @@ object AbstractStringDeserializer {
     input.getChars(start, escapeIndex, buffer, 0)
     var size = escapeIndex - start
 
-    var runStart = escapeIndex
     var index = escapeIndex
-    while (index < length) {
-      val currentChar = input.charAt(index)
-      if (currentChar == '"' || currentChar == '\\') {
-        // copy the run of ordinary characters, leaving room for one decoded character
-        buffer = jsonIterator.charBuffer(size + (index - runStart) + 2, size)
-        input.getChars(runStart, index, buffer, size)
-        size += index - runStart
+    // next '"' at or after `index` (may be an escaped one), `length` if there is none; searched again only once passed
+    var quoteIndex = -1
+    while (true) {
+      if (quoteIndex < index) {
+        val found = input.indexOf('"', index)
+        quoteIndex = if (found < 0) length else found
       }
-      if (currentChar == '"') {
-        jsonIterator.seek(index + 1)
+      val special = Math.min(quoteIndex, jsonIterator.backslashIndexFrom(index))
+      // copy the run of ordinary characters, leaving room for one decoded character
+      buffer = jsonIterator.charBuffer(size + (special - index) + 2, size)
+      input.getChars(index, special, buffer, size)
+      size += special - index
+      if (special >= length) {
+        throw new IllegalArgumentException("Unexpected end of Json")
+      }
+      if (special == quoteIndex) {
+        jsonIterator.seek(special + 1)
         return new String(buffer, 0, size)
-      } else if (currentChar == '\\') {
-        index += 1
-        if (index >= length) {
-          throw new IllegalArgumentException("Unexpected end of Json")
-        }
-        input.charAt(index) match {
-          case '"' => buffer(size) = '"'; size += 1
-          case '\\' => buffer(size) = '\\'; size += 1
-          case '/' => buffer(size) = '/'; size += 1
-          case 'b' => buffer(size) = '\b'; size += 1
-          case 'f' => buffer(size) = '\f'; size += 1
-          case 'n' => buffer(size) = '\n'; size += 1
-          case 'r' => buffer(size) = '\r'; size += 1
-          case 't' => buffer(size) = '\t'; size += 1
-          case 'u' =>
-            if (index + 4 >= length) {
-              throw new IllegalArgumentException("Unexpected end of Json")
-            }
-            val codePoint = Integer.parseInt(input.substring(index + 1, index + 5), 16)
-            size += Character.toChars(codePoint, buffer, size)
-            index += 4
-          case other => throw new IllegalArgumentException("Unsupported control character [\\" + other + "]")
-        }
-        index += 1
-        runStart = index
-      } else {
-        index += 1
       }
+      index = special + 1
+      if (index >= length) {
+        throw new IllegalArgumentException("Unexpected end of Json")
+      }
+      input.charAt(index) match {
+        case '"' => buffer(size) = '"'; size += 1
+        case '\\' => buffer(size) = '\\'; size += 1
+        case '/' => buffer(size) = '/'; size += 1
+        case 'b' => buffer(size) = '\b'; size += 1
+        case 'f' => buffer(size) = '\f'; size += 1
+        case 'n' => buffer(size) = '\n'; size += 1
+        case 'r' => buffer(size) = '\r'; size += 1
+        case 't' => buffer(size) = '\t'; size += 1
+        case 'u' =>
+          if (index + 4 >= length) {
+            throw new IllegalArgumentException("Unexpected end of Json")
+          }
+          val hex = hexValue(input, index + 1)
+          // anything but four hex digits (a sign, other Unicode digits) goes through parseInt as before: same value or error
+          val codePoint = if (hex >= 0) hex else Integer.parseInt(input.substring(index + 1, index + 5), 16)
+          size += Character.toChars(codePoint, buffer, size)
+          index += 4
+        case other => throw new IllegalArgumentException("Unsupported control character [\\" + other + "]")
+      }
+      index += 1
     }
+    throw new IllegalStateException("unreachable")
+  }
 
-    throw new IllegalArgumentException("Unexpected end of Json")
+  /** The value of the four hex digits at `from`, or -1 if they are not four ASCII hex digits. */
+  private def hexValue(input: String, from: Int): Int = {
+    var value = 0
+    var i = from
+    while (i < from + 4) {
+      val c = input.charAt(i)
+      val digit =
+        if (c >= '0' && c <= '9') c - '0'
+        else if (c >= 'a' && c <= 'f') c - 'a' + 10
+        else if (c >= 'A' && c <= 'F') c - 'A' + 10
+        else return -1
+      value = (value << 4) | digit
+      i += 1
+    }
+    value
   }
 }
 

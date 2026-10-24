@@ -30,11 +30,21 @@ class SerializerFactoryMemoizer(config: MPJsonsConfig) extends SerializerFactory
 
   def getSerializer[T](orgtpe: Type, context: Context, allowSuperType: Boolean = true): JsonTypeSerializer[T] = {
 
+    val map = if (allowSuperType) cache else cacheWithoutSuperTypes
+
+    // With no bindings in the context, resolving returns the type as given (or throws for a bare type parameter, which
+    // is never a key), so the lookup can come first; this skips the reflection on the per-call path (serialize[T]).
+    if (context.typeParams.isEmpty) {
+      val direct = map.get(orgtpe)
+      if (direct != null) {
+        return direct.asInstanceOf[JsonTypeSerializer[T]]
+      }
+    }
+
     // Replace every type parameter (e.g. the T in List[T]) with its binding from the context,
     // so that the cache key is always a fully concrete type (List[Int] vs List[String]).
     val tpe = TypeParamsResolver.resolve(orgtpe, context)
 
-    val map = if (allowSuperType) cache else cacheWithoutSuperTypes
     val cached = map.get(tpe)
     if (cached != null) {
       cached.asInstanceOf[JsonTypeSerializer[T]]

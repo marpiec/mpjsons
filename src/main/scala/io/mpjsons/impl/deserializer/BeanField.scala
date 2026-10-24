@@ -18,7 +18,6 @@ import scala.reflect.runtime.universe._
  * through its constructor (see BeanDeserializer), or -1 when the field is written after construction.
  */
 abstract class BeanField(val name: String, val field: Field, nullValue: NullValue, val argIndex: Int) {
-  val hash: Int = name.hashCode
 
   /** Reads the value at the cursor and stores it into `instance`. */
   def set(instance: AnyRef, jsonIterator: StringIterator): Unit
@@ -36,10 +35,10 @@ abstract class BeanField(val name: String, val field: Field, nullValue: NullValu
   protected var slot: Int = 0
 
   /**
-   * Position of this field's JSON key in the order the serializer writes keys (see BeanFieldTable.find), or -1.
-   * Set before the owning BeanFieldTable is published and never changed afterwards.
+   * The field whose key followed this one in an object read earlier, or null (see BeanFieldTable). Only a hint: it is
+   * written without synchronisation by any thread that reads another order, and a stale value costs one comparison.
    */
-  private[deserializer] var order: Int = -1
+  private[deserializer] var next: BeanField = null
 
   /**
    * Index of this field among the bean's Option fields, or -1 when it is not an Option field or when a value

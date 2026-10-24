@@ -1,0 +1,108 @@
+# In-repo JsonbShapeBench, 2 forks, 24/10/2026: 0.7.7 (two fixed orders) / order-independent lookup only / learned hints + char compare / learned hints + regionMatches (kept)
+## base
+JsonbShapeBench.readOrders  current   compact  latin1  thrpt   10     2747,145 ±     24,685  ops/s
+JsonbShapeBench.readOrders  current   compact  polish  thrpt   10     2751,553 ±     37,723  ops/s
+JsonbShapeBench.readOrders  current     jsonb  latin1  thrpt   10     2113,124 ±     55,151  ops/s
+JsonbShapeBench.readOrders  current     jsonb  polish  thrpt   10     2259,087 ±     26,104  ops/s
+JsonbShapeBench.readOrders  current  reversed  latin1  thrpt   10     2155,391 ±     14,242  ops/s
+JsonbShapeBench.readOrders  current  reversed  polish  thrpt   10     2182,237 ±     20,872  ops/s
+JsonbShapeBench.readUser    current   compact  latin1  thrpt   10  3300994,598 ±  32800,415  ops/s
+JsonbShapeBench.readUser    current   compact  polish  thrpt   10  3226799,930 ±  45901,738  ops/s
+JsonbShapeBench.readUser    current     jsonb  latin1  thrpt   10  2739513,196 ± 118629,079  ops/s
+JsonbShapeBench.readUser    current     jsonb  polish  thrpt   10  2762331,303 ±  33864,563  ops/s
+JsonbShapeBench.readUser    current  reversed  latin1  thrpt   10  2467046,302 ± 119511,708  ops/s
+JsonbShapeBench.readUser    current  reversed  polish  thrpt   10  2486920,312 ±  31269,738  ops/s
+## S
+JsonbShapeBench.readOrders  current   compact  latin1  thrpt   10     2246,420 ±     16,496  ops/s
+JsonbShapeBench.readOrders  current   compact  polish  thrpt   10     2091,801 ±     24,035  ops/s
+JsonbShapeBench.readOrders  current     jsonb  latin1  thrpt   10     1840,461 ±     21,774  ops/s
+JsonbShapeBench.readOrders  current     jsonb  polish  thrpt   10     1879,685 ±     27,532  ops/s
+JsonbShapeBench.readOrders  current  reversed  latin1  thrpt   10     2268,524 ±     67,488  ops/s
+JsonbShapeBench.readOrders  current  reversed  polish  thrpt   10     2176,379 ±     88,989  ops/s
+JsonbShapeBench.readUser    current   compact  latin1  thrpt   10  2544574,169 ±  25262,253  ops/s
+JsonbShapeBench.readUser    current   compact  polish  thrpt   10  2564767,518 ±  82175,819  ops/s
+JsonbShapeBench.readUser    current     jsonb  latin1  thrpt   10  2300508,851 ± 101081,876  ops/s
+JsonbShapeBench.readUser    current     jsonb  polish  thrpt   10  2300792,344 ±  44346,496  ops/s
+JsonbShapeBench.readUser    current  reversed  latin1  thrpt   10  2641347,545 ± 201766,215  ops/s
+JsonbShapeBench.readUser    current  reversed  polish  thrpt   10  2571518,826 ± 146228,432  ops/s
+## L
+JsonbShapeBench.readOrders  current   compact  latin1  thrpt   10     2666,702 ±    38,976  ops/s
+JsonbShapeBench.readOrders  current   compact  polish  thrpt   10     2581,948 ±    27,458  ops/s
+JsonbShapeBench.readOrders  current     jsonb  latin1  thrpt   10     2148,618 ±    32,812  ops/s
+JsonbShapeBench.readOrders  current     jsonb  polish  thrpt   10     2064,914 ±    24,878  ops/s
+JsonbShapeBench.readOrders  current  reversed  latin1  thrpt   10     2582,817 ±    49,199  ops/s
+JsonbShapeBench.readOrders  current  reversed  polish  thrpt   10     2527,210 ±   130,530  ops/s
+JsonbShapeBench.readUser    current   compact  latin1  thrpt   10  3170403,472 ± 43640,987  ops/s
+JsonbShapeBench.readUser    current   compact  polish  thrpt   10  3027531,251 ± 38349,810  ops/s
+JsonbShapeBench.readUser    current     jsonb  latin1  thrpt   10  2734203,730 ± 67155,048  ops/s
+JsonbShapeBench.readUser    current     jsonb  polish  thrpt   10  2748432,140 ± 61965,281  ops/s
+JsonbShapeBench.readUser    current  reversed  latin1  thrpt   10  3094877,132 ± 44179,216  ops/s
+JsonbShapeBench.readUser    current  reversed  polish  thrpt   10  3158060,863 ± 27693,176  ops/s
+## L2
+JsonbShapeBench.readOrders  current   compact  latin1  thrpt   10     2852,131 ±     50,141  ops/s
+JsonbShapeBench.readOrders  current   compact  polish  thrpt   10     2836,269 ±     39,023  ops/s
+JsonbShapeBench.readOrders  current     jsonb  latin1  thrpt   10     2207,725 ±     23,226  ops/s
+JsonbShapeBench.readOrders  current     jsonb  polish  thrpt   10     2299,733 ±    250,095  ops/s
+JsonbShapeBench.readOrders  current  reversed  latin1  thrpt   10     2813,407 ±     39,916  ops/s
+JsonbShapeBench.readOrders  current  reversed  polish  thrpt   10     2836,308 ±     43,022  ops/s
+JsonbShapeBench.readUser    current   compact  latin1  thrpt   10  3503631,833 ± 100439,202  ops/s
+JsonbShapeBench.readUser    current   compact  polish  thrpt   10  3451838,901 ±  30158,467  ops/s
+JsonbShapeBench.readUser    current     jsonb  latin1  thrpt   10  2919101,344 ±  61582,272  ops/s
+JsonbShapeBench.readUser    current     jsonb  polish  thrpt   10  3152912,637 ±  58447,808  ops/s
+JsonbShapeBench.readUser    current  reversed  latin1  thrpt   10  3382987,497 ±  19542,458  ops/s
+JsonbShapeBench.readUser    current  reversed  polish  thrpt   10  3316308,009 ±  34916,782  ops/s
+# Standalone harness, 2 forks: 0.7.7 / learned + chars / learned + regionMatches
+## 077
+ReadBench.orders200                  thrpt   10     2738,093 ±    28,925  ops/s
+ReadBench.orders200JsonbShape        thrpt   10     2161,160 ±    41,323  ops/s
+ReadBench.orders200OldKeyOrder       thrpt   10     2161,677 ±    17,642  ops/s
+ReadBench.orders200Polish            thrpt   10     2567,145 ±    22,676  ops/s
+ReadBench.orders200PolishJsonbShape  thrpt   10     2225,040 ±    28,810  ops/s
+ReadBench.ordersProjectionSkipping   thrpt   10     5208,656 ±    60,163  ops/s
+ReadBench.typedShapes                thrpt   10     9235,916 ±   445,033  ops/s
+ReadBench.userJsonbShape             thrpt   10  2787252,836 ± 25374,162  ops/s
+ReadBench.userOldKeyOrder            thrpt   10  2526358,941 ± 19485,352  ops/s
+ReadBench.userPolish                 thrpt   10  3261685,251 ± 49342,151  ops/s
+ReadBench.userPolishJsonbShape       thrpt   10  2936842,493 ± 22056,152  ops/s
+ReadBench.userStatic                 thrpt   10  3273600,429 ± 22159,276  ops/s
+## L
+ReadBench.orders200                  thrpt   10     2591,203 ±     14,106  ops/s
+ReadBench.orders200JsonbShape        thrpt   10     2200,852 ±     45,756  ops/s
+ReadBench.orders200OldKeyOrder       thrpt   10     2597,491 ±     16,767  ops/s
+ReadBench.orders200Polish            thrpt   10     2429,199 ±     37,509  ops/s
+ReadBench.orders200PolishJsonbShape  thrpt   10     2143,143 ±    108,420  ops/s
+ReadBench.ordersProjectionSkipping   thrpt   10     5228,467 ±     81,580  ops/s
+ReadBench.typedShapes                thrpt   10    10706,264 ±    412,831  ops/s
+ReadBench.userJsonbShape             thrpt   10  2883764,566 ±  33262,045  ops/s
+ReadBench.userOldKeyOrder            thrpt   10  3206124,084 ± 204496,246  ops/s
+ReadBench.userPolish                 thrpt   10  2988694,795 ±  33959,042  ops/s
+ReadBench.userPolishJsonbShape       thrpt   10  2774953,306 ± 164730,334  ops/s
+ReadBench.userStatic                 thrpt   10  3132703,447 ±  23160,571  ops/s
+## L2
+ReadBench.orders200                  thrpt   10     2812,443 ±    41,910  ops/s
+ReadBench.orders200JsonbShape        thrpt   10     2422,201 ±    47,433  ops/s
+ReadBench.orders200OldKeyOrder       thrpt   10     2823,373 ±    29,968  ops/s
+ReadBench.orders200Polish            thrpt   10     2653,844 ±    57,953  ops/s
+ReadBench.orders200PolishJsonbShape  thrpt   10     2368,707 ±   129,707  ops/s
+ReadBench.ordersProjectionSkipping   thrpt   10     5333,228 ±    71,566  ops/s
+ReadBench.typedShapes                thrpt   10     9740,881 ±   613,906  ops/s
+ReadBench.userJsonbShape             thrpt   10  3225544,134 ± 57762,478  ops/s
+ReadBench.userOldKeyOrder            thrpt   10  3495634,755 ± 74292,588  ops/s
+ReadBench.userPolish                 thrpt   10  3478050,072 ± 33343,656  ops/s
+ReadBench.userPolishJsonbShape       thrpt   10  3295225,802 ± 33251,088  ops/s
+ReadBench.userStatic                 thrpt   10  3473164,060 ± 30781,815  ops/s
+# Typed names: C1 = in-place matching (kept), T0 = 0.7.6 String + map
+## C1
+ReadBench.typedShapes                N/A  thrpt   10  9241,657 ±  90,961  ops/s
+ReadBench.typedShapesJsonbShape      N/A  thrpt   10  7957,923 ± 247,530  ops/s
+TinyBench.typedEvent             compact   avgt   10    65,028 ±   0,511  ns/op
+TinyBench.typedEvent               jsonb   avgt   10    72,802 ±   1,201  ns/op
+TinyBench.typedEventByType       compact   avgt   10    67,000 ±   4,052  ns/op
+TinyBench.typedEventByType         jsonb   avgt   10    78,214 ±   0,851  ns/op
+## T0
+ReadBench.typedShapes                N/A  thrpt   10  8565,645 ± 726,765  ops/s
+ReadBench.typedShapesJsonbShape      N/A  thrpt   10  7653,411 ± 308,739  ops/s
+TinyBench.typedEvent             compact   avgt   10    82,912 ±   0,991  ns/op
+TinyBench.typedEvent               jsonb   avgt   10    94,936 ±   2,469  ns/op
+TinyBench.typedEventByType       compact   avgt   10    90,286 ±   0,612  ns/op
+TinyBench.typedEventByType         jsonb   avgt   10   105,958 ±   1,204  ns/op

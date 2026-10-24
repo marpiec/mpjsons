@@ -307,6 +307,197 @@ Results (JDK 25.0.4.1, `Utf8OutputBench`, two forks, 23/10/2026; measured; `benc
   +20% (bean), +6% (strings) and +1% (orders), but −6% (numbers) and −5% (shapes). It also could not keep unpaired
   surrogates. So it was not adopted (`xUtf8String` rows in `utf8-output.txt`).
 
+## 4e. 0.7.6 against 0.6.51 (the last release before 0.7)
+
+How the comparison was set up (measured 23/10/2026, JDK 25.0.4.1, two forks with `-prof gc`, warm-up 3×2 s,
+measurement 5×2 s):
+
+- **Released jars:** 0.6.51 from the Maven repository and 0.7.6 as published from `377e666`. The two versions share
+  package names, so they cannot run side by side.
+- **Harness:** a standalone JMH project ran the same benchmark code with the same fixtures (`Models.scala`) twice,
+  once per version. Only the API calls differ (`markTypedClass`, the lenient constructor, bytes).
+- **Same content written:** both versions produce identical JSON content for every fixture (same length, same
+  multiset of bytes); 0.6.51 writes keys in reverse declaration order (docs/upgrading.md).
+- **Same values read:** each version reads its own output. 0.6.51 reads equal values, though its maps iterate in a
+  different order.
+- **Old key order:** the `old key order` rows show 0.7.6 reading JSON written by 0.6.51, as data stored by
+  applications on 0.6.x looks.
+- **Raw results:** `bench-results/release-0.6.51.txt` and `release-0.7.6.txt`.
+
+| Benchmark | 0.6.51 ops/s | 0.7.6 ops/s | speed-up | B/op 0.6.51 → 0.7.6 |
+|---|---:|---:|---:|---:|
+| **read** `User`, static deserializer | 950 640 | 3 081 474 | 3.24× | 1 896 → 256 |
+| read `User`, `deserialize[T]` | 783 411 | 2 825 938 | 3.61× | 1 992 → 352 |
+| read `User`, old key order | 950 619 | 2 901 440 | 3.05× | 1 896 → 256 |
+| read 200 orders (114 KB) | 956 | 2 746 | 2.87× | 1 705 876 → 244 601 |
+| read 200 orders, old key order | 967 | 2 412 | 2.50× | 1 705 876 → 242 201 |
+| read 200 orders into a projection (skipping) | 1 697 | 5 913 | 3.48× | 1 012 058 → 7 793 |
+| read `SimpleBean` | 343 508 | 1 081 272 | 3.15× | 4 816 → 1 032 |
+| read number arrays | 1 561 | 4 671 | 2.99× | 852 466 → 56 105 |
+| read strings (escapes, non-ASCII) | 14 155 | 42 550 | 3.01× | 116 273 → 42 464 |
+| read typed shapes | 2 350 | 9 611 | 4.09× | 676 009 → 58 064 |
+| **write** `User`, static serializer | 2 167 121 | 4 159 166 | 1.92× | 824 → 384 |
+| write `User`, `serialize[T]` | 1 585 417 | 3 049 086 | 1.92× | 920 → 480 |
+| write 200 orders | 1 981 | 3 256 | 1.64× | 701 778 → 250 297 |
+| write `SimpleBean` | 908 574 | 1 508 612 | 1.66× | 2 584 → 864 |
+| write number arrays | 6 074 | 9 577 | 1.58× | 469 689 → 100 704 |
+| write strings | 16 999 | 18 012 | ~1.06× (noise: ±19% on 0.6.51) | 100 276 → 65 768 |
+| write typed shapes | 5 994 | 11 497 | 1.92× | 336 593 → 45 744 |
+| **UTF-8 bytes** `User` (0.6.51: `getBytes`; 0.7.6: `serializeToBytes`) | 2 134 298 | 4 894 429 | 2.29× | 944 → 424 |
+| UTF-8 bytes, 200 orders | 1 936 | 3 328 | 1.72× | 815 578 → 250 337 |
+| UTF-8 bytes, strings | 13 884 | 24 857 | 1.79× | 153 233 → 27 328 |
+
+Reading is 2.5–4.1× faster with 63–99% less allocation. Writing is 1.6–1.9× faster (strings within noise), and
+UTF-8 output 1.7–2.3× faster, with 34–86% less allocation.
+
+Reading JSON in the old key order costs 0.7.6 about 12% on orders (2 412 vs 2 746 ops/s; the second row is noisy at
+±15%) and about 6% on `User`: key prediction misses, and every key takes the hash lookup. Data re-written by 0.7.x
+gets the full speed.
+
+Noisy rows (error above 5%):
+- 0.7.6 read orders: ±15.2%;
+- 0.6.51 write strings and strings bytes: ±19.1% and ±15.7%;
+- 0.7.6 write `SimpleBean`: ±8.2%.
+
+## 4f. Reading after 0.7.6: jsonb input and many tiny documents
+
+What prompted it: a production report that JSON read back from PostgreSQL `jsonb` columns was slower than mpjsons' own
+output, and that events are read one by one as documents of 10–30 characters.
+
+Why jsonb input is slower:
+- jsonb does not keep key order; it prints keys sorted by length, then bytes, with `", "` and `": "` separators
+  (PostgreSQL `jsonb_util.c` `lengthCompareJsonbString`, `jsonb.c`).
+- In 0.7.6, key prediction followed only the serializer's order. On jsonb input almost every key missed and took the
+  hash lookup.
+
+Changes, all with `sbt test` green (310 specs, including the differential fuzzers against the 0.7.2 copy):
+- **Two predicted key orders** (`BeanFieldTable`): the serializer's and jsonb's. `expected` indexes a precomputed
+  `predictions` array, "after field p, in order m". The bean loop calls the small `matchPredicted` and only on a miss
+  `find`.
+  - A first version kept the prediction in one bigger method. In one harness C2 compiled it standalone first and then
+    would not inline it ("already compiled into a big method"), which hid the whole gain.
+  - Replaced after 0.7.7 by learned hints, see §4g.
+- **`matchKey` uses `String.regionMatches`** instead of comparing char by char. Measured +5 to +19% in the standalone
+  harness, −3 to −5% in the in-repo one (`round5-key-compare.txt`); kept.
+- **Escaped strings**: bulk copies between escapes, `\u` decoded without a substring.
+- **Memoizer lookup before type resolution** when the context binds no type parameters: `deserialize(json, tpe)` and
+  typed values skip the reflection.
+- **Typed values**: type names already read are matched in place on the raw input (`TypedDeserializer.knownNames`),
+  only while the built-in String reader is in effect. This saves a String and a hash per value.
+- **Absent `Option` fields** get `None` through the generated `FieldWriters` instead of `Field.set`.
+- **Tried and reverted**: skipping whitespace runs out of line. It was +3% on large jsonb documents in-repo, but the
+  inline loop measured equal or better in the standalone harness (jsonb `User` +4.3%, tiny jsonb documents −3 to −4% ns)
+  (`round5-whitespace.txt`).
+
+Measured 24/10/2026, JDK 25.0.4.1. Standalone JMH project (the one used for §4e), 2 forks, `-prof gc`. Raw results
+are in `round5-release-0.7.6.txt` and `round5-candidate.txt`. The candidate still had the out-of-line whitespace
+skip; the revert measured equal or better (above).
+
+| Read benchmark | 0.7.6 ops/s | candidate ops/s | change |
+|---|---:|---:|---:|
+| `User`, static deserializer | 2 956 224 | 3 400 433 | +15.0% |
+| `User`, `deserialize(json, tpe)` | 2 781 744 | 3 304 891 | +18.8% |
+| `User`, jsonb shape | 2 247 043 | 2 665 842 | +18.6% |
+| `User`, jsonb shape, `deserialize(json, tpe)` | 2 124 744 | 2 514 104 | +18.3% |
+| `User`, old key order | 2 538 443 | 2 550 529 | +0.5% |
+| 200 orders | 2 373 | 2 642 | +11.3% |
+| 200 orders, jsonb shape | 1 877 | 2 050 | +9.2% |
+| 200 orders, old key order | 2 168 | 2 031 (±4%) | −6.3% |
+| 200 orders into a projection (skipping) | 5 133 | 4 973 | −3.1% |
+| strings | 37 472 | 43 731 (±6%) | +16.7% |
+| escaped documents | 4 421 (±5%) | 4 998 | +13.0% |
+| escaped documents, jsonb shape | 4 472 | 5 234 | +17.0% |
+| typed shapes | 8 622 | 9 232 | +7.1% (B/op −41%) |
+| typed shapes, jsonb shape | 6 900 | 7 505 | +8.8% (B/op −41%) |
+
+Tiny documents (`TinyBench`, ns/op, lower is better; compact / jsonb shape):
+
+| Document | 0.7.6 | candidate |
+|---|---:|---:|
+| `{"id":42}`, static | 42.7 / 46.8 | 44.2 / 50.7 |
+| `{"id":42}`, `deserialize(json, tpe)` | 55.7 / 56.9 | 51.6 / 58.0 |
+| `{"id":42}`, `deserialize(json, className)` | 55.0 / 60.6 | 49.6 / 55.9 |
+| `{"id":7}` into `(Long, Option[String])` | 48.1 / 51.0 | 44.5 / 50.6 |
+| `{"TinyCreated":{"id":5}}`, typed, static | 103.6 / 111.8 | 66.6 / 76.4 (B/op 128 → 72) |
+| same, `deserialize(json, tpe)` | 136.7 / 172.1 | 73.6 / 83.8 (B/op 144–160 → 72) |
+| `{"a":1,"b":true}` | 53.2 / 69.5 | 62.9 / 82.7 |
+| `{"v":"abc"}` | 44.4 / 51.1 | 49.5 / 57.0 |
+
+Reading the tiny-document rows:
+- Bimodal results: depending on what C2 compiles first, the bean reader is either inlined into the root call or not.
+  When it is, escape analysis removes the `StringIterator` (48 B less per call) and the read takes 8–14 ns less.
+- 0.7.6 landed in the fast mode more often in this harness (`pair`/`text` compact: ±6.6 / ±4.8 ns, B/op 48 / 88 are
+  averages of both modes).
+- A single fork with flags passed through JMH showed the reverse (0.7.6 48.4 ns, candidate 43.3 ns on `text`).
+- The jsonb rows of `pair`/`text` (same mode, same B/op) are 6–13 ns slower in this run, with the reverted whitespace
+  skip; after the revert they measured 3–4% faster than this.
+- In an application where the same bean type is also read nested, the slow mode is the likely one for both versions.
+
+The lesson for later work: results moved by 15–25% between harnesses with byte-identical library code (in-repo
+`JsonbShapeBench` vs the standalone project, and even the standalone benchmark class copied into the repo). The
+cause was C2 compile order and inlining, not the code under test. Check a change in both harnesses with several forks
+before trusting a few percent.
+
+## 4g. After 0.7.7: key order and Polish text without a penalty
+
+What prompted it: Neula's profile of 0.7.7 showed key matching no faster than in 0.7.6. Its explanation was Polish
+letters: they make Java store the whole input as UTF-16, and `regionMatches` against Latin-1 field names then takes a
+char-by-char path in the JDK. The owner's goals were no penalty for Polish text or for key order, and no complexity
+that does not pay for itself.
+
+What changed, all with `sbt test` green (311 specs, including the differential fuzzers against the 0.7.2 copy):
+- **Learned key hints replace the two fixed orders.**
+  - The table remembers the first key and, in each field, the key that followed it in an object read earlier.
+  - Any consistent order then predicts well after the first object: mpjsons', jsonb's sorted one, 0.6.x's reversed
+    one, or a client's own.
+  - Hints are plain fields written by any thread. They only point to fields `find` returned for that name, so a stale
+    hint costs one compare, never a wrong field. The 16-thread spec reads all key permutations of one type at once.
+  - Net code is smaller than 0.7.7's prediction: no order encoding and no jsonb sorting.
+- **Order-independent lookup on a miss**:
+  - the end of a quoted key comes from `String.indexOf`;
+  - the slot comes from the key's length and its first and last characters;
+  - keys are compared with `regionMatches`.
+
+What the measurements decided (`round6-variants.txt`, both harnesses, 2 forks):
+- **Lookup only, no prediction**: order-independent, but 13–23% slower on keys in the expected order. Prediction pays
+  for itself.
+- **Hints compared char by char instead of `regionMatches`**: 3–9% slower than `regionMatches`. Polish input
+  included; Neula's concern did not reproduce here.
+- **Typed-name matching in place, kept**: without it a tiny typed event took 18–28 ns more (+28–36%), and typed shapes
+  read 4–8% slower.
+
+Result against 0.7.7 (standalone harness, 24/10/2026, JDK 25.0.4.1, 2 forks, `-prof gc`; `round6-0.7.7.txt`,
+`round6-learned-hints.txt`). No benchmark got slower, and allocation is unchanged.
+
+| Read | 0.7.7 ops/s | now ops/s | change |
+|---|---:|---:|---:|
+| `User`, compact | 3 331 309 | 3 485 469 | +4.6% |
+| `User`, old (reversed) key order | 2 466 224 | 3 460 341 | +40.3% |
+| `User`, jsonb shape | 2 770 595 | 3 288 154 | +18.7% |
+| `User`, Polish text | 3 268 954 | 3 429 572 | +4.9% |
+| `User`, Polish text, jsonb shape | 2 772 571 | 3 228 261 | +16.4% |
+| 200 orders, compact | 2 730 | 2 840 | +4.0% |
+| 200 orders, old key order | 2 088 (±7%) | 2 855 | +36.7% |
+| 200 orders, jsonb shape | 2 226 | 2 438 | +9.5% |
+| 200 orders, Polish text | 2 590 | 2 685 | +3.6% |
+| 200 orders, Polish text, jsonb shape | 2 161 | 2 349 | +8.7% |
+| typed shapes / jsonb shape | 8 807 / 7 379 | 9 232 / 8 222 | +4.8% / +11.4% |
+| projection, escaped documents, strings | | | +0.2% to +2.6% |
+| tiny documents (`TinyBench`, ns/op) | | | 0 to −10.5% |
+
+What is left:
+- **Key order no longer costs anything**: `User` reads at 3.49 M ops/s in mpjsons' order and 3.46 M in reversed order;
+  orders at 2 840 and 2 855 ops/s.
+- **jsonb shape** is still 6–14% slower than compact. Those are the spaces after `,` and `:`, one more character per
+  token to skip.
+- **Polish text** costs nothing on `User` (−1.6%, within noise) and 5.5% on orders. That remainder is in the strings,
+  not the keys: a `substring` of a UTF-16 input goes through `StringUTF16.newString`, which first tries to compress
+  each value back to Latin-1. Every Java JSON library that returns compact Strings pays this. Avoiding it would mean
+  copying the input to a `char[]` per document, which is not worth it for 5%.
+- **Reference field writes** (Neula's request 5) were not changed. The generated writers already hold constant method
+  handles. A `VarHandle` performs the same receiver and type checks, and a direct `putfield` cannot write the final
+  fields of case classes, so there is no simple win.
+
 ## 5. Constraints to respect while optimising
 
 - Public API: `JsonTypeSerializer.serialize(obj, jsonBuilder: scala.collection.mutable.StringBuilder)`,

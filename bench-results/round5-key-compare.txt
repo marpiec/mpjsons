@@ -1,0 +1,33 @@
+# BeanFieldTable.matchKey: A = char-by-char loop, B = String.regionMatches (kept). 2 forks, 24/10/2026
+## standalone harness A
+CloneBench.readOrders               thrpt   10     2000,245 ±    26,063  ops/s
+CloneBench.readUser                 thrpt   10  2210775,613 ± 21681,393  ops/s
+ReadBench.orders200                 thrpt   10     2330,984 ±    20,498  ops/s
+ReadBench.orders200JsonbShape       thrpt   10     1900,115 ±    51,763  ops/s
+ReadBench.orders200OldKeyOrder      thrpt   10     1965,863 ±    95,869  ops/s
+ReadBench.ordersProjectionSkipping  thrpt   10     5168,592 ±   325,497  ops/s
+ReadBench.typedShapesJsonbShape     thrpt   10     7375,198 ±   186,905  ops/s
+ReadBench.userJsonbShape            thrpt   10  2342287,822 ± 32342,128  ops/s
+ReadBench.userOldKeyOrder           thrpt   10  2421467,747 ± 36958,161  ops/s
+ReadBench.userStatic                thrpt   10  2865687,307 ± 29863,908  ops/s
+## standalone harness B
+CloneBench.readOrders               thrpt   10     2168,434 ±    13,404  ops/s
+CloneBench.readUser                 thrpt   10  2462380,372 ± 44030,356  ops/s
+ReadBench.orders200                 thrpt   10     2618,840 ±    33,850  ops/s
+ReadBench.orders200JsonbShape       thrpt   10     2094,459 ±    59,472  ops/s
+ReadBench.orders200OldKeyOrder      thrpt   10     2067,103 ±    21,528  ops/s
+ReadBench.ordersProjectionSkipping  thrpt   10     5082,714 ±    69,494  ops/s
+ReadBench.typedShapesJsonbShape     thrpt   10     7013,905 ±   169,340  ops/s
+ReadBench.userJsonbShape            thrpt   10  2598396,715 ± 65339,218  ops/s
+ReadBench.userOldKeyOrder           thrpt   10  2554753,105 ± 23754,620  ops/s
+ReadBench.userStatic                thrpt   10  3416151,484 ± 57055,326  ops/s
+## in-repo JsonbShapeBench A
+JsonbShapeBench.readOrders  current    jsonb  thrpt   10     2243,169 ±    22,213  ops/s
+JsonbShapeBench.readOrders  current  compact  thrpt   10     2840,639 ±    57,549  ops/s
+JsonbShapeBench.readUser    current    jsonb  thrpt   10  2792727,611 ± 19434,488  ops/s
+JsonbShapeBench.readUser    current  compact  thrpt   10  3500349,508 ± 59639,477  ops/s
+## in-repo JsonbShapeBench B
+JsonbShapeBench.readOrders  current    jsonb  thrpt   10     2185,496 ±     11,032  ops/s
+JsonbShapeBench.readOrders  current  compact  thrpt   10     2721,272 ±     23,382  ops/s
+JsonbShapeBench.readUser    current    jsonb  thrpt   10  2700098,839 ±  40146,536  ops/s
+JsonbShapeBench.readUser    current  compact  thrpt   10  3327017,198 ± 138995,415  ops/s

@@ -5,6 +5,7 @@ import io.mpjsons.impl.util.Messages
 import io.mpjsons.impl.util.{Context, TypesUtil}
 import io.mpjsons.impl.{DeserializerFactory, SerializerFactory, StringIterator}
 import io.mpjsons.impl.serializer.{StringSerializer, Utf8Output, Utf8Writer}
+import io.mpjsons.impl.deserializer.values.StringDeserializer
 import io.mpjsons.{JsonTypeDeserializer, JsonTypeSerializer}
 
 import java.nio.charset.StandardCharsets
@@ -13,6 +14,11 @@ import scala.reflect.runtime.universe._
 
 
 object TypedConverter {
+
+  /** Type names matched in place by one TypedDeserializer (see knownNames); further names use the map only. */
+  private final val MaxKnownNames = 32
+
+  private final class KnownName(val name: String, val deserializer: JsonTypeDeserializer[AnyRef])
 
   /**
    * Writes {"Name":{...}} where Name is the `@typeName` alias of the runtime class, or its simple name.
@@ -104,17 +110,30 @@ object TypedConverter {
     private val rootContext = Context(List.empty, Map.empty)
     private val classLoader: ClassLoader = Option(markedClass.getClassLoader).getOrElse(getClass.getClassLoader)
 
+    /**
+     * Type names already read, with their deserializers, matched in place on the raw input (no String per value, no
+     * hashing); copied on write. Only names without '"' and '\' are kept: for them a raw match is exactly what the
+     * built-in String reader returns, so it is used only while that reader is in effect.
+     */
+    @volatile private var knownNames: Array[KnownName] = Array.empty
+
     override def deserialize(jsonIterator: StringIterator): T = {
 
       jsonIterator.consumeObjectStart()
 
-      val typeName = extractTypeName(jsonIterator)
-
-      var innerElementDeserializer = deserializers.get(typeName)
+      val stringDeserializer = deserializerFactory.getDeserializer[String](stringType, rootContext)
+      jsonIterator.skipWhitespaceChars()
+      var innerElementDeserializer = if (stringDeserializer eq StringDeserializer) matchKnownName(jsonIterator) else null
       if (innerElementDeserializer == null) {
-        val elementType = TypesUtil.getTypeFromClass(resolveClass(typeName))
-        innerElementDeserializer = deserializerFactory.getDeserializer(elementType, Context(List.empty, Map.empty), allowSuperType = false).asInstanceOf[JsonTypeDeserializer[AnyRef]]
-        deserializers.putIfAbsent(typeName, innerElementDeserializer)
+        val typeName = stringDeserializer.deserialize(jsonIterator)
+
+        innerElementDeserializer = deserializers.get(typeName)
+        if (innerElementDeserializer == null) {
+          val elementType = TypesUtil.getTypeFromClass(resolveClass(typeName))
+          innerElementDeserializer = deserializerFactory.getDeserializer(elementType, Context(List.empty, Map.empty), allowSuperType = false).asInstanceOf[JsonTypeDeserializer[AnyRef]]
+          deserializers.putIfAbsent(typeName, innerElementDeserializer)
+        }
+        remember(typeName, innerElementDeserializer)
       }
 
       jsonIterator.skipWhitespaceChars()
@@ -127,6 +146,37 @@ object TypedConverter {
       jsonIterator.nextChar()
 
       value
+    }
+
+    /** The deserializer of the known name quoted at the cursor, with the cursor after its closing quote; else null. */
+    private def matchKnownName(jsonIterator: StringIterator): JsonTypeDeserializer[AnyRef] = {
+      if (jsonIterator.currentChar == '"') {
+        val names = knownNames
+        val input = jsonIterator.stringValue
+        val start = jsonIterator.nextIndex
+        var index = 0
+        while (index < names.length) {
+          val known = names(index)
+          val end = start + known.name.length
+          if (end < jsonIterator.stringLength && input.charAt(end) == '"' && input.regionMatches(start, known.name, 0, known.name.length)) {
+            jsonIterator.seek(end + 1)
+            return known.deserializer
+          }
+          index += 1
+        }
+      }
+      null
+    }
+
+    private def remember(typeName: String, deserializer: JsonTypeDeserializer[AnyRef]): Unit = {
+      if (knownNames.length < TypedConverter.MaxKnownNames && typeName.indexOf('"') < 0 && typeName.indexOf('\\') < 0) {
+        synchronized {
+          val names = knownNames
+          if (names.length < TypedConverter.MaxKnownNames && !names.exists(_.name == typeName)) {
+            knownNames = names :+ new KnownName(typeName, deserializer)
+          }
+        }
+      }
     }
 
     private def resolveClass(typeName: String): Class[_] = {

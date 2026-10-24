@@ -1,0 +1,101 @@
+Benchmark                                             (impl)  (shape)   Mode  Cnt        Score       Error   Units
+JsonbShapeBench.readEscapedDocs                       legacy  compact  thrpt    5     1758,690 ±    40,016   ops/s
+JsonbShapeBench.readEscapedDocs:gc.alloc.rate         legacy  compact  thrpt    5      645,874 ±    14,687  MB/sec
+JsonbShapeBench.readEscapedDocs:gc.alloc.rate.norm    legacy  compact  thrpt    5   385129,998 ±     0,050    B/op
+JsonbShapeBench.readEscapedDocs:gc.count              legacy  compact  thrpt    5       53,000              counts
+JsonbShapeBench.readEscapedDocs:gc.time               legacy  compact  thrpt    5       60,000                  ms
+JsonbShapeBench.readEscapedDocs                       legacy    jsonb  thrpt    5     1840,618 ±     9,783   ops/s
+JsonbShapeBench.readEscapedDocs:gc.alloc.rate         legacy    jsonb  thrpt    5      651,237 ±     3,426  MB/sec
+JsonbShapeBench.readEscapedDocs:gc.alloc.rate.norm    legacy    jsonb  thrpt    5   371041,910 ±     0,016    B/op
+JsonbShapeBench.readEscapedDocs:gc.count              legacy    jsonb  thrpt    5       52,000              counts
+JsonbShapeBench.readEscapedDocs:gc.time               legacy    jsonb  thrpt    5       61,000                  ms
+JsonbShapeBench.readEscapedDocs                      current  compact  thrpt    5     4117,955 ±   133,368   ops/s
+JsonbShapeBench.readEscapedDocs:gc.alloc.rate        current  compact  thrpt    5      594,607 ±    19,284  MB/sec
+JsonbShapeBench.readEscapedDocs:gc.alloc.rate.norm   current  compact  thrpt    5   151424,854 ±     0,034    B/op
+JsonbShapeBench.readEscapedDocs:gc.count             current  compact  thrpt    5       48,000              counts
+JsonbShapeBench.readEscapedDocs:gc.time              current  compact  thrpt    5       55,000                  ms
+JsonbShapeBench.readEscapedDocs                      current    jsonb  thrpt    5     4010,264 ±   253,663   ops/s
+JsonbShapeBench.readEscapedDocs:gc.alloc.rate        current    jsonb  thrpt    5      578,606 ±    36,599  MB/sec
+JsonbShapeBench.readEscapedDocs:gc.alloc.rate.norm   current    jsonb  thrpt    5   151304,877 ±     0,060    B/op
+JsonbShapeBench.readEscapedDocs:gc.count             current    jsonb  thrpt    5       47,000              counts
+JsonbShapeBench.readEscapedDocs:gc.time              current    jsonb  thrpt    5       55,000                  ms
+JsonbShapeBench.readOrders                            legacy  compact  thrpt    5     1729,953 ±    26,432   ops/s
+JsonbShapeBench.readOrders:gc.alloc.rate              legacy  compact  thrpt    5      632,220 ±     9,695  MB/sec
+JsonbShapeBench.readOrders:gc.alloc.rate.norm         legacy  compact  thrpt    5   383250,031 ±     0,041    B/op
+JsonbShapeBench.readOrders:gc.count                   legacy  compact  thrpt    5       51,000              counts
+JsonbShapeBench.readOrders:gc.time                    legacy  compact  thrpt    5       57,000                  ms
+JsonbShapeBench.readOrders                            legacy    jsonb  thrpt    5     1519,393 ±    52,072   ops/s
+JsonbShapeBench.readOrders:gc.alloc.rate              legacy    jsonb  thrpt    5      564,542 ±    19,343  MB/sec
+JsonbShapeBench.readOrders:gc.alloc.rate.norm         legacy    jsonb  thrpt    5   389650,314 ±     0,086    B/op
+JsonbShapeBench.readOrders:gc.count                   legacy    jsonb  thrpt    5       45,000              counts
+JsonbShapeBench.readOrders:gc.time                    legacy    jsonb  thrpt    5       52,000                  ms
+JsonbShapeBench.readOrders                           current  compact  thrpt    5     2880,983 ±    42,937   ops/s
+JsonbShapeBench.readOrders:gc.alloc.rate             current  compact  thrpt    5      665,384 ±     9,968  MB/sec
+JsonbShapeBench.readOrders:gc.alloc.rate.norm        current  compact  thrpt    5   242201,222 ±     0,027    B/op
+JsonbShapeBench.readOrders:gc.count                  current  compact  thrpt    5       54,000              counts
+JsonbShapeBench.readOrders:gc.time                   current  compact  thrpt    5       61,000                  ms
+JsonbShapeBench.readOrders                           current    jsonb  thrpt    5     1992,366 ±    19,089   ops/s
+JsonbShapeBench.readOrders:gc.alloc.rate             current    jsonb  thrpt    5      481,427 ±     4,614  MB/sec
+JsonbShapeBench.readOrders:gc.alloc.rate.norm        current    jsonb  thrpt    5   253401,765 ±     0,010    B/op
+JsonbShapeBench.readOrders:gc.count                  current    jsonb  thrpt    5       39,000              counts
+JsonbShapeBench.readOrders:gc.time                   current    jsonb  thrpt    5       45,000                  ms
+JsonbShapeBench.readOrdersByType                      legacy  compact  thrpt    5     1785,347 ±    40,714   ops/s
+JsonbShapeBench.readOrdersByType:gc.alloc.rate        legacy  compact  thrpt    5      644,328 ±    14,743  MB/sec
+JsonbShapeBench.readOrdersByType:gc.alloc.rate.norm   legacy  compact  thrpt    5   378473,970 ±     0,053    B/op
+JsonbShapeBench.readOrdersByType:gc.count             legacy  compact  thrpt    5       52,000              counts
+JsonbShapeBench.readOrdersByType:gc.time              legacy  compact  thrpt    5       61,000                  ms
+JsonbShapeBench.readOrdersByType                      legacy    jsonb  thrpt    5     1520,190 ±    35,964   ops/s
+JsonbShapeBench.readOrdersByType:gc.alloc.rate        legacy    jsonb  thrpt    5      564,867 ±    13,316  MB/sec
+JsonbShapeBench.readOrdersByType:gc.alloc.rate.norm   legacy    jsonb  thrpt    5   389674,313 ±     0,040    B/op
+JsonbShapeBench.readOrdersByType:gc.count             legacy    jsonb  thrpt    5       45,000              counts
+JsonbShapeBench.readOrdersByType:gc.time              legacy    jsonb  thrpt    5       51,000                  ms
+JsonbShapeBench.readOrdersByType                     current  compact  thrpt    5     2902,129 ±    91,248   ops/s
+JsonbShapeBench.readOrdersByType:gc.alloc.rate       current  compact  thrpt    5      670,257 ±    21,153  MB/sec
+JsonbShapeBench.readOrdersByType:gc.alloc.rate.norm  current  compact  thrpt    5   242201,212 ±     0,048    B/op
+JsonbShapeBench.readOrdersByType:gc.count            current  compact  thrpt    5       54,000              counts
+JsonbShapeBench.readOrdersByType:gc.time             current  compact  thrpt    5       62,000                  ms
+JsonbShapeBench.readOrdersByType                     current    jsonb  thrpt    5     1992,869 ±    17,706   ops/s
+JsonbShapeBench.readOrdersByType:gc.alloc.rate       current    jsonb  thrpt    5      481,543 ±     4,273  MB/sec
+JsonbShapeBench.readOrdersByType:gc.alloc.rate.norm  current    jsonb  thrpt    5   253401,766 ±     0,023    B/op
+JsonbShapeBench.readOrdersByType:gc.count            current    jsonb  thrpt    5       39,000              counts
+JsonbShapeBench.readOrdersByType:gc.time             current    jsonb  thrpt    5       45,000                  ms
+JsonbShapeBench.readTypedShapes                       legacy  compact  thrpt    5     3588,935 ±   111,295   ops/s
+JsonbShapeBench.readTypedShapes:gc.alloc.rate         legacy  compact  thrpt    5     1025,840 ±    31,802  MB/sec
+JsonbShapeBench.readTypedShapes:gc.alloc.rate.norm    legacy  compact  thrpt    5   299749,546 ±     1,288    B/op
+JsonbShapeBench.readTypedShapes:gc.count              legacy  compact  thrpt    5       68,000              counts
+JsonbShapeBench.readTypedShapes:gc.time               legacy  compact  thrpt    5       84,000                  ms
+JsonbShapeBench.readTypedShapes                       legacy    jsonb  thrpt    5     3401,319 ±    64,597   ops/s
+JsonbShapeBench.readTypedShapes:gc.alloc.rate         legacy    jsonb  thrpt    5      972,210 ±    18,465  MB/sec
+JsonbShapeBench.readTypedShapes:gc.alloc.rate.norm    legacy    jsonb  thrpt    5   299750,464 ±     0,806    B/op
+JsonbShapeBench.readTypedShapes:gc.count              legacy    jsonb  thrpt    5       64,000              counts
+JsonbShapeBench.readTypedShapes:gc.time               legacy    jsonb  thrpt    5       79,000                  ms
+JsonbShapeBench.readTypedShapes                      current  compact  thrpt    5     8217,821 ±   135,099   ops/s
+JsonbShapeBench.readTypedShapes:gc.alloc.rate        current  compact  thrpt    5      455,001 ±     7,496  MB/sec
+JsonbShapeBench.readTypedShapes:gc.alloc.rate.norm   current  compact  thrpt    5    58064,429 ±     0,013    B/op
+JsonbShapeBench.readTypedShapes:gc.count             current  compact  thrpt    5       36,000              counts
+JsonbShapeBench.readTypedShapes:gc.time              current  compact  thrpt    5       43,000                  ms
+JsonbShapeBench.readTypedShapes                      current    jsonb  thrpt    5     6286,024 ±   224,080   ops/s
+JsonbShapeBench.readTypedShapes:gc.alloc.rate        current    jsonb  thrpt    5      348,050 ±    12,401  MB/sec
+JsonbShapeBench.readTypedShapes:gc.alloc.rate.norm   current    jsonb  thrpt    5    58064,559 ±     0,016    B/op
+JsonbShapeBench.readTypedShapes:gc.count             current    jsonb  thrpt    5       29,000              counts
+JsonbShapeBench.readTypedShapes:gc.time              current    jsonb  thrpt    5       34,000                  ms
+JsonbShapeBench.readUser                              legacy  compact  thrpt    5  2201366,503 ± 25160,307   ops/s
+JsonbShapeBench.readUser:gc.alloc.rate                legacy  compact  thrpt    5      722,103 ±     8,295  MB/sec
+JsonbShapeBench.readUser:gc.alloc.rate.norm           legacy  compact  thrpt    5      344,002 ±     0,001    B/op
+JsonbShapeBench.readUser:gc.count                     legacy  compact  thrpt    5       58,000              counts
+JsonbShapeBench.readUser:gc.time                      legacy  compact  thrpt    5       64,000                  ms
+JsonbShapeBench.readUser                              legacy    jsonb  thrpt    5  2045454,155 ± 32071,471   ops/s
+JsonbShapeBench.readUser:gc.alloc.rate                legacy    jsonb  thrpt    5      670,961 ±    10,514  MB/sec
+JsonbShapeBench.readUser:gc.alloc.rate.norm           legacy    jsonb  thrpt    5      344,002 ±     0,001    B/op
+JsonbShapeBench.readUser:gc.count                     legacy    jsonb  thrpt    5       54,000              counts
+JsonbShapeBench.readUser:gc.time                      legacy    jsonb  thrpt    5       59,000                  ms
+JsonbShapeBench.readUser                             current  compact  thrpt    5  3577351,341 ± 49132,053   ops/s
+JsonbShapeBench.readUser:gc.alloc.rate               current  compact  thrpt    5      873,275 ±    11,960  MB/sec
+JsonbShapeBench.readUser:gc.alloc.rate.norm          current  compact  thrpt    5      256,001 ±     0,001    B/op
+JsonbShapeBench.readUser:gc.count                    current  compact  thrpt    5       70,000              counts
+JsonbShapeBench.readUser:gc.time                     current  compact  thrpt    5       77,000                  ms
+JsonbShapeBench.readUser                             current    jsonb  thrpt    5  2379048,116 ± 44323,768   ops/s
+JsonbShapeBench.readUser:gc.alloc.rate               current    jsonb  thrpt    5      580,755 ±    10,786  MB/sec
+JsonbShapeBench.readUser:gc.alloc.rate.norm          current    jsonb  thrpt    5      256,001 ±     0,001    B/op
+JsonbShapeBench.readUser:gc.count                    current    jsonb  thrpt    5       47,000              counts
+JsonbShapeBench.readUser:gc.time                     current    jsonb  thrpt    5       53,000                  ms

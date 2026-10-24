@@ -56,8 +56,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   lazy val fieldTable: BeanFieldTable = {
     val typeName = tpe.toString
     val jsonNames = fields.map(_.jsonName).toSet
-    // Only when values are written into an allocated instance; the constructor path passes them as arguments.
-    val writers = if (useConstructor) null else FieldWriters.forFields(fields.map(_.field))
+    val writers = fieldWriters
     val entries = fields.flatMap { field =>
       // A skipped field keeps its keys so that stored JSON still reads, but the value is discarded; no deserializer is
       // built, so its type may have no reader (e.g. an unmarked trait).
@@ -81,8 +80,15 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     val ordered = entries.filter(entry => !entry.skipped && fields.exists(f => f.field == entry.field && f.jsonName == entry.name))
     new BeanFieldTable(entries, ordered)
   }
+  /**
+   * Writers of all fields, in `fields` order (see FieldWriters); only when values are written into an allocated
+   * instance, the constructor path passes them as arguments.
+   */
+  private lazy val fieldWriters: FieldWriters = if (useConstructor) null else FieldWriters.forFields(fields.map(_.field))
   /** Option fields are initialised to None when construction left them null, so an absent key reads as None. */
   private lazy val optionFields: Array[Field] = fields.filter(_.tpe <:< BeanDeserializer.optionType).map(_.field)
+  /** Index in `fieldWriters` of each of `optionFields`. */
+  private lazy val optionWriterSlots: Array[Int] = optionFields.map(option => fields.indexWhere(_.field == option))
   /** Constructor arguments for absent keys: zero / false for primitives, None for Options, null otherwise. */
   private lazy val argumentDefaults: Array[AnyRef] =
     if (useConstructor) BeanDeserializer.argumentDefaults(primaryConstructor, constructorParams, fields) else null
@@ -105,20 +111,23 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     }
     // Per-call state lives in locals only: the deserializer is shared between threads.
     var assignedOptions = 0L
-    var expected = 0
+    var expected = table.start
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
 
-      val field = table.find(jsonIterator, expected)
+      var field = table.matchPredicted(jsonIterator, expected)
+      if (field == null) {
+        field = table.find(jsonIterator, expected)
+      }
 
       if (field != null) {
+        expected = table.next(field, expected)
         jsonIterator.consumeFieldValueSeparator()
         field.set(instance.asInstanceOf[AnyRef], jsonIterator)
         if (field.optionSlot >= 0) {
           assignedOptions |= 1L << field.optionSlot
         }
-        expected = field.order + 1
       } else {
         skipOrFail(jsonIterator)
         expected = -1 // input not written by mpjsons for this type: no prediction until a field matches again
@@ -142,16 +151,19 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     val table = fieldTable
     val arguments = argumentDefaults.clone()
     var lateFields: List[(BeanField, AnyRef)] = Nil
-    var expected = 0
+    var expected = table.start
 
     jsonIterator.skipWhitespaceChars()
     while (jsonIterator.currentChar != '}') {
 
-      val field = table.find(jsonIterator, expected)
+      var field = table.matchPredicted(jsonIterator, expected)
+      if (field == null) {
+        field = table.find(jsonIterator, expected)
+      }
 
       if (field != null) {
         jsonIterator.consumeFieldValueSeparator()
-        expected = field.order + 1
+        expected = table.next(field, expected)
         val value = field.readValue(jsonIterator)
         if (field.argIndex >= 0) {
           arguments(field.argIndex) = value
@@ -195,16 +207,21 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
   /**
    * Same result as `initialiseOptions` before the key loop: an Option field that no key was written to is set to None
-   * when construction left it null. An instance allocated without a constructor has only null fields, so it is not read.
+   * when construction left it null. An instance allocated without a constructor has only null fields, so it is not
+   * read, and None is written through the generated writers like any other value.
    */
   private def initialiseAbsentOptions(instance: AnyRef, assigned: Long): Unit = {
     val options = optionFields
     var index = 0
     while (index < options.length) {
       if ((assigned & (1L << index)) == 0) {
-        val field = options(index)
-        if (constructor == null || field.get(instance) == null) {
-          field.set(instance, None)
+        if (constructor == null) {
+          fieldWriters.setObject(instance, optionWriterSlots(index), None)
+        } else {
+          val field = options(index)
+          if (field.get(instance) == null) {
+            field.set(instance, None)
+          }
         }
       }
       index += 1

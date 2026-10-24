@@ -1,0 +1,27 @@
+# skipWhitespaceChars: D = run skipped out of line, E = inline while loop (kept). Standalone harness, 2 forks, 24/10/2026
+## D
+ReadBench.orders200                N/A  thrpt   10     2589,017 ±    49,411  ops/s
+ReadBench.orders200JsonbShape      N/A  thrpt   10     2086,769 ±   110,764  ops/s
+ReadBench.userJsonbShape           N/A  thrpt   10  2632424,562 ± 18732,965  ops/s
+ReadBench.userStatic               N/A  thrpt   10  3388521,424 ± 41283,786  ops/s
+TinyBench.idStatic             compact   avgt   10       43,433 ±     3,075  ns/op
+TinyBench.idStatic               jsonb   avgt   10       48,918 ±     5,070  ns/op
+TinyBench.pair                 compact   avgt   10       62,817 ±     0,829  ns/op
+TinyBench.pair                   jsonb   avgt   10       81,593 ±     3,681  ns/op
+TinyBench.text                 compact   avgt   10       49,486 ±     0,698  ns/op
+TinyBench.text                   jsonb   avgt   10       57,646 ±     1,211  ns/op
+TinyBench.typedEvent           compact   avgt   10       65,363 ±     0,488  ns/op
+TinyBench.typedEvent             jsonb   avgt   10       75,056 ±     1,932  ns/op
+## E
+ReadBench.orders200                N/A  thrpt   10     2572,639 ±    61,533  ops/s
+ReadBench.orders200JsonbShape      N/A  thrpt   10     2127,532 ±    55,227  ops/s
+ReadBench.userJsonbShape           N/A  thrpt   10  2745602,983 ± 21479,703  ops/s
+ReadBench.userStatic               N/A  thrpt   10  3357783,695 ± 11998,154  ops/s
+TinyBench.idStatic             compact   avgt   10       42,451 ±     2,369  ns/op
+TinyBench.idStatic               jsonb   avgt   10       46,925 ±     4,433  ns/op
+TinyBench.pair                 compact   avgt   10       62,737 ±     0,498  ns/op
+TinyBench.pair                   jsonb   avgt   10       77,963 ±     5,549  ns/op
+TinyBench.text                 compact   avgt   10       49,722 ±     0,950  ns/op
+TinyBench.text                   jsonb   avgt   10       55,962 ±     0,883  ns/op
+TinyBench.typedEvent           compact   avgt   10       64,748 ±     2,277  ns/op
+TinyBench.typedEvent             jsonb   avgt   10       74,166 ±     4,278  ns/op

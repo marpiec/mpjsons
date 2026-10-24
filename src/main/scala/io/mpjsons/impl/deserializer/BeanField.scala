@@ -36,10 +36,14 @@ abstract class BeanField(val name: String, val field: Field, nullValue: NullValu
   protected var slot: Int = 0
 
   /**
-   * Position of this field's JSON key in the order the serializer writes keys (see BeanFieldTable.find), or -1.
-   * Set before the owning BeanFieldTable is published and never changed afterwards.
+   * Key prediction state (see BeanFieldTable) after this field's key when the object follows the serializer's key
+   * order, or -1 when the field is not predicted. Set before the owning BeanFieldTable is published and never changed
+   * afterwards.
    */
-  private[deserializer] var order: Int = -1
+  private[deserializer] var afterInSerializerOrder: Int = -1
+
+  /** Same as `afterInSerializerOrder`, when the object follows PostgreSQL jsonb's key order. */
+  private[deserializer] var afterInJsonbOrder: Int = -1
 
   /**
    * Index of this field among the bean's Option fields, or -1 when it is not an Option field or when a value

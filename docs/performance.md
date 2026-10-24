@@ -359,6 +359,84 @@ Noisy rows (error above 5%):
 - 0.6.51 write strings and strings bytes: ±19.1% and ±15.7%;
 - 0.7.6 write `SimpleBean`: ±8.2%.
 
+## 4f. Reading after 0.7.6: jsonb input and many tiny documents
+
+What prompted it: a production report that JSON read back from PostgreSQL `jsonb` columns was slower than mpjsons' own
+output, and that events are read one by one as documents of 10–30 characters.
+
+Why jsonb input is slower:
+- jsonb does not keep key order; it prints keys sorted by length, then bytes, with `", "` and `": "` separators
+  (PostgreSQL `jsonb_util.c` `lengthCompareJsonbString`, `jsonb.c`).
+- In 0.7.6, key prediction followed only the serializer's order. On jsonb input almost every key missed and took the
+  hash lookup.
+
+Changes, all with `sbt test` green (310 specs, including the differential fuzzers against the 0.7.2 copy):
+- **Two predicted key orders** (`BeanFieldTable`): the serializer's and jsonb's. `expected` indexes a precomputed
+  `predictions` array, "after field p, in order m". The bean loop calls the small `matchPredicted` and only on a miss
+  `find`.
+  - A first version kept the prediction in one bigger method. In one harness C2 compiled it standalone first and then
+    would not inline it ("already compiled into a big method"), which hid the whole gain.
+- **`matchKey` uses `String.regionMatches`** instead of comparing char by char. Measured +5 to +19% in the standalone
+  harness, −3 to −5% in the in-repo one (`round5-key-compare.txt`); kept.
+- **Escaped strings**: bulk copies between escapes, `\u` decoded without a substring.
+- **Memoizer lookup before type resolution** when the context binds no type parameters: `deserialize(json, tpe)` and
+  typed values skip the reflection.
+- **Typed values**: type names already read are matched in place on the raw input (`TypedDeserializer.knownNames`),
+  only while the built-in String reader is in effect. This saves a String and a hash per value.
+- **Absent `Option` fields** get `None` through the generated `FieldWriters` instead of `Field.set`.
+- **Tried and reverted**: skipping whitespace runs out of line. It was +3% on large jsonb documents in-repo, but the
+  inline loop measured equal or better in the standalone harness (jsonb `User` +4.3%, tiny jsonb documents −3 to −4% ns)
+  (`round5-whitespace.txt`).
+
+Measured 24/10/2026, JDK 25.0.4.1. Standalone JMH project (the one used for §4e), 2 forks, `-prof gc`. Raw results
+are in `round5-release-0.7.6.txt` and `round5-candidate.txt`. The candidate still had the out-of-line whitespace
+skip; the revert measured equal or better (above).
+
+| Read benchmark | 0.7.6 ops/s | candidate ops/s | change |
+|---|---:|---:|---:|
+| `User`, static deserializer | 2 956 224 | 3 400 433 | +15.0% |
+| `User`, `deserialize(json, tpe)` | 2 781 744 | 3 304 891 | +18.8% |
+| `User`, jsonb shape | 2 247 043 | 2 665 842 | +18.6% |
+| `User`, jsonb shape, `deserialize(json, tpe)` | 2 124 744 | 2 514 104 | +18.3% |
+| `User`, old key order | 2 538 443 | 2 550 529 | +0.5% |
+| 200 orders | 2 373 | 2 642 | +11.3% |
+| 200 orders, jsonb shape | 1 877 | 2 050 | +9.2% |
+| 200 orders, old key order | 2 168 | 2 031 (±4%) | −6.3% |
+| 200 orders into a projection (skipping) | 5 133 | 4 973 | −3.1% |
+| strings | 37 472 | 43 731 (±6%) | +16.7% |
+| escaped documents | 4 421 (±5%) | 4 998 | +13.0% |
+| escaped documents, jsonb shape | 4 472 | 5 234 | +17.0% |
+| typed shapes | 8 622 | 9 232 | +7.1% (B/op −41%) |
+| typed shapes, jsonb shape | 6 900 | 7 505 | +8.8% (B/op −41%) |
+
+Tiny documents (`TinyBench`, ns/op, lower is better; compact / jsonb shape):
+
+| Document | 0.7.6 | candidate |
+|---|---:|---:|
+| `{"id":42}`, static | 42.7 / 46.8 | 44.2 / 50.7 |
+| `{"id":42}`, `deserialize(json, tpe)` | 55.7 / 56.9 | 51.6 / 58.0 |
+| `{"id":42}`, `deserialize(json, className)` | 55.0 / 60.6 | 49.6 / 55.9 |
+| `{"id":7}` into `(Long, Option[String])` | 48.1 / 51.0 | 44.5 / 50.6 |
+| `{"TinyCreated":{"id":5}}`, typed, static | 103.6 / 111.8 | 66.6 / 76.4 (B/op 128 → 72) |
+| same, `deserialize(json, tpe)` | 136.7 / 172.1 | 73.6 / 83.8 (B/op 144–160 → 72) |
+| `{"a":1,"b":true}` | 53.2 / 69.5 | 62.9 / 82.7 |
+| `{"v":"abc"}` | 44.4 / 51.1 | 49.5 / 57.0 |
+
+Reading the tiny-document rows:
+- Bimodal results: depending on what C2 compiles first, the bean reader is either inlined into the root call or not.
+  When it is, escape analysis removes the `StringIterator` (48 B less per call) and the read takes 8–14 ns less.
+- 0.7.6 landed in the fast mode more often in this harness (`pair`/`text` compact: ±6.6 / ±4.8 ns, B/op 48 / 88 are
+  averages of both modes).
+- A single fork with flags passed through JMH showed the reverse (0.7.6 48.4 ns, candidate 43.3 ns on `text`).
+- The jsonb rows of `pair`/`text` (same mode, same B/op) are 6–13 ns slower in this run, with the reverted whitespace
+  skip; after the revert they measured 3–4% faster than this.
+- In an application where the same bean type is also read nested, the slow mode is the likely one for both versions.
+
+The lesson for later work: results moved by 15–25% between harnesses with byte-identical library code (in-repo
+`JsonbShapeBench` vs the standalone project, and even the standalone benchmark class copied into the repo). The
+cause was C2 compile order and inlining, not the code under test. Check a change in both harnesses with several forks
+before trusting a few percent.
+
 ## 5. Constraints to respect while optimising
 
 - Public API: `JsonTypeSerializer.serialize(obj, jsonBuilder: scala.collection.mutable.StringBuilder)`,

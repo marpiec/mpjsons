@@ -29,11 +29,12 @@ private object ErrorMessageFormatter {
     val suffix = if (end < input.length) "..." else ""
     val window = printable(input.substring(start, end))
     val caret = " " * (prefix.length + position - start) + "^"
-    s"""|Problem deserializing: $tpe
-        |Problem: ${e.toString}
-        |At position $position of ${input.length}:
-        |$prefix$window$suffix
-        |$caret""".stripMargin
+    // explicit '\n': a multi-line literal would take the line endings of the checked-out source (CRLF on Windows)
+    "Problem deserializing: " + tpe + "\n" +
+      "Problem: " + e.toString + "\n" +
+      "At position " + position + " of " + input.length + ":\n" +
+      prefix + window + suffix + "\n" +
+      caret
   }
 
   /**

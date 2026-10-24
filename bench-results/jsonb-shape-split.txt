@@ -1,0 +1,25 @@
+Benchmark                         (impl)  (shape)   Mode  Cnt        Score       Error  Units
+JsonbShapeBench.readOrders        legacy  compact  thrpt    5     1778,166 ±    40,392  ops/s
+JsonbShapeBench.readOrders        legacy   spaced  thrpt    5     1502,549 ±    34,445  ops/s
+JsonbShapeBench.readOrders        legacy   sorted  thrpt    5     1816,522 ±    39,628  ops/s
+JsonbShapeBench.readOrders        legacy    jsonb  thrpt    5     1474,897 ±    17,302  ops/s
+JsonbShapeBench.readOrders       current  compact  thrpt    5     2891,652 ±    17,373  ops/s
+JsonbShapeBench.readOrders       current   spaced  thrpt    5     2246,887 ±    31,199  ops/s
+JsonbShapeBench.readOrders       current   sorted  thrpt    5     2299,180 ±    35,494  ops/s
+JsonbShapeBench.readOrders       current    jsonb  thrpt    5     1975,789 ±    23,428  ops/s
+JsonbShapeBench.readTypedShapes   legacy  compact  thrpt    5     3680,592 ±    50,733  ops/s
+JsonbShapeBench.readTypedShapes   legacy   spaced  thrpt    5     3371,674 ±    25,431  ops/s
+JsonbShapeBench.readTypedShapes   legacy   sorted  thrpt    5     3617,541 ±    48,870  ops/s
+JsonbShapeBench.readTypedShapes   legacy    jsonb  thrpt    5     3350,876 ±   102,107  ops/s
+JsonbShapeBench.readTypedShapes  current  compact  thrpt    5     8078,820 ±    81,940  ops/s
+JsonbShapeBench.readTypedShapes  current   spaced  thrpt    5     7167,306 ±   159,078  ops/s
+JsonbShapeBench.readTypedShapes  current   sorted  thrpt    5     7548,539 ±   144,048  ops/s
+JsonbShapeBench.readTypedShapes  current    jsonb  thrpt    5     6340,864 ±   219,428  ops/s
+JsonbShapeBench.readUser          legacy  compact  thrpt    5  2246804,013 ± 59508,124  ops/s
+JsonbShapeBench.readUser          legacy   spaced  thrpt    5  1952967,535 ± 18321,461  ops/s
+JsonbShapeBench.readUser          legacy   sorted  thrpt    5  2240992,559 ± 18687,008  ops/s
+JsonbShapeBench.readUser          legacy    jsonb  thrpt    5  2005765,328 ± 33515,851  ops/s
+JsonbShapeBench.readUser         current  compact  thrpt    5  3608047,216 ± 58055,635  ops/s
+JsonbShapeBench.readUser         current   spaced  thrpt    5  2896056,758 ± 63179,076  ops/s
+JsonbShapeBench.readUser         current   sorted  thrpt    5  2644979,149 ± 28115,754  ops/s
+JsonbShapeBench.readUser         current    jsonb  thrpt    5  2357064,039 ± 32316,188  ops/s

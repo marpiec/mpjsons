@@ -14,12 +14,14 @@ import scala.reflect.runtime.universe._
  * @author Marcin Pieciukiewicz
  */
 
-case class FieldInfo[T](field: Field, name: String, jsonTypeSerializer: JsonTypeSerializer[T], nullable: Boolean, tpe: Type = NoType)
+case class FieldInfo[T](field: Field, name: String, jsonTypeSerializer: JsonTypeSerializer[T], nullable: Boolean, tpe: Type = NoType,
+                        omitEmpty: Boolean = false)
 
 /**
  * Writes one bean field. `write` appends `"name":value` (with the leading comma when `notFirst`) and returns
  * true, or appends nothing and returns false when the field is omitted (null value under Omit, a nullable
- * field under Fail, None under compactOptions, or a value equal to the type's default under omitDefaults).
+ * field under Fail, None under compactOptions, an empty value of an `@omitEmpty` field, or a value equal to the
+ * type's default under omitDefaults).
  * Primitive fields are read without boxing when the built-in serializer is in use.
  *
  * `template` is the instance reading `{}` would produce (null when omitDefaults is off): writers compare the
@@ -106,13 +108,24 @@ object BeanFieldWriter {
         new OptionWriter(info.name, field, nullMode, typeName, OptionSerializer.elementSerializer(serializerFactory, elementType, context, compact = true),
           hasTemplate, defaultValue)
       } else {
-        new ObjectWriter(info.name, field, info.nullable, serializer, nullMode, typeName, hasTemplate, defaultValue)
+        // Reading `{}` gives an `@omitEmpty` field left null by construction its empty value, not null: a null value is
+        // then not the default, and the empty value is left out anyway.
+        val omitDefault = hasTemplate && !(info.omitEmpty && defaultValue == null)
+        new ObjectWriter(info.name, field, info.nullable, serializer, nullMode, typeName, omitDefault, defaultValue, info.omitEmpty)
       }
     }
   }
 
+  /** Whether `value` (not null) is an empty collection, array or String, which an `@omitEmpty` field leaves out. */
+  private def isEmpty(value: AnyRef): Boolean = value match {
+    case string: String => string.isEmpty
+    case iterable: scala.collection.Iterable[_] => iterable.isEmpty
+    case _ => value.getClass.isArray && java.lang.reflect.Array.getLength(value) == 0
+  }
+
   final class ObjectWriter(name: String, field: Field, nullable: Boolean, serializer: JsonTypeSerializer[AnyRef],
-                           nullMode: Int, typeName: String, omitDefault: Boolean, defaultValue: AnyRef) extends BeanFieldWriter(name, field, nullable) {
+                           nullMode: Int, typeName: String, omitDefault: Boolean, defaultValue: AnyRef, omitEmpty: Boolean)
+    extends BeanFieldWriter(name, field, nullable) {
 
     override def write(obj: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
       val value = readers.getObject(obj, slot)
@@ -129,6 +142,8 @@ object BeanFieldWriter {
         } else {
           throw new IllegalArgumentException("Null value is not allowed for field " + name + " in type " + typeName)
         }
+      } else if (omitEmpty && BeanFieldWriter.isEmpty(value)) {
+        false
       } else {
         appendPrefix(jsonBuilder.underlying, notFirst)
         serializer.serialize(value, jsonBuilder)
@@ -152,6 +167,8 @@ object BeanFieldWriter {
         } else {
           throw new IllegalArgumentException("Null value is not allowed for field " + name + " in type " + typeName)
         }
+      } else if (omitEmpty && BeanFieldWriter.isEmpty(value)) {
+        false
       } else {
         writePrefix(out, notFirst)
         writer.writeUtf8(value, out)
@@ -417,7 +434,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
   /** Lazy val to prevent StackOverflow while construction recursive type serializer */
   private lazy val fieldsWithSerializers: Array[FieldInfo[AnyRef]] = fields.filterNot(_.skipSerialization).map { field =>
     FieldInfo(field.field, field.jsonName, serializerFactory.getSerializer(field.tpe, context)
-      .asInstanceOf[JsonTypeSerializer[AnyRef]], field.nullable, field.tpe)
+      .asInstanceOf[JsonTypeSerializer[AnyRef]], field.nullable, field.tpe, field.omitEmpty)
   }
   private lazy val writers: Array[BeanFieldWriter] = {
     val typeName = tpe.typeSymbol.fullName

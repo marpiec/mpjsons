@@ -63,3 +63,15 @@ Default wire format of primitives, strings, collections, maps (pair arrays), `Op
 `Either`, tuples, `java.time` objects, typed wrappers; lenient parsing (bare keys, missing and trailing commas,
 trailing content); `ignoreNonExistingFields`; `postDeserializationTransform`; `markTypedClass`; custom converters.
 All new behaviour beyond the fixes above is behind `MPJsonsConfig` levers that default to off.
+
+# Upgrading to 0.7.9
+
+- **Field annotations on supertype members now apply.** `@jsonName`, `@nullable`, `@skipSerialization` and the new
+  `@omitEmpty` on a member of a trait or superclass apply to the field that implements or overrides it, e.g.
+  `trait Named { @jsonName("n") def name: String }` makes `case class Person(name: String) extends Named` write
+  `{"n":...}`. Up to 0.7.8 such annotations had no effect, so **classes that already carry them change their JSON**.
+  The field's own annotation wins; among supertypes the nearest one in the linearization wins.
+- **New `@omitEmpty`** leaves empty collections, arrays and Strings out on write and reads a missing key as empty
+  (README, "Leaving empty collections and strings out").
+- `FieldWithTypeInfo` and `FieldInfo` gained a trailing `omitEmpty` field with a default; pattern matches with the
+  old arity need updating.

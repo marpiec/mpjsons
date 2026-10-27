@@ -3,7 +3,7 @@ package io.mpjsons.impl.util.reflection
 import java.lang.reflect.Field
 
 import io.mpjsons.impl.util.TypesUtil
-import io.mpjsons.{jsonName, skipSerialization}
+import io.mpjsons.{jsonName, omitEmpty, skipSerialization}
 
 import scala.collection.mutable
 import scala.reflect.runtime.universe._
@@ -16,6 +16,7 @@ private[reflection] object ReflectionUtilNoCache {
 
   private val jsonNameType = typeOf[jsonName]
   private val skipSerializationType = typeOf[skipSerialization]
+  private val omitEmptyType = typeOf[omitEmpty]
 
   /**
    * Returns the array containing all Fields declared by given class or in its superclasses.
@@ -29,8 +30,10 @@ private[reflection] object ReflectionUtilNoCache {
    * format and their fields cannot be opened under the module system. A field that cannot be made accessible is
    * skipped as well.
    *
-   * Annotations (`@jsonName`, `@nullable`, `@skipSerialization`) are looked up on the field, on the constructor parameter of the same
-   * name and on the getter, so case class parameters need no `@field` meta-annotation.
+   * Annotations (`@jsonName`, `@nullable`, `@skipSerialization`, `@omitEmpty`) are looked up on the field, on the constructor
+   * parameter of the same name and on the getter, so case class parameters need no `@field` meta-annotation, and then on
+   * the members of supertypes that the getter implements or overrides. The field's own `@jsonName` wins over a
+   * supertype's, and a nearer supertype's over a farther one's.
    *
    * @param tpe type from which the fields should be retrieved
    * @return array containing all defined fields in class
@@ -55,15 +58,24 @@ private[reflection] object ReflectionUtilNoCache {
         if (seenNames.add(fieldName)) {
           val field = getAccessibleField(clazz, fieldName)
           if (field != null) {
+            // the field's own annotations first, so that they take precedence over those of supertype members
             val annotations = member.annotations ++
               constructorParams.filter(_.name.toString.trim == fieldName).flatMap(_.annotations) ++
-              getterAnnotations(tpe, fieldName)
+              getterAnnotations(tpe, fieldName) ++
+              overriddenAnnotations(tpe, fieldName)
+            val fieldType = member.typeSignatureIn(tpe)
+            val omitIfEmpty = annotations.exists(_.tree.tpe <:< omitEmptyType)
+            if (omitIfEmpty && !canBeEmpty(fieldType)) {
+              throw new IllegalArgumentException("@omitEmpty on field " + fieldName + " of " + tpe + ": it applies to collections, " +
+                "arrays and String, not to " + fieldType)
+            }
             val info = FieldWithTypeInfo(
               field,
-              member.typeSignatureIn(tpe),
+              fieldType,
               annotations.exists(_.toString.toLowerCase().contains("nullable")),
               jsonNameOf(annotations).getOrElse(fieldName),
-              annotations.exists(_.tree.tpe <:< skipSerializationType))
+              annotations.exists(_.tree.tpe <:< skipSerializationType),
+              omitIfEmpty)
             collected += ((classCount - classIndex, declarationIndex, info))
           }
         }
@@ -74,6 +86,10 @@ private[reflection] object ReflectionUtilNoCache {
     checkUniqueJsonNames(tpe, result)
     result
   }
+
+  /** The types `@omitEmpty` applies to: Scala collections (maps included), arrays and String. */
+  private def canBeEmpty(fieldType: Type): Boolean =
+    fieldType <:< typeOf[scala.collection.Iterable[_]] || fieldType.typeSymbol == definitions.ArrayClass || fieldType <:< typeOf[String]
 
   private def isJdkClass(classSymbol: Symbol): Boolean = {
     val name = classSymbol.fullName
@@ -92,6 +108,15 @@ private[reflection] object ReflectionUtilNoCache {
   private def getterAnnotations(tpe: Type, fieldName: String): List[Annotation] = {
     val getter = tpe.member(TermName(fieldName))
     if (getter.isMethod) getter.annotations else Nil
+  }
+
+  /**
+   * Annotations of the members in supertypes that the getter implements or overrides, e.g. of `def tags` in
+   * `trait Tagged { @omitEmpty def tags: Set[String] }`, the nearest supertype first (linearization order).
+   */
+  private def overriddenAnnotations(tpe: Type, fieldName: String): List[Annotation] = {
+    val getter = tpe.member(TermName(fieldName))
+    if (getter.isMethod) getter.overrides.flatMap(_.annotations) else Nil
   }
 
   private def jsonNameOf(annotations: List[Annotation]): Option[String] = {

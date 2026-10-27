@@ -66,7 +66,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         } else {
           val argIndex = if (useConstructor) constructorParams.indexOf(field.field.getName) else -1
           val beanField = BeanField(name, field.field, field.tpe, typeName, deserializerFactory.getDeserializer(field.tpe, context), argIndex, field.nullable, config)
-          beanField.optionSlot = optionFields.indexOf(field.field)
+          beanField.absentSlot = absentDefaults.indexWhere(_.field == field.field)
           if (writers == null) beanField else beanField.useWriters(writers, fields.indexOf(field))
         }
       val scalaName = field.field.getName
@@ -83,13 +83,57 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
    * instance, the constructor path passes them as arguments.
    */
   private lazy val fieldWriters: FieldWriters = if (useConstructor) null else FieldWriters.forFields(fields.map(_.field))
-  /** Option fields are initialised to None when construction left them null, so an absent key reads as None. */
-  private lazy val optionFields: Array[Field] = fields.filter(_.tpe <:< BeanDeserializer.optionType).map(_.field)
-  /** Index in `fieldWriters` of each of `optionFields`. */
-  private lazy val optionWriterSlots: Array[Int] = optionFields.map(option => fields.indexWhere(_.field == option))
-  /** Constructor arguments for absent keys: zero / false for primitives, None for Options, null otherwise. */
-  private lazy val argumentDefaults: Array[AnyRef] =
-    if (useConstructor) BeanDeserializer.argumentDefaults(primaryConstructor, constructorParams, fields) else null
+  /**
+   * Fields that get a value when no key was read for them and construction left them null: None for Option fields
+   * (an absent key reads as None), the empty value for `@omitEmpty` fields.
+   */
+  private lazy val absentDefaults: Array[BeanDeserializer.AbsentDefault] =
+    fields.filter(field => field.tpe <:< BeanDeserializer.optionType || field.omitEmpty).map { field =>
+      val writerSlot = fields.indexOf(field)
+      val argIndex = if (useConstructor) constructorParams.indexOf(field.field.getName) else -1
+      if (field.tpe <:< BeanDeserializer.optionType) {
+        new BeanDeserializer.AbsentDefault(field.field, writerSlot, argIndex, None, null)
+      } else {
+        emptyDefault(field, writerSlot, argIndex)
+      }
+    }
+  /** Constructor arguments for absent keys: zero / false for primitives, None for Options, empty for `@omitEmpty`. */
+  private lazy val argumentDefaults: Array[AnyRef] = if (useConstructor) {
+    val arguments = BeanDeserializer.argumentDefaults(primaryConstructor)
+    for (default <- absentDefaults if default.argIndex >= 0) {
+      arguments(default.argIndex) = default.value()
+    }
+    arguments
+  } else {
+    null
+  }
+  /** Constructor arguments whose absent value may be mutable: each object gets its own. */
+  private lazy val freshArguments: Array[BeanDeserializer.AbsentDefault] = absentDefaults.filter(d => d.argIndex >= 0 && !d.shared)
+
+  /**
+   * An absent `@omitEmpty` key reads as `[]` would (`""` for a String; `{}` where only that is understood), through
+   * the field's own deserializer, so converters and transforms registered for its type apply. An immutable result is
+   * shared; anything else is read again for each object.
+   */
+  private def emptyDefault(field: FieldWithTypeInfo, writerSlot: Int, argIndex: Int): BeanDeserializer.AbsentDefault = {
+    val deserializer = deserializerFactory.getDeserializer[AnyRef](field.tpe, context)
+    val candidates = if (field.tpe <:< typeOf[String]) List("\"\"") else List("[]", "{}")
+    def read(json: String): AnyRef = {
+      val jsonIterator = new StringIterator(json)
+      val value = deserializer.deserialize(jsonIterator)
+      jsonIterator.expectEnd()
+      value
+    }
+    val (json, empty) = candidates.iterator.map(json => json -> scala.util.Try(read(json))).collectFirst {
+      case (json, scala.util.Success(value)) => (json, value)
+    }.getOrElse(throw new IllegalArgumentException("@omitEmpty on field " + field.field.getName + " of " + tpe +
+      ": its deserializer reads none of " + candidates.mkString(", ") + ", so an absent key cannot be read as empty"))
+    if (empty == null || empty.isInstanceOf[String] || empty.getClass.isArray || empty.isInstanceOf[scala.collection.immutable.Iterable[_]]) {
+      new BeanDeserializer.AbsentDefault(field.field, writerSlot, argIndex, empty, null)
+    } else {
+      new BeanDeserializer.AbsentDefault(field.field, writerSlot, argIndex, null, () => read(json))
+    }
+  }
 
 
   override def deserialize(jsonIterator: StringIterator): T = {
@@ -101,14 +145,14 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     jsonIterator.consumeObjectStart()
     val instance = ObjectConstructionUtil.createInstance[T](clazz, constructor, context)
     val table = fieldTable
-    // Option fields still unset after the loop are initialised to None at the end (see initialiseAbsentOptions);
-    // with more than 64 of them, all are initialised up front as before.
-    val trackOptions = optionFields.length <= 64
-    if (!trackOptions) {
-      initialiseOptions(instance.asInstanceOf[AnyRef])
+    // Fields with a value for absent keys (Option, @omitEmpty) still unset after the loop get it at the end (see
+    // initialiseAbsentFields); with more than 64 of them, all are initialised up front instead.
+    val trackAbsent = absentDefaults.length <= 64
+    if (!trackAbsent) {
+      initialiseNullFields(instance.asInstanceOf[AnyRef])
     }
     // Per-call state lives in locals only: the deserializer is shared between threads.
-    var assignedOptions = 0L
+    var assigned = 0L
 
     var previous: BeanField = null // the last field read, which predicts the next key (see BeanFieldTable)
 
@@ -127,8 +171,8 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
         previous = field
         jsonIterator.consumeFieldValueSeparator()
         field.set(instance.asInstanceOf[AnyRef], jsonIterator)
-        if (field.optionSlot >= 0) {
-          assignedOptions |= 1L << field.optionSlot
+        if (field.absentSlot >= 0) {
+          assigned |= 1L << field.absentSlot
         }
       } else {
         skipOrFail(jsonIterator)
@@ -139,8 +183,8 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
 
     jsonIterator.nextCharOrNullIfLast
 
-    if (trackOptions) {
-      initialiseAbsentOptions(instance.asInstanceOf[AnyRef], assignedOptions)
+    if (trackAbsent) {
+      initialiseAbsentFields(instance.asInstanceOf[AnyRef], assigned)
     }
 
     instance
@@ -151,6 +195,12 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     jsonIterator.consumeObjectStart()
     val table = fieldTable
     val arguments = argumentDefaults.clone()
+    var index = 0
+    while (index < freshArguments.length) {
+      val default = freshArguments(index)
+      arguments(default.argIndex) = default.value()
+      index += 1
+    }
     var lateFields: List[(BeanField, AnyRef)] = Nil
 
     var previous: BeanField = null // the last field read, which predicts the next key (see BeanFieldTable)
@@ -193,7 +243,7 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
     if (lateFields.nonEmpty) {
       lateFields.foreach { case (field, value) => field.field.set(instance, value) }
     }
-    initialiseOptions(instance.asInstanceOf[AnyRef])
+    initialiseAfterConstruction(instance.asInstanceOf[AnyRef], lateFields)
     instance
   }
 
@@ -210,37 +260,43 @@ class BeanDeserializer[T](deserializerFactory: DeserializerFactory,
   }
 
   /**
-   * Same result as `initialiseOptions` before the key loop: an Option field that no key was written to is set to None
-   * when construction left it null. An instance allocated without a constructor has only null fields, so it is not
-   * read, and None is written through the generated writers like any other value.
+   * Same result as `initialiseNullFields` before the key loop: a field of `absentDefaults` that no key was written to
+   * gets its value when construction left it null. An instance allocated without a constructor has only null fields,
+   * so it is not read, and the value is written through the generated writers like any other.
    */
-  private def initialiseAbsentOptions(instance: AnyRef, assigned: Long): Unit = {
-    val options = optionFields
+  private def initialiseAbsentFields(instance: AnyRef, assigned: Long): Unit = {
+    val defaults = absentDefaults
     var index = 0
-    while (index < options.length) {
+    while (index < defaults.length) {
       if ((assigned & (1L << index)) == 0) {
+        val default = defaults(index)
         if (constructor == null) {
-          fieldWriters.setObject(instance, optionWriterSlots(index), None)
-        } else {
-          val field = options(index)
-          if (field.get(instance) == null) {
-            field.set(instance, None)
-          }
+          fieldWriters.setObject(instance, default.writerSlot, default.value())
+        } else if (default.field.get(instance) == null) {
+          default.field.set(instance, default.value())
         }
       }
       index += 1
     }
   }
 
-  private def initialiseOptions(instance: AnyRef): Unit = {
-    val options = optionFields
-    var index = 0
-    while (index < options.length) {
-      val field = options(index)
-      if (field.get(instance) == null) {
-        field.set(instance, None)
+  private def initialiseNullFields(instance: AnyRef): Unit = {
+    for (default <- absentDefaults if default.field.get(instance) == null) {
+      default.field.set(instance, default.value())
+    }
+  }
+
+  /**
+   * Constructor mode: constructor arguments already hold the values for absent keys. Option fields still null get
+   * None (as they always did), and `@omitEmpty` fields that are not constructor parameters get their empty value when
+   * no key was read for them and the class left them null.
+   */
+  private def initialiseAfterConstruction(instance: AnyRef, lateFields: List[(BeanField, AnyRef)]): Unit = {
+    for (default <- absentDefaults) {
+      val absent = default.isOption || (default.argIndex < 0 && !lateFields.exists(_._1.field == default.field))
+      if (absent && default.field.get(instance) == null) {
+        default.field.set(instance, default.value())
       }
-      index += 1
     }
   }
 
@@ -312,6 +368,16 @@ object BeanDeserializer {
   private val optionType = typeOf[Option[_]]
 
   /**
+   * The value a field gets when its key is absent: `sharedValue`, or a new one from `newValue` for each object.
+   * `writerSlot` is the field's index in the bean's FieldWriters; `argIndex` its constructor position, or -1.
+   */
+  private final class AbsentDefault(val field: Field, val writerSlot: Int, val argIndex: Int, sharedValue: AnyRef, newValue: () => AnyRef) {
+    def shared: Boolean = newValue == null
+    def isOption: Boolean = sharedValue eq None
+    def value(): AnyRef = if (newValue == null) sharedValue else newValue()
+  }
+
+  /**
    * The primary constructor's parameter names when `tpe` is a concrete case class whose parameters are all
    * backed by fields; null otherwise (the allocation path is used then).
    */
@@ -344,11 +410,9 @@ object BeanDeserializer {
     }
   }
 
-  private def argumentDefaults(constructor: Constructor[_], params: Array[String], fields: Array[FieldWithTypeInfo]): Array[AnyRef] = {
-    val parameterTypes = constructor.getParameterTypes
-    params.indices.map { index =>
-      val parameterType = parameterTypes(index)
-      val field = fields.find(_.field.getName == params(index)).get
+  /** Zero / false for primitive parameters, null otherwise; Options and `@omitEmpty` fields are set from absentDefaults. */
+  private def argumentDefaults(constructor: Constructor[_]): Array[AnyRef] = {
+    constructor.getParameterTypes.map { parameterType =>
       if (parameterType == java.lang.Integer.TYPE) java.lang.Integer.valueOf(0)
       else if (parameterType == java.lang.Long.TYPE) java.lang.Long.valueOf(0L)
       else if (parameterType == java.lang.Boolean.TYPE) java.lang.Boolean.FALSE
@@ -357,8 +421,7 @@ object BeanDeserializer {
       else if (parameterType == java.lang.Short.TYPE) java.lang.Short.valueOf(0.toShort)
       else if (parameterType == java.lang.Byte.TYPE) java.lang.Byte.valueOf(0.toByte)
       else if (parameterType == java.lang.Character.TYPE) java.lang.Character.valueOf('\u0000')
-      else if (field.tpe <:< optionType) None
       else null
-    }.toArray
+    }
   }
 }

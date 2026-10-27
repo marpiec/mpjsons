@@ -41,10 +41,10 @@ abstract class BeanField(val name: String, val field: Field, nullValue: NullValu
   private[deserializer] var next: BeanField = null
 
   /**
-   * Index of this field among the bean's Option fields, or -1 when it is not an Option field or when a value
-   * stored by `set` may be null (custom or wrapped reader). Set before the owning table is published.
+   * Index of this field among the bean's fields that get a value when their key is absent (Option and `@omitEmpty`
+   * fields, see BeanDeserializer), or -1. Set before the owning table is published.
    */
-  private[deserializer] var optionSlot: Int = -1
+  private[deserializer] var absentSlot: Int = -1
 
   /** Makes this field write through the given writers (shared by all fields of one bean class). */
   private[deserializer] def useWriters(fieldWriters: FieldWriters, index: Int): this.type = {

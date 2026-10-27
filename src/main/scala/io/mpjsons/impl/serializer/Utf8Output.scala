@@ -27,6 +27,14 @@ final class Utf8Output(initialCapacity: Int) {
   /** Number of bytes written so far. */
   def size: Int = count
 
+  /** The byte at `index`, which is below `size`. */
+  private[serializer] def byteAt(index: Int): Byte = buf(index)
+
+  /** Drops what was written after the first `size` bytes. */
+  private[serializer] def truncate(size: Int): Unit = {
+    count = size
+  }
+
   def toByteArray: Array[Byte] = Arrays.copyOf(buf, count)
 
   private def ensure(extra: Int): Unit = {

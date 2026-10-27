@@ -16,6 +16,10 @@ object OmitEmptySpec {
 
   case class WithMutable(@omitEmpty buffer: mutable.ArrayBuffer[Int], @omitEmpty map: mutable.Map[String, Int])
 
+  // empty values that are not shared instances are written and then taken back: first, middle and last field
+  case class Mixed(@omitEmpty first: mutable.ArrayBuffer[Int], a: Int, @omitEmpty middle: Array[Int], b: Int,
+                   @omitEmpty last: mutable.Set[String])
+
   class Bean {
     var id: Int = 0
     @omitEmpty var tags: List[String] = _
@@ -29,7 +33,11 @@ object OmitEmptySpec {
   case class Node(name: String, @omitEmpty children: List[Node])
 
   case class WrongType(@omitEmpty id: Int)
-  case class WrongOption(@omitEmpty value: Option[List[Int]])
+  case class WrongEither(@omitEmpty value: Either[String, Int])
+
+  case class WithOption(id: Int, @omitEmpty note: Option[String], @omitEmpty nested: Option[List[Int]])
+
+  case class ReadmeOrder(id: Long, @omitEmpty tags: Set[String], @omitEmpty note: String, @omitEmpty discount: Option[Int])
 
   case class Renamed(@omitEmpty @jsonName("t") tags: List[String], id: Int)
 
@@ -78,6 +86,28 @@ class OmitEmptySpec extends AnyFlatSpec {
     }
   }
 
+  it must "leave None out and read a missing Option key as None, in both bean modes and with compact Options" in {
+    val none = WithOption(1, None, None)
+    val some = WithOption(1, Some("x"), Some(Nil)) // Some(Nil) is not empty: the Option holds a value
+    for (m <- Seq(mpjsons, viaConstructor)) {
+      m.serialize(none) mustBe """{"id":1}"""
+      new String(m.serializeToBytes(none), StandardCharsets.UTF_8) mustBe """{"id":1}"""
+      m.serialize(some) mustBe """{"id":1,"note":{"value":"x"},"nested":{"value":[]}}"""
+      m.deserialize[WithOption]("""{"id":1}""") mustBe none
+      m.deserialize[WithOption](m.serialize(some)) mustBe some
+    }
+    val compact = new MPJsons(MPJsonsConfig(compactOptions = true))
+    compact.serialize(none) mustBe """{"id":1}"""
+    compact.serialize(some) mustBe """{"id":1,"note":"x","nested":[]}"""
+    compact.deserialize[WithOption]("""{"id":1}""") mustBe none
+  }
+
+  it must "behave as the README shows" in {
+    mpjsons.serialize(ReadmeOrder(1, Set.empty, "", None)) mustBe """{"id":1}"""
+    mpjsons.serialize(ReadmeOrder(2, Set("a"), "n", Some(5))) mustBe """{"id":2,"tags":["a"],"note":"n","discount":{"value":5}}"""
+    mpjsons.deserialize[ReadmeOrder]("""{"id":1}""") mustBe ReadmeOrder(1, Set.empty, "", None)
+  }
+
   it must "omit empty arrays and read them back as empty arrays of the right type" in {
     mpjsons.serialize(WithArray(Array.empty, Array.empty)) mustBe "{}"
     for (m <- Seq(mpjsons, viaConstructor)) {
@@ -85,6 +115,19 @@ class OmitEmptySpec extends AnyFlatSpec {
       read.values mustBe Array.empty[Int]
       read.names mustBe Array.empty[String]
     }
+  }
+
+  it must "take back empty values that are not shared instances, wherever they are in the object" in {
+    def bothOutputs(value: Mixed): String = {
+      val json = mpjsons.serialize(value)
+      new String(mpjsons.serializeToBytes(value), StandardCharsets.UTF_8) mustBe json
+      json
+    }
+    bothOutputs(Mixed(mutable.ArrayBuffer.empty, 1, Array.empty, 2, mutable.Set.empty)) mustBe """{"a":1,"b":2}"""
+    bothOutputs(Mixed(mutable.ArrayBuffer(5), 1, Array.empty, 2, mutable.Set.empty)) mustBe """{"first":[5],"a":1,"b":2}"""
+    bothOutputs(Mixed(mutable.ArrayBuffer.empty, 1, Array(3), 2, mutable.Set("x"))) mustBe """{"a":1,"middle":[3],"b":2,"last":["x"]}"""
+    mpjsons.serialize(WithMutable(mutable.ArrayBuffer.empty, mutable.Map.empty)) mustBe "{}"
+    mpjsons.serialize(Order(1, Set.empty, List(1), "", Map("k" -> 1), Vector.empty)) mustBe """{"id":1,"items":[1],"attributes":[["k",1]]}"""
   }
 
   it must "give every object its own empty mutable collection" in {
@@ -171,10 +214,10 @@ class OmitEmptySpec extends AnyFlatSpec {
 
   it must "fail when the (de)serializer is built for a field that cannot be empty" in {
     the[IllegalArgumentException] thrownBy mpjsons.serialize(CountedImpl(1)) must have message
-      "@omitEmpty on field count of io.mpjsons.OmitEmptySpec.CountedImpl: it applies to collections, arrays and String, not to Int"
+      "@omitEmpty on field count of io.mpjsons.OmitEmptySpec.CountedImpl: it applies to collections, Options, arrays and String, not to Int"
     val wrongType = the[JsonInnerException] thrownBy mpjsons.deserialize[WrongType]("""{"id":1}""")
     wrongType.getMessage must include("@omitEmpty on field id")
-    the[IllegalArgumentException] thrownBy mpjsons.serialize(WrongOption(None)) must have message
-      "@omitEmpty on field value of io.mpjsons.OmitEmptySpec.WrongOption: it applies to collections, arrays and String, not to Option[List[Int]]"
+    the[IllegalArgumentException] thrownBy mpjsons.serialize(WrongEither(Right(1))) must have message
+      "@omitEmpty on field value of io.mpjsons.OmitEmptySpec.WrongEither: it applies to collections, Options, arrays and String, not to Either[String,Int]"
   }
 }

@@ -65,8 +65,10 @@ unknown keys are still rejected. Covered by `TimeSpec`.
 Resolution order is now: known subclasses of a sealed marked type (wherever they are declared), then
 `<binary name prefix of the marked type> + SimpleName` (loaded without running static initializers; names containing `.`, `/`, `[` or `;` and classes that are not subtypes of the marked type are rejected, `TypedResolutionSafetySpec`); with `markTypedSuperClass` the check uses the declared subtype being read (`TypedSuperClassSpec`) (same package for top-level types, same enclosing object for
 nested types); an unknown name fails with a message listing the known subclasses. Covered by `TypedNestedSpec`.
-Remaining limitation: subtypes of a **non-sealed** trait must be siblings of the trait, and two subtypes with the
-same simple name cannot be told apart unless one of them gets a `@typeName` alias (sealed hierarchies; `TypeNameSpec`).
+Remaining limitation: subtypes of a **non-sealed** trait must be siblings of the trait (its package, or its enclosing
+object), and two subtypes with the same simple name cannot be told apart unless one of them gets a `@typeName` alias.
+Aliases of such siblings are found by listing the package on the class path (directories and jars) the first time an
+alias is written or read (`TypeNames.Siblings`, `TypeNameSpec`); class path entries of other kinds cannot be listed.
 
 ### 11. Superclass-converter matching is nondeterministic — FIXED
 

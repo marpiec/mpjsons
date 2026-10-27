@@ -72,6 +72,16 @@ All new behaviour beyond the fixes above is behind `MPJsonsConfig` levers that d
   `{"n":...}`. Up to 0.7.8 such annotations had no effect, so **classes that already carry them change their JSON**.
   The field's own annotation wins; among supertypes the nearest one in the linearization wins.
 - **New `@omitEmpty`** leaves empty collections, arrays and Strings out on write and reads a missing key as empty
-  (README, "Leaving empty collections and strings out").
+  (README, "Leaving empty values out").
 - `FieldWithTypeInfo` and `FieldInfo` gained a trailing `omitEmpty` field with a default; pattern matches with the
   old arity need updating.
+
+# Upgrading to 0.7.10
+
+- **`@omitEmpty` on `Option` fields**: `None` is left out on write; a missing key reads as `None`, as it always did.
+- **`@typeName` on subclasses of a non-sealed typed class** now works when the subclasses are in the typed class's
+  package (or enclosing object): the first alias written or read lists that package on the class path once
+  (directories and jars). Up to 0.7.9 writing such an alias failed with "aliases need a sealed typed class"; an aliased
+  subclass in another package still fails, with an explanation.
+- `TypedSerializer` and `TypedDeserializer` gained a trailing `siblings` constructor parameter; the previous
+  constructors remain.

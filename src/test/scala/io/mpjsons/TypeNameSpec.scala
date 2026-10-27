@@ -30,9 +30,19 @@ object TypeNameSpec {
   case class Bike(gears: Int) extends Vehicle
 
   case class Drawing(shapes: List[Shape], main: Shape)
+
+  trait NestedOpen
+  @typeName("no") case class AliasedNested(a: Int) extends NestedOpen
+  @typeName("np") case object NestedPoint extends NestedOpen
+  case class PlainNested(a: Int) extends NestedOpen
+
+  trait ClashOpen
+  @typeName("dup") case class DupA(a: Int) extends ClashOpen
+  @typeName("dup") case class DupB(a: Int) extends ClashOpen
 }
 
-// Non-sealed hierarchy: subclasses cannot be enumerated, so aliases cannot be resolved when reading.
+// Non-sealed hierarchy: Scala records no subclasses, so aliases are resolved by listing the package on the class path.
+// FarOpen (package io.mpjsons.elsewhere) is not a sibling, so its alias cannot be resolved.
 trait OpenShape
 @typeName("o") case class AliasedOpen(a: Int) extends OpenShape
 case class PlainOpen(a: Int) extends OpenShape
@@ -80,14 +90,54 @@ class TypeNameSpec extends AnyFlatSpec {
     m.deserialize[List[Vehicle]]("""[{"car":{"seats":4}},{"Bike":{"gears":21}}]""") mustBe vehicles
   }
 
-  "@typeName" must "refuse to write an alias that the reader could not resolve" in {
+  "@typeName" must "work for subclasses of a non-sealed trait in its package, found on the class path" in {
     val m = new MPJsons
     m.markTypedClass[OpenShape]
     m.serialize[OpenShape](PlainOpen(1)) mustBe """{"PlainOpen":{"a":1}}"""
     m.deserialize[OpenShape]("""{"PlainOpen":{"a":1}}""") mustBe PlainOpen(1)
-    val e = intercept[IllegalArgumentException] { m.serialize[OpenShape](AliasedOpen(1)) }
-    e.getMessage must include("sealed")
-    e.getMessage must include("AliasedOpen")
+    m.serialize[OpenShape](AliasedOpen(1)) mustBe """{"o":{"a":1}}"""
+    m.deserialize[OpenShape]("""{"o":{"a":1}}""") mustBe AliasedOpen(1)
+    m.deserialize[OpenShape]("""{"AliasedOpen":{"a":1}}""") mustBe AliasedOpen(1)
+    // a reader that never wrote the alias
+    val reader = new MPJsons
+    reader.markTypedClass[OpenShape]
+    reader.deserialize[List[OpenShape]]("""[{"o":{"a":1}},{"PlainOpen":{"a":2}}]""") mustBe List(AliasedOpen(1), PlainOpen(2))
+  }
+
+  "@typeName" must "work for a non-sealed trait nested in an object, including case objects" in {
+    val m = new MPJsons
+    m.markTypedClass[NestedOpen]
+    val values: List[NestedOpen] = List(AliasedNested(1), NestedPoint, PlainNested(2))
+    val json = m.serialize(values)
+    json mustBe """[{"no":{"a":1}},{"np":{}},{"PlainNested":{"a":2}}]"""
+    m.deserialize[List[NestedOpen]](json) mustBe values
+    val reader = new MPJsons
+    reader.markTypedClass[NestedOpen]
+    reader.deserialize[List[NestedOpen]](json) mustBe values
+  }
+
+  "@typeName" must "refuse to write an alias that the reader could not resolve" in {
+    val m = new MPJsons
+    m.markTypedClass[OpenShape]
+    val e = intercept[IllegalArgumentException] { m.serialize[OpenShape](io.mpjsons.elsewhere.FarOpen(1)) }
+    e.getMessage must include("FarOpen")
+    e.getMessage must include("package")
+    intercept[JsonInnerException] { m.deserialize[OpenShape]("""{"far":{"a":1}}""") }.getMessage must include("Unknown type name 'far'")
+  }
+
+  "Listing a package for aliases" must "find classes in jars as well as in directories" in {
+    // scala-library is a jar: the concrete subclasses of AbstractMap in its package, nested ones included
+    val table = new io.mpjsons.impl.special.TypeNames.Siblings(classOf[scala.collection.immutable.AbstractMap[_, _]]).table
+    table.get("HashMap") mustBe Some(classOf[scala.collection.immutable.HashMap[_, _]])
+    table.get("ListMap") mustBe Some(classOf[scala.collection.immutable.ListMap[_, _]])
+    table.get("Map1") mustBe Some(classOf[scala.collection.immutable.Map.Map1[_, _]])
+  }
+
+  "@typeName" must "reject siblings of a non-sealed trait that write the same name" in {
+    val m = new MPJsons
+    m.markTypedClass[ClashOpen]
+    val e = intercept[IllegalArgumentException] { m.serialize[ClashOpen](DupA(1)) }
+    e.getMessage must include("'dup'")
   }
 
   "@typeName" must "report unknown names with the known ones" in {

@@ -285,26 +285,28 @@ mpjsons.deserialize[Session]("""{"user":"ann"}""")                  // Session("
 - Like `@jsonName`, it works on case class parameters, `val`s and `var`s without a
   meta-annotation, on inherited fields and on members of traits and superclasses.
 
-### Leaving empty collections and strings out
+### Leaving empty values out
 
-`@omitEmpty` leaves an empty collection, map, array or String out of the JSON, and reads a missing
-key as an empty value.
+`@omitEmpty` leaves an empty collection, map or array, `None` or `""` out of the JSON, and reads
+a missing key as an empty value.
 
 ```scala
 import io.mpjsons.omitEmpty
 
-case class Order(id: Long, @omitEmpty tags: Set[String], @omitEmpty note: String)
+case class Order(id: Long, @omitEmpty tags: Set[String], @omitEmpty note: String,
+                 @omitEmpty discount: Option[Int])
 
-mpjsons.serialize(Order(1, Set.empty, ""))           // {"id":1}
-mpjsons.serialize(Order(2, Set("a"), "n"))           // {"id":2,"tags":["a"],"note":"n"}
-mpjsons.deserialize[Order]("""{"id":1}""")           // Order(1, Set(), "")
+mpjsons.serialize(Order(1, Set.empty, "", None))     // {"id":1}
+mpjsons.serialize(Order(2, Set("a"), "n", Some(5)))  // {"id":2,"tags":["a"],"note":"n","discount":{"value":5}}
+mpjsons.deserialize[Order]("""{"id":1}""")           // Order(1, Set(), "", None)
 ```
 
-- It applies to Scala collections (maps included), arrays and String; on any other type it fails
-  when the (de)serializer is built.
-- A missing key reads the way `[]` (or `""`) would, so converters and post-deserialization
-  transforms registered for the field's type apply to the empty value too. Each object gets its
-  own empty mutable collection.
+- It applies to everything that is `IterableOnce` (collections, maps, `Option`), to arrays and to
+  String; on any other type it fails when the (de)serializer is built. With a converter
+  registered for the field's type, any value it writes as `[]`, `{}` or `""` counts as empty too.
+- A missing `Option` key reads as `None`, as always. Any other missing key reads the way `[]` (or
+  `""`) would, so converters and post-deserialization transforms registered for the field's type
+  apply to the empty value too. Each object gets its own empty mutable collection.
 - `null` is not empty: it follows the null policy as before.
 - Like any absent key, a missing key keeps a value set by a no-arg constructor.
 
@@ -533,9 +535,14 @@ mpjsons.markTypedClass[Shape]
 mpjsons.serialize(List[Shape](Circle(1.5), Box(2)))   // [{"c":{"r":1.5}},{"Square":{"side":2}}]
 ```
 
-Aliases are resolved through the known subclasses of a **sealed** typed class. Writing an aliased
-subclass of a non-sealed typed class fails with an explanation, because the reader could not
-find it. Two subclasses that would write the same name are rejected by `markTypedClass`.
+For a **sealed** typed class, aliases are resolved through its known subclasses, wherever they
+are declared. For a typed class that is not sealed (its subclasses may be in other files),
+Scala records no subclasses, so the first alias written or read makes mpjsons list the typed
+class's package on the class path (directories and jars) and read the aliases of the subclasses
+it finds there. This runs once per typed class and only when an alias is used; it measured
+65–208 ms for packages of a few hundred to 1 300 classes. An aliased subclass in another package
+cannot be found: writing it fails with an explanation. Two subclasses that would write the same
+name are rejected.
 
 ### Performance: static (de)serializers
 

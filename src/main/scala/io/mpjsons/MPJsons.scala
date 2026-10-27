@@ -434,10 +434,10 @@ class MPJsons(val config: MPJsonsConfig) {
 
 
   /** Builds the typed deserializer for a marked type: subtypes resolve via the sealed hierarchy or as siblings of the marked type. */
-  private def typedDeserializerFor[T <: AnyRef](tpe: Type, readTable: Map[String, Class[_]], deserializerFactory: DeserializerFactory): TypedDeserializer[T] = {
-    val binaryName = TypesUtil.getClassFromType(tpe).getName
-    val prefix = binaryName.substring(0, Math.max(binaryName.lastIndexOf('$'), binaryName.lastIndexOf('.')) + 1)
-    new TypedDeserializer[T](prefix, readTable, tpe.toString, TypesUtil.getClassFromType(tpe), deserializerFactory)
+  private def typedDeserializerFor[T <: AnyRef](tpe: Type, readTable: Map[String, Class[_]], siblings: TypeNames.Siblings,
+                                                deserializerFactory: DeserializerFactory): TypedDeserializer[T] = {
+    val markedClass = TypesUtil.getClassFromType(tpe)
+    new TypedDeserializer[T](TypeNames.binaryNamePrefix(markedClass), readTable, tpe.toString, markedClass, deserializerFactory, siblings)
   }
 
   /**
@@ -450,9 +450,10 @@ class MPJsons(val config: MPJsonsConfig) {
     } else {
       val tpe = extractType(tag)
       val readTable = TypeNames.readTable(tpe.typeSymbol)
+      val siblings = new TypeNames.Siblings(TypesUtil.getClassFromType(tpe))
       registerConverter[T](
-        sf => new TypedSerializer[T](sf, readTable, tpe.toString),
-        df => typedDeserializerFor[T](tpe, readTable, df))
+        sf => new TypedSerializer[T](sf, readTable, tpe.toString, siblings),
+        df => typedDeserializerFor[T](tpe, readTable, siblings, df))
     }
   }
 
@@ -468,9 +469,10 @@ class MPJsons(val config: MPJsonsConfig) {
     } else {
       val tpe = extractType(tag)
       val readTable = TypeNames.readTable(tpe.typeSymbol)
+      val siblings = new TypeNames.Siblings(TypesUtil.getClassFromType(tpe))
       registerSuperclassConverter[T](
-        sf => new TypedSerializer[T](sf, readTable, tpe.toString),
-        df => typedDeserializerFor[T](tpe, readTable, df))
+        sf => new TypedSerializer[T](sf, readTable, tpe.toString, siblings),
+        df => typedDeserializerFor[T](tpe, readTable, siblings, df))
     }
   }
 

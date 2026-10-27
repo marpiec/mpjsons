@@ -244,8 +244,8 @@ new MPJsons().deserialize[TestObject](json)
 
 By default the JSON key is the Scala field name. `@jsonName` overrides it, which is the
 simplest way to make the output smaller or to match an external schema. It works on case
-class parameters, `val`s and `var`s directly, without a meta-annotation, and also on
-inherited fields.
+class parameters, `val`s and `var`s directly, without a meta-annotation, on inherited fields,
+and on members of traits and superclasses (see "Annotations on traits and superclasses").
 
 ```scala
 import io.mpjsons.jsonName
@@ -283,7 +283,53 @@ mpjsons.deserialize[Session]("""{"user":"ann"}""")                  // Session("
 - No serializer or deserializer is built for the field, so its type does not need to be readable
   or writable, and the null policy does not apply to it.
 - Like `@jsonName`, it works on case class parameters, `val`s and `var`s without a
-  meta-annotation, and on inherited fields.
+  meta-annotation, on inherited fields and on members of traits and superclasses.
+
+### Leaving empty collections and strings out
+
+`@omitEmpty` leaves an empty collection, map, array or String out of the JSON, and reads a missing
+key as an empty value.
+
+```scala
+import io.mpjsons.omitEmpty
+
+case class Order(id: Long, @omitEmpty tags: Set[String], @omitEmpty note: String)
+
+mpjsons.serialize(Order(1, Set.empty, ""))           // {"id":1}
+mpjsons.serialize(Order(2, Set("a"), "n"))           // {"id":2,"tags":["a"],"note":"n"}
+mpjsons.deserialize[Order]("""{"id":1}""")           // Order(1, Set(), "")
+```
+
+- It applies to Scala collections (maps included), arrays and String; on any other type it fails
+  when the (de)serializer is built.
+- A missing key reads the way `[]` (or `""`) would, so converters and post-deserialization
+  transforms registered for the field's type apply to the empty value too. Each object gets its
+  own empty mutable collection.
+- `null` is not empty: it follows the null policy as before.
+- Like any absent key, a missing key keeps a value set by a no-arg constructor.
+
+### Annotations on traits and superclasses
+
+`@jsonName`, `@nullable`, `@skipSerialization` and `@omitEmpty` can also be put on a member of a
+trait or superclass. They then apply to the field that implements or overrides that member, in
+every subclass:
+
+```scala
+sealed trait Event {
+  @jsonName("at") def time: Long
+  @omitEmpty def tags: Set[String]
+}
+
+case class Created(time: Long, tags: Set[String]) extends Event
+case class Renamed(time: Long, name: String, tags: Set[String]) extends Event
+
+mpjsons.serialize(Created(5, Set.empty))            // {"at":5}
+mpjsons.serialize(Renamed(6, "", Set("x")))         // {"at":6,"name":"","tags":["x"]}
+```
+
+- The field's own annotation wins over a supertype's; among supertypes, the nearest one in the
+  linearization wins (in `class C extends A with B`, the one in `B`).
+- Up to 0.7.8 annotations on supertype members had no effect (see `docs/upgrading.md`).
 
 ### Nullable fields and null handling
 

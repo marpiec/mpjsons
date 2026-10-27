@@ -149,7 +149,8 @@ class StaticDeserializer[T](private val innerDeserializer: JsonTypeDeserializer[
 }
 
 /**
-  * Allows field in bean to be ommited if it's value is null
+  * Allows a bean field to be null: omitted on write instead of failing, accepted on read. Works on case class
+  * parameters, vals and vars, and on a member of a trait or superclass, for the field implementing it.
   */
 final class nullable extends StaticAnnotation
 

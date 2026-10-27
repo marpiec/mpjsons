@@ -67,7 +67,7 @@ private[reflection] object ReflectionUtilNoCache {
             val omitIfEmpty = annotations.exists(_.tree.tpe <:< omitEmptyType)
             if (omitIfEmpty && !canBeEmpty(fieldType)) {
               throw new IllegalArgumentException("@omitEmpty on field " + fieldName + " of " + tpe + ": it applies to collections, " +
-                "arrays and String, not to " + fieldType)
+                "Options, arrays and String, not to " + fieldType)
             }
             val info = FieldWithTypeInfo(
               field,
@@ -87,9 +87,9 @@ private[reflection] object ReflectionUtilNoCache {
     result
   }
 
-  /** The types `@omitEmpty` applies to: Scala collections (maps included), arrays and String. */
+  /** The types `@omitEmpty` applies to: everything that is `IterableOnce` (collections, maps, Options), arrays and String. */
   private def canBeEmpty(fieldType: Type): Boolean =
-    fieldType <:< typeOf[scala.collection.Iterable[_]] || fieldType.typeSymbol == definitions.ArrayClass || fieldType <:< typeOf[String]
+    fieldType <:< typeOf[IterableOnce[_]] || fieldType.typeSymbol == definitions.ArrayClass || fieldType <:< typeOf[String]
 
   private def isJdkClass(classSymbol: Symbol): Boolean = {
     val name = classSymbol.fullName

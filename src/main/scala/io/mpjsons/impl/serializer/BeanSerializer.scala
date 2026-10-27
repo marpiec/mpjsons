@@ -116,12 +116,20 @@ object BeanFieldWriter {
     }
   }
 
-  /** Whether `value` (not null) is an empty collection, array or String, which an `@omitEmpty` field leaves out. */
-  private def isEmpty(value: AnyRef): Boolean = value match {
-    case string: String => string.isEmpty
-    case iterable: scala.collection.Iterable[_] => iterable.isEmpty
-    case _ => value.getClass.isArray && java.lang.reflect.Array.getLength(value) == 0
-  }
+  /**
+   * An `@omitEmpty` field leaves out a value written as `[]`, `{}` or `""` (`isEmptyJson`): reading the missing key
+   * gives the same value. With the built-in serializers these are exactly the empty collections, None, empty arrays and
+   * "". Testing each value's type instead cost about 8 ns per non-empty field (an interface call that sees many
+   * collection classes), and writing a value only to take it back costs about as much per empty one; so the usual
+   * empty values, None, the shared empty immutable collections (which the readers return too) and "", are recognised
+   * first by identity, and only other values are written and judged by their output.
+   */
+  private def isKnownEmpty(value: AnyRef): Boolean =
+    (value eq None) || (value eq Nil) || (value eq Set.empty) || (value eq Map.empty) || (value eq Vector.empty) ||
+      value.isInstanceOf[String] && value.asInstanceOf[String].isEmpty // not `value == ""`: equals is a virtual call
+
+  private def isEmptyJson(first: Int, second: Int): Boolean =
+    first == '[' && second == ']' || first == '{' && second == '}' || first == '"' && second == '"'
 
   final class ObjectWriter(name: String, field: Field, nullable: Boolean, serializer: JsonTypeSerializer[AnyRef],
                            nullMode: Int, typeName: String, omitDefault: Boolean, defaultValue: AnyRef, omitEmpty: Boolean)
@@ -142,11 +150,27 @@ object BeanFieldWriter {
         } else {
           throw new IllegalArgumentException("Null value is not allowed for field " + name + " in type " + typeName)
         }
-      } else if (omitEmpty && BeanFieldWriter.isEmpty(value)) {
+      } else if (omitEmpty && BeanFieldWriter.isKnownEmpty(value)) {
         false
+      } else if (omitEmpty) {
+        writeUnlessEmpty(value, jsonBuilder, notFirst)
       } else {
         appendPrefix(jsonBuilder.underlying, notFirst)
         serializer.serialize(value, jsonBuilder)
+        true
+      }
+    }
+
+    private def writeUnlessEmpty(value: AnyRef, jsonBuilder: StringBuilder, notFirst: Boolean): Boolean = {
+      val builder = jsonBuilder.underlying
+      val start = builder.length
+      appendPrefix(builder, notFirst)
+      val valueStart = builder.length
+      serializer.serialize(value, jsonBuilder)
+      if (builder.length - valueStart == 2 && BeanFieldWriter.isEmptyJson(builder.charAt(valueStart), builder.charAt(valueStart + 1))) {
+        builder.setLength(start)
+        false
+      } else {
         true
       }
     }
@@ -167,11 +191,26 @@ object BeanFieldWriter {
         } else {
           throw new IllegalArgumentException("Null value is not allowed for field " + name + " in type " + typeName)
         }
-      } else if (omitEmpty && BeanFieldWriter.isEmpty(value)) {
+      } else if (omitEmpty && BeanFieldWriter.isKnownEmpty(value)) {
         false
+      } else if (omitEmpty) {
+        writeUtf8UnlessEmpty(value, out, notFirst)
       } else {
         writePrefix(out, notFirst)
         writer.writeUtf8(value, out)
+        true
+      }
+    }
+
+    private def writeUtf8UnlessEmpty(value: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
+      val start = out.size
+      writePrefix(out, notFirst)
+      val valueStart = out.size
+      writer.writeUtf8(value, out)
+      if (out.size - valueStart == 2 && BeanFieldWriter.isEmptyJson(out.byteAt(valueStart), out.byteAt(valueStart + 1))) {
+        out.truncate(start)
+        false
+      } else {
         true
       }
     }

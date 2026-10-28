@@ -1,0 +1,52 @@
+# OmitEmptyBench (in-repo), 0.7.10, JDK 25.0.4.1, 3 forks, -prof gc, 27/10/2026
+empty: @omitEmpty 26 chars {"id":42,"name":"renamed"}
+empty: plain 102 chars {"id":42,"name":"renamed","tags":[],"labels":[],"attributes":[],"comment":"","items":[],"discount":{}}
+full: @omitEmpty 144 chars {"id":42,"name":"renamed","tags":["a","b"],"labels":["x"],"attributes":[["k","v"]],"comment":"a comment","items":[1,2,3],"discount":{"value":5}}
+full: plain 144 chars {"id":42,"name":"renamed","tags":["a","b"],"labels":["x"],"attributes":[["k","v"]],"comment":"a comment","items":[1,2,3],"discount":{"value":5}}
+OmitEmptyBench.readOmitting                              empty  avgt   15   118,504 ±   3,929   ns/op
+OmitEmptyBench.readOmitting:gc.alloc.rate.norm           empty  avgt   15   144,001 ±   0,001    B/op
+OmitEmptyBench.readOmitting                               full  avgt   15   596,192 ±   6,748   ns/op
+OmitEmptyBench.readOmitting:gc.alloc.rate.norm            full  avgt   15   848,004 ±   0,001    B/op
+OmitEmptyBench.readOmittingBuffer                        empty  avgt   15    47,534 ±   4,416   ns/op
+OmitEmptyBench.readOmittingBuffer:gc.alloc.rate.norm     empty  avgt   15   144,000 ±  25,039    B/op
+OmitEmptyBench.readOmittingBuffer                         full  avgt   15   102,435 ±   1,461   ns/op
+OmitEmptyBench.readOmittingBuffer:gc.alloc.rate.norm      full  avgt   15   240,001 ±   0,001    B/op
+OmitEmptyBench.readPlain                                 empty  avgt   15   288,091 ±   1,803   ns/op
+OmitEmptyBench.readPlain:gc.alloc.rate.norm              empty  avgt   15   344,002 ±   0,001    B/op
+OmitEmptyBench.readPlain                                  full  avgt   15   594,268 ±   7,602   ns/op
+OmitEmptyBench.readPlain:gc.alloc.rate.norm               full  avgt   15   848,004 ±   0,001    B/op
+OmitEmptyBench.readPlainBuffer                           empty  avgt   15    60,948 ±   0,672   ns/op
+OmitEmptyBench.readPlainBuffer:gc.alloc.rate.norm        empty  avgt   15   128,000 ±   0,001    B/op
+OmitEmptyBench.readPlainBuffer                            full  avgt   15    96,273 ±   1,222   ns/op
+OmitEmptyBench.readPlainBuffer:gc.alloc.rate.norm         full  avgt   15   240,001 ±   0,001    B/op
+OmitEmptyBench.writeOmitting                             empty  avgt   15   118,835 ±   2,622   ns/op
+OmitEmptyBench.writeOmitting:gc.alloc.rate.norm          empty  avgt   15   192,001 ±   0,001    B/op
+OmitEmptyBench.writeOmitting                              full  avgt   15   406,342 ±   3,958   ns/op
+OmitEmptyBench.writeOmitting:gc.alloc.rate.norm           full  avgt   15   560,003 ±   0,001    B/op
+OmitEmptyBench.writePlain                                empty  avgt   15   208,986 ±   4,154   ns/op
+OmitEmptyBench.writePlain:gc.alloc.rate.norm             empty  avgt   15   336,001 ±   0,001    B/op
+OmitEmptyBench.writePlain                                 full  avgt   15   389,576 ±   8,986   ns/op
+OmitEmptyBench.writePlain:gc.alloc.rate.norm              full  avgt   15   560,003 ±   0,001    B/op
+
+# Write check variants (4 forks): per-value type test (pattern match), per-field type, output only, identity + output (kept)
+## pattern match
+OmitEmptyBench.writeOmitting      full  avgt   20  388,266 ± 4,646  ns/op
+OmitEmptyBench.writePlain         full  avgt   20  341,759 ± 4,138  ns/op
+## per-field type
+OmitEmptyBench.writeOmitting      full  avgt   20  391,280 ± 8,826  ns/op
+OmitEmptyBench.writePlain         full  avgt   20  353,382 ± 4,894  ns/op
+## output only
+OmitEmptyBench.writeOmitting     empty  avgt   20  212,858 ± 4,008  ns/op
+OmitEmptyBench.writeOmitting      full  avgt   20  359,159 ± 6,206  ns/op
+OmitEmptyBench.writePlain        empty  avgt   20  189,294 ± 1,354  ns/op
+OmitEmptyBench.writePlain         full  avgt   20  352,005 ± 6,453  ns/op
+## identity + output, with value == ""
+OmitEmptyBench.writeOmitting     empty  avgt   20  114,368 ± 4,055  ns/op
+OmitEmptyBench.writeOmitting      full  avgt   20  388,520 ± 8,420  ns/op
+OmitEmptyBench.writePlain        empty  avgt   20  192,691 ± 2,030  ns/op
+OmitEmptyBench.writePlain         full  avgt   20  352,997 ± 3,157  ns/op
+## identity + output (kept)
+OmitEmptyBench.writeOmitting     empty  avgt   20  111,613 ± 4,388  ns/op
+OmitEmptyBench.writeOmitting      full  avgt   20  364,942 ± 4,562  ns/op
+OmitEmptyBench.writePlain        empty  avgt   20  190,262 ± 2,446  ns/op
+OmitEmptyBench.writePlain         full  avgt   20  345,338 ± 7,188  ns/op

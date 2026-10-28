@@ -498,6 +498,41 @@ What is left:
   handles. A `VarHandle` performs the same receiver and type checks, and a direct `putfield` cannot write the final
   fields of case classes, so there is no simple win.
 
+## 4h. `@omitEmpty` (0.7.9–0.7.10)
+
+Measured 27/10/2026, JDK 25.0.4.1, with `OmitEmptyBench` (in-repo, 3 forks, `-prof gc`; raw results in
+`round7-omitempty.txt`). The benchmark uses an event with 8 fields, 6 of them collections, a String and an `Option`.
+It is written and read once without and once with `@omitEmpty` on those 6. The *empty* case has all 6 fields empty
+(what the annotation is for), the *filled* case none.
+
+| Event | JSON size | Write | Read |
+|---|---|---|---|
+| fields empty | 102 → 26 chars (−75%) | 209 → 119 ns (−43%); 336 → 192 B | 288 → 119 ns (−59%); 344 → 144 B |
+| fields filled | 144 → 144 chars | 390 → 406 ns (+4%); 560 B both | 594 → 596 ns (same); 848 B both |
+| one `ArrayBuffer`, empty | | | 61 → 48 ns (−22%) |
+
+- A missing mutable collection is read as `[]` again for each object, which is still cheaper than parsing the key and
+  `[]` from the input.
+- How the write side decides "empty" matters more than expected (4 forks, filled case):
+  - a type test per value (`case s: String`, `case i: Iterable[_]`, then `isEmpty`) cost +11–14% (+38 to +46 ns
+    for 5 fields);
+  - choosing the test per field from its declared type did not help, because the `isEmpty` call still sees many
+    collection classes;
+  - writing every value and taking back `[]`, `{}` or `""` cost only +2%, but made empty values 12% slower than without
+    the annotation;
+  - kept: recognise `None`, the shared empty collections and `""` by identity first, and only write-and-take-back
+    other values.
+- `value == ""` in that identity test cost +10% by itself: it calls the collection's `equals`. An `instanceof
+  String` check is used instead.
+
+Classes without the annotation, 0.7.8 jar against 0.7.10 (standalone harness, 2 forks, rechecked with 3 where it
+looked different; `round7-regression-0.7.8.txt`):
+- every read, write, bytes and tiny-document benchmark is within ±2%;
+- `typedShapes` first showed −6.7%, but that came from a 0.7.8 run with ±6% error; the recheck gave 9 241 vs
+  9 275 ops/s;
+- `optionAbsent` moves by 1–3 ns either way between runs (−1.7% / +5.9% in the recheck).
+- Allocation is unchanged everywhere.
+
 ## 5. Constraints to respect while optimising
 
 - Public API: `JsonTypeSerializer.serialize(obj, jsonBuilder: scala.collection.mutable.StringBuilder)`,

@@ -588,8 +588,15 @@ wrapping the array they were written into (usually larger than the output; `rema
 
 ```scala
 val buffer: java.nio.ByteBuffer = ser.serializeToByteBuffer(user)
-complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromByteBuffer(buffer)))  // copies once
+complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromArrayUnsafe(buffer.array, 0, buffer.limit)))
 ```
+
+`ByteString.fromByteBuffer(buffer)` would copy the bytes again, which gains nothing over `serializeToBytes`.
+
+As a rule, keep this (or `serializeToBytes`) for ordinary responses and stream only those that can be large
+(exports, reports, unpaginated lists; roughly 1 MB and more). Streaming holds a blocking thread per response for as
+long as the client takes to read it, a failure part-way can only break the connection instead of becoming an error
+response, and the response is sent chunked, without `Content-Length`.
 
 ### Streaming output
 

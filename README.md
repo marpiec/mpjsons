@@ -425,6 +425,7 @@ compact.serialize(Profile("Ann", Some("annie"), None))
 | `omitDefaults = true` | `false` | Bean fields whose value equals what reading `{}` would produce (the no-arg constructor initialisers, or zero / false / null / None) are left out. Lossless for round trips through this library; such nulls are omitted regardless of `nullPolicy`. |
 | `caseClassesViaConstructor = true` | `false` | Case classes are built by calling their primary constructor with the parsed values (constructor bodies such as `require` run; no final field is written reflectively, which future JDKs restrict). Absent keys still give zero / false / null / None. Costs some boxing per value. |
 | `maxDepth = n` | `0` (unlimited) | Reading fails with a clear error once values (objects, collections, maps, Options, tuples) nest deeper than `n`, including unknown fields being skipped. Use it for untrusted input, which could otherwise end in a `StackOverflowError`. |
+| `maxOutputBytes = n` | 100 MiB | Writing fails with a `JsonTooLargeException` once the output is larger than `n` bytes; see "Output size limit". |
 
 Other levers are listed in `docs/roadmap.md`.
 
@@ -581,6 +582,107 @@ complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromArray
 ```
 
 `complete(json: String)` would be sent as `text/plain`, and `HttpEntity(contentType, bytes)` copies the array.
+
+`serializeToByteBuffer` returns the same bytes without the final copy that `serializeToBytes` makes: a `ByteBuffer`
+wrapping the array they were written into (usually larger than the output; `remaining` is the output's length):
+
+```scala
+val buffer: java.nio.ByteBuffer = ser.serializeToByteBuffer(user)
+complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromArrayUnsafe(buffer.array, 0, buffer.limit)))
+```
+
+`ByteString.fromByteBuffer(buffer)` would copy the bytes again, which gains nothing over `serializeToBytes`.
+
+As a rule, keep this (or `serializeToBytes`) for ordinary responses and stream only those that can be large
+(exports, reports, unpaginated lists; roughly 1 MB and more). Streaming holds a blocking thread per response for as
+long as the client takes to read it, a failure part-way can only break the connection instead of becoming an error
+response, and the response is sent chunked, without `Content-Length`.
+
+### Streaming output
+
+`serializeToStream` writes the same bytes to an `OutputStream` while they are produced, in chunks of
+32 KiB, so a large response does not have to be held in memory: memory use stays at about one chunk,
+or the longest single string value (or one custom converter's output) when that is larger. It
+flushes the stream at the end and does not close it. Writing to the stream blocks, so run it on a
+thread that may block.
+
+```scala
+mpjsons.serializeToStream(report, outputStream)   // also (obj, Type, stream), (obj, typeName, stream)
+ser.serializeToStream(report, outputStream)       // StaticSerializer
+```
+
+The chunk size is `MPJsonsConfig.streamChunkBytes` (32 KiB by default), or the `chunkBytes` argument
+for one call, which comes after `maxBytes`. One write to the stream can be up to about twice the
+chunk size. Larger chunks write to the stream less often, which is faster through Pekko's
+`asOutputStream` (each chunk costs a hand-off between threads), but hold more memory per response
+in progress:
+
+```scala
+val mpjsons = new MPJsons(MPJsonsConfig(streamChunkBytes = 16 * 1024))   // every stream of this instance
+ser.serializeToStream(report, outputStream, 800 * 1024 * 1024, 256 * 1024)  // this call: maxBytes, chunkBytes
+```
+
+Streaming a 10.8 MB document through `asOutputStream` (measured once on one machine) took 173 ms in
+1 KiB chunks, 48 ms in 8 KiB, 34 ms in 32 KiB and 30 ms in 256 KiB; mpjsons itself took 24 ms at
+every size. 32 KiB suits most responses; 128–256 KiB pays off for multi-megabyte exports with few
+of them at a time. Above 256 KiB the gain is small, and with G1 a buffer of half a heap region or
+more (regions are 1–32 MB depending on the heap) is a slower "humongous" allocation.
+
+If serialization fails part-way (an exception from a serializer, or the output limit), the chunks
+already written stay written. With Pekko HTTP the status line and headers are sent before the body
+is complete, so a failure can no longer change the status; fail the response stream instead of
+ending it, so the client sees a broken response rather than a short JSON:
+
+```scala
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.{Source, StreamConverters}
+import org.apache.pekko.util.ByteString
+import scala.concurrent.{ExecutionContext, Future, Promise}
+
+/** `blocking`: a dispatcher for blocking work, e.g. system.dispatchers.lookup("pekko.actor.default-blocking-io-dispatcher"). */
+def jsonSource[T](ser: StaticSerializer[T], value: T)(implicit blocking: ExecutionContext): Source[ByteString, NotUsed] = {
+  val end = Promise[Source[ByteString, NotUsed]]()
+  StreamConverters.asOutputStream()
+    .mapMaterializedValue { out =>
+      Future(ser.serializeToStream(value, out)).onComplete { result =>
+        out.close()
+        end.tryComplete(result.map(_ => Source.empty)) // a failure fails the stream instead of ending it
+      }
+      NotUsed
+    }
+    .concat(Source.futureSource(end.future))
+}
+
+complete(HttpEntity(ContentTypes.`application/json`, jsonSource(ser, report)))  // sent chunked
+```
+
+For small responses `serializeToBytes` is faster: the stream costs a thread switch and chunked
+transfer per response.
+
+### Output size limit
+
+The JDK cannot build a `String` of 2^30 (about a billion) or more characters when any of them is
+outside Latin-1, e.g. a Polish letter: the attempt ends in
+`OutOfMemoryError: UTF16 String size is ...` after using several gigabytes of memory. mpjsons stops
+earlier, at `MPJsonsConfig.maxOutputBytes` (100 MiB by default). Larger output fails with an
+`io.mpjsons.JsonTooLargeException` (an `IllegalArgumentException`) naming the type and the limit.
+Every serialize method also takes a limit in bytes for one call:
+
+```scala
+val mpjsons = new MPJsons(MPJsonsConfig(maxOutputBytes = 20 * 1024 * 1024))
+mpjsons.serialize(event)                                     // up to 20 MiB
+mpjsons.serialize(bigReport, maxBytes = 800 * 1024 * 1024)  // this call only
+mpjsons.serializeToBytes(bigReport, maxBytes = 800 * 1024 * 1024)
+mpjsons.serializeToStream(bigReport, outputStream, maxBytes = 800 * 1024 * 1024)
+mpjsons.buildStaticSerializer[Report].serialize(bigReport, 800 * 1024 * 1024)
+```
+
+For `serialize` the limit counts characters, which is never more than the UTF-8 bytes they encode
+to. Byte output stops as soon as its buffer would grow past the limit. String output is checked
+after each object, every 1024 elements of a collection or array, after each map entry and before a
+long string is appended, so it stops soon after crossing the limit, and the finished output is
+checked exactly. Keep the limit well below a billion so that this margin cannot reach the JDK's
+limit.
 
 ### Error handling
 

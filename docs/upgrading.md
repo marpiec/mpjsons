@@ -85,3 +85,16 @@ All new behaviour beyond the fixes above is behind `MPJsonsConfig` levers that d
   subclass in another package still fails, with an explanation.
 - `TypedSerializer` and `TypedDeserializer` gained a trailing `siblings` constructor parameter; the previous
   constructors remain.
+
+# Upgrading to 0.7.11
+
+- **Output is limited to 100 MiB by default.** `serialize` / `serializeToBytes` of output longer than
+  `MPJsonsConfig.maxOutputBytes` now fail with `io.mpjsons.JsonTooLargeException`
+  instead of building it. Raise the limit in the config, or per call with the new `maxBytes` argument
+  (`serialize(obj, maxBytes)`, `serializeToBytes(obj, maxBytes)`, the `Type` and class-name variants, and the same
+  on `StaticSerializer`).
+- `Utf8Output` gained a `maxBytes` constructor parameter; the one-argument constructor remains.
+- New: `serializeToStream(obj, outputStream)` writes UTF-8 to a stream while it is produced, in chunks of
+  `MPJsonsConfig.streamChunkBytes` (32 KiB by default, or a `chunkBytes` argument after `maxBytes` for one call),
+  and `serializeToByteBuffer(obj)` returns the bytes of `serializeToBytes` without its final copy. Both have the
+  `Type`, class-name and `maxBytes` variants and are on `StaticSerializer` too. The existing methods are unchanged.

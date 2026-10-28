@@ -204,9 +204,12 @@ object BeanFieldWriter {
 
     private def writeUtf8UnlessEmpty(value: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
       val start = out.size
+      out.holdBack() // when streaming, keeps what may be taken back from being written to the stream
       writePrefix(out, notFirst)
       val valueStart = out.size
+      out.holdValueStart()
       writer.writeUtf8(value, out)
+      out.release()
       if (out.size - valueStart == 2 && BeanFieldWriter.isEmptyJson(out.byteAt(valueStart), out.byteAt(valueStart + 1))) {
         out.truncate(start)
         false
@@ -503,6 +506,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
       } else {
         writeFields(obj, jsonBuilder)
       }
+      OutputLimit.check(jsonBuilder.underlying, path.maxBytes)
     } finally {
       path.depth -= 1
     }
@@ -580,9 +584,13 @@ object BeanSerializer {
    */
   private[serializer] final val CycleCheckDepth = 100
 
-  /** The beans being serialized on the current thread, from the root to the innermost one. */
+  /**
+   * The beans being serialized on the current thread, from the root to the innermost one, and the output limit of the
+   * serialize call (see OutputLimit).
+   */
   private[serializer] final class Path {
     var depth: Int = 0
+    var maxBytes: Int = Int.MaxValue
     val onPath: java.util.Set[AnyRef] = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[AnyRef, java.lang.Boolean]())
   }
 

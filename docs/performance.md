@@ -498,6 +498,87 @@ What is left:
   handles. A `VarHandle` performs the same receiver and type checks, and a direct `putfield` cannot write the final
   fields of case classes, so there is no simple win.
 
+## 4h. `@omitEmpty` (0.7.9–0.7.10)
+
+Measured 27/10/2026, JDK 25.0.4.1, with `OmitEmptyBench` (in-repo, 3 forks, `-prof gc`; raw results in
+`round7-omitempty.txt`). The benchmark uses an event with 8 fields, 6 of them collections, a String and an `Option`.
+It is written and read once without and once with `@omitEmpty` on those 6. The *empty* case has all 6 fields empty
+(what the annotation is for), the *filled* case none.
+
+| Event | JSON size | Write | Read |
+|---|---|---|---|
+| fields empty | 102 → 26 chars (−75%) | 209 → 119 ns (−43%); 336 → 192 B | 288 → 119 ns (−59%); 344 → 144 B |
+| fields filled | 144 → 144 chars | 390 → 406 ns (+4%); 560 B both | 594 → 596 ns (same); 848 B both |
+| one `ArrayBuffer`, empty | | | 61 → 48 ns (−22%) |
+
+- A missing mutable collection is read as `[]` again for each object, which is still cheaper than parsing the key and
+  `[]` from the input.
+- How the write side decides "empty" matters more than expected (4 forks, filled case):
+  - a type test per value (`case s: String`, `case i: Iterable[_]`, then `isEmpty`) cost +11–14% (+38 to +46 ns
+    for 5 fields);
+  - choosing the test per field from its declared type did not help, because the `isEmpty` call still sees many
+    collection classes;
+  - writing every value and taking back `[]`, `{}` or `""` cost only +2%, but made empty values 12% slower than without
+    the annotation;
+  - kept: recognise `None`, the shared empty collections and `""` by identity first, and only write-and-take-back
+    other values.
+- `value == ""` in that identity test cost +10% by itself: it calls the collection's `equals`. An `instanceof
+  String` check is used instead.
+
+Classes without the annotation, 0.7.8 jar against 0.7.10 (standalone harness, 2 forks, rechecked with 3 where it
+looked different; `round7-regression-0.7.8.txt`):
+- every read, write, bytes and tiny-document benchmark is within ±2%;
+- `typedShapes` first showed −6.7%, but that came from a 0.7.8 run with ±6% error; the recheck gave 9 241 vs
+  9 275 ops/s;
+- `optionAbsent` moves by 1–3 ns either way between runs (−1.7% / +5.9% in the recheck).
+- Allocation is unchanged everywhere.
+
+## 4i. Streaming output and `serializeToByteBuffer` (0.7.11)
+
+`serializeToStream` reuses `Utf8Output`: with a sink, `grow` (the cold path) writes the buffer to the stream once it is
+the chunk size (`streamChunkBytes`, 32 KiB by default, or the call's `chunkBytes`) instead of doubling it, so none of
+the write methods changed. The only hot-path addition is three calls per `@omitEmpty` value that is written and may
+be taken back (`holdBack`, `holdValueStart`, `release`); each is a null test without a sink.
+
+Measured 28/10/2026, JDK 25.0.4.1, standalone harness (`WriteBench` plus an `@omitEmpty` `serializeToBytes` event
+with 7 annotated fields). The committed output-limit classes and the streaming classes were run in the order A B B A,
+2 forks each, and each side's two runs were averaged:
+
+| Benchmark | before | after | change |
+|---|---|---|---|
+| `userStatic` (String) | 3 851 k ops/s | 4 030 k ops/s | +4.6% (code unchanged: noise) |
+| `orders200` (String) | 3 025 ops/s | 3 033 ops/s | +0.3% |
+| `strings` (String) | 16 185 ops/s | 15 706 ops/s | −3.0% (code unchanged; ±10% error in two runs) |
+| `numberArrays` (String) | 9 059 ops/s | 9 107 ops/s | +0.5% |
+| `userBytes` | 4 463 k ops/s | 4 466 k ops/s | 0% |
+| `orders200Bytes` | 3 108 ops/s | 3 108 ops/s | 0% |
+| `stringsBytes` | 23 647 ops/s | 23 946 ops/s | +1.3% |
+| `@omitEmpty` bytes, values empty | 120.2 ns | 121.4 ns | +1.0% |
+| `@omitEmpty` bytes, values filled | 421.3 ns | 420.5 ns | −0.2% |
+
+All changes are within run-to-run noise. Streaming a 2.6 MB document through Pekko's `StreamConverters.asOutputStream`
+(the README example) delivered it in 27 chunks of at most 96 KiB.
+
+Chunk size, measured 28/10/2026 with a plain timing loop (3 passes, medians; one machine, so indicative): a 10.8 MB
+document streamed to a discarding stream, and through the README's Pekko `asOutputStream` source:
+
+| Chunk | discarding stream | through Pekko | chunks |
+|---|---|---|---|
+| 1 KiB | 24 ms | 173 ms | 10 579 |
+| 4 KiB | 24 ms | 68 ms | 2 634 |
+| 8 KiB | 24 ms | 48 ms | 1 317 |
+| 16 KiB | 24 ms | 39 ms | 659 |
+| 32 KiB | 24 ms | 34 ms | 329 |
+| 64 KiB | 24 ms | 38 ms | 165 |
+| 128 KiB | 24 ms | 33 ms | 83 |
+| 256 KiB | 24 ms | 30 ms | 42 |
+| 1 MiB | 24 ms | 27 ms | 11 |
+
+- mpjsons itself does not depend on the chunk size (`serializeToBytes` of the same document: 27 ms).
+- Through Pekko each chunk costs about 15–20 µs (a hand-off between threads), which dominates below 16 KiB.
+- 64 KiB was slower than both 32 KiB and 128 KiB in all three passes (not explained); the default became 32 KiB:
+  as fast as 128 KiB here, with a quarter of the memory per response in progress.
+
 ## 5. Constraints to respect while optimising
 
 - Public API: `JsonTypeSerializer.serialize(obj, jsonBuilder: scala.collection.mutable.StringBuilder)`,

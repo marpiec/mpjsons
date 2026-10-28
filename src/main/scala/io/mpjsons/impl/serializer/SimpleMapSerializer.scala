@@ -69,6 +69,7 @@ class SimpleMapSerializer[T](serializerFactory: SerializerFactory, private val c
 
     var isNotFirstField = false
 
+    val limit = OutputLimit.maxBytes
     obj.foreach {
       case (name, value) =>
 
@@ -97,6 +98,7 @@ class SimpleMapSerializer[T](serializerFactory: SerializerFactory, private val c
             valueSerializer.serialize(value, jsonBuilder)
           }
         }
+        OutputLimit.check(jsonBuilder.underlying, limit)
     }
 
     jsonBuilder.append('}')

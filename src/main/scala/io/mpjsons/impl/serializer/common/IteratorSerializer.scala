@@ -2,7 +2,7 @@ package io.mpjsons.impl.serializer.common
 
 import io.mpjsons.{JsonTypeSerializer, NullPolicy}
 import io.mpjsons.impl.SerializerFactory
-import io.mpjsons.impl.serializer.{Utf8Output, Utf8Writer}
+import io.mpjsons.impl.serializer.{OutputLimit, Utf8Output, Utf8Writer}
 import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
 
 import scala.reflect.runtime.universe._
@@ -23,6 +23,7 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
     jsonBuilder.append('[')
 
     var isNotFirstField = false
+    var count = 0
 
     while (iterator.hasNext) {
       if (isNotFirstField) {
@@ -31,6 +32,8 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
         isNotFirstField = true
       }
       serializeElement(iterator.next(), jsonBuilder)
+      OutputLimit.checkEvery(count, jsonBuilder.underlying)
+      count += 1
     }
 
     jsonBuilder.append(']')
@@ -43,6 +46,7 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
 
     var remaining = list
     var isNotFirstField = false
+    var count = 0
 
     while (remaining ne Nil) {
       if (isNotFirstField) {
@@ -51,6 +55,8 @@ abstract class IteratorSerializer[T, C](private val serializerFactory: Serialize
         isNotFirstField = true
       }
       serializeElement(remaining.head, jsonBuilder)
+      OutputLimit.checkEvery(count, jsonBuilder.underlying)
+      count += 1
       remaining = remaining.tail
     }
 

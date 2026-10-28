@@ -45,6 +45,7 @@ class BitSetSerializer(serializerFactory: SerializerFactory, tpe: Type, context:
 
     var isNotFirstField = false
 
+    val limit = OutputLimit.maxBytes
     obj.iterator.foreach(element => {
 
       if (isNotFirstField) {
@@ -53,6 +54,7 @@ class BitSetSerializer(serializerFactory: SerializerFactory, tpe: Type, context:
         isNotFirstField = true
       }
       subTypeSerializer.serialize(element, jsonBuilder)
+      OutputLimit.check(jsonBuilder.underlying, limit)
     })
 
 

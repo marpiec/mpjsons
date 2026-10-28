@@ -36,6 +36,9 @@ class StringSerializerImpl(escapeSlash: Boolean) extends JsonTypeSerializer[Any]
     val string = obj.toString
     val length = string.length
     val builder = jsonBuilder.underlying
+    if (length >= OutputLimit.LongString) {
+      OutputLimit.checkAppend(builder, length)
+    }
 
     builder.append('"')
 

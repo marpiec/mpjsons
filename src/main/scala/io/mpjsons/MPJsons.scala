@@ -1,6 +1,6 @@
 package io.mpjsons
 
-import io.mpjsons.impl.serializer.{Utf8Output, Utf8Writer}
+import io.mpjsons.impl.serializer.{OutputLimit, Utf8Output, Utf8Writer}
 import io.mpjsons.impl.special.TypeNames
 import io.mpjsons.impl.special.TypedConverter.{TypedDeserializer, TypedSerializer}
 import io.mpjsons.impl.util.{Context, NullValues, TypesUtil}
@@ -61,7 +61,8 @@ private[mpjsons] final class OutputSizeHint {
   @volatile private var length: Int = 64
 
   // Margin: StringBuilder.append(double) reserves 24 chars up front (JDK 19+), so a trailing number must not overflow.
-  def newBuilder(): StringBuilder = new StringBuilder(length + 32)
+  // Never larger than the output may become.
+  def newBuilder(maxLength: Int): StringBuilder = new StringBuilder(Math.min(length + 32, maxLength))
 
   def update(builder: StringBuilder): Unit = {
     length = builder.length
@@ -69,7 +70,7 @@ private[mpjsons] final class OutputSizeHint {
 
   @volatile private var byteLength: Int = 64
 
-  def newUtf8Output(): Utf8Output = new Utf8Output(byteLength + 32)
+  def newUtf8Output(maxLength: Int): Utf8Output = new Utf8Output(Math.min(byteLength + 32, maxLength), maxLength)
 
   def update(out: Utf8Output): Unit = {
     byteLength = out.size
@@ -88,8 +89,11 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], co
   /**
    * Takes an object and returns a String containing JSON representation of that object.
    */
-  def serialize(obj: T): String = {
-    serializeToStringBuilder(obj).toString()
+  def serialize(obj: T): String = serialize(obj, config.maxOutputLength)
+
+  /** `serialize(obj)` allowing at most `maxLength` characters instead of `MPJsonsConfig.maxOutputLength`. */
+  def serialize(obj: T, maxLength: Int): String = {
+    serializeToStringBuilder(obj, maxLength).toString()
   }
 
   /**
@@ -97,9 +101,15 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], co
    * Useful when StringBuilder can be used without converting it to a String
    * which requires copying of underlying char array.
    */
-  def serializeToStringBuilder(obj: T): StringBuilder = {
-    val json = sizeHint.newBuilder()
-    if (obj == null) NullValues.writeNull(json, config.nullPolicy != NullPolicy.Fail, "the top-level value") else innerSerializer.serialize(obj, json)
+  def serializeToStringBuilder(obj: T): StringBuilder = serializeToStringBuilder(obj, config.maxOutputLength)
+
+  /** `serializeToStringBuilder(obj)` allowing at most `maxLength` characters. */
+  def serializeToStringBuilder(obj: T, maxLength: Int): StringBuilder = {
+    val json = sizeHint.newBuilder(maxLength)
+    OutputLimit.within(maxLength, if (obj == null) "null" else obj.getClass.getName, "characters") {
+      if (obj == null) NullValues.writeNull(json, config.nullPolicy != NullPolicy.Fail, "the top-level value") else innerSerializer.serialize(obj, json)
+      json.length
+    }
     sizeHint.update(json)
     json
   }
@@ -110,12 +120,18 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], co
    * Takes an object and returns JSON representation of that object encoded in UTF-8: the same bytes as
    * `serialize(obj).getBytes(UTF_8)`, written without building the String first.
    */
-  def serializeToBytes(obj: T): Array[Byte] = {
+  def serializeToBytes(obj: T): Array[Byte] = serializeToBytes(obj, config.maxOutputLength)
+
+  /** `serializeToBytes(obj)` allowing at most `maxLength` bytes instead of `MPJsonsConfig.maxOutputLength`. */
+  def serializeToBytes(obj: T, maxLength: Int): Array[Byte] = {
     if (obj == null) {
-      serialize(obj).getBytes(StandardCharsets.UTF_8)
+      serialize(obj, maxLength).getBytes(StandardCharsets.UTF_8)
     } else {
-      val out = sizeHint.newUtf8Output()
-      utf8Writer.writeUtf8(obj, out)
+      val out = sizeHint.newUtf8Output(maxLength)
+      OutputLimit.within(maxLength, obj.getClass.getName, "bytes") {
+        utf8Writer.writeUtf8(obj, out)
+        out.size
+      }
       sizeHint.update(out)
       out.toByteArray
     }
@@ -281,12 +297,15 @@ class MPJsons(val config: MPJsonsConfig) {
    * @param obj object to serialize
    * @return JSON representation of given object
    */
-  def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = {
+  def serialize[T](obj: T)(implicit tag: TypeTag[T]): String = serialize(obj, config.maxOutputLength)
+
+  /** `serialize(obj)` allowing at most `maxLength` characters instead of `MPJsonsConfig.maxOutputLength`. */
+  def serialize[T](obj: T, maxLength: Int)(implicit tag: TypeTag[T]): String = {
     val tpe = extractType(tag)
     if (isNothing(tpe)) {
       throw new IllegalArgumentException("Type for object serialization was not specified, or was Nothing. Please specify object type.")
     } else {
-      serialize(obj, tpe)
+      serialize(obj, tpe, maxLength)
     }
   }
 
@@ -296,7 +315,10 @@ class MPJsons(val config: MPJsonsConfig) {
    * @param tpe type of object to serialize
    * @return JSON representation of given object
    */
-  def serialize[T](obj: T, tpe: Type): String = {
+  def serialize[T](obj: T, tpe: Type): String = serialize(obj, tpe, config.maxOutputLength)
+
+  /** `serialize(obj, tpe)` allowing at most `maxLength` characters instead of `MPJsonsConfig.maxOutputLength`. */
+  def serialize[T](obj: T, tpe: Type, maxLength: Int): String = {
     if (obj == null) {
       if (config.nullPolicy == NullPolicy.Fail) {
         throw new IllegalArgumentException("Null value is not allowed as the top-level value (NullPolicy.Fail); use NullPolicy.Omit or WriteNull to allow nulls")
@@ -304,8 +326,11 @@ class MPJsons(val config: MPJsonsConfig) {
       "null"
     } else {
       val hint = outputSizeHint(tpe)
-      val json = hint.newBuilder()
-      serializerFactory.getSerializer(tpe, rootContext).serialize(obj, json)
+      val json = hint.newBuilder(maxLength)
+      OutputLimit.within(maxLength, tpe, "characters") {
+        serializerFactory.getSerializer(tpe, rootContext).serialize(obj, json)
+        json.length
+      }
       hint.update(json)
       json.toString()
     }
@@ -317,9 +342,10 @@ class MPJsons(val config: MPJsonsConfig) {
    * @param typeName type name (class name) of object to serialize
    * @return JSON representation of given object
    */
-  def serialize[T](obj: T, typeName: String): String = {
-    serialize(obj, extractTypeFromName(typeName))
-  }
+  def serialize[T](obj: T, typeName: String): String = serialize(obj, extractTypeFromName(typeName), config.maxOutputLength)
+
+  /** `serialize(obj, typeName)` allowing at most `maxLength` characters instead of `MPJsonsConfig.maxOutputLength`. */
+  def serialize[T](obj: T, typeName: String, maxLength: Int): String = serialize(obj, extractTypeFromName(typeName), maxLength)
 
   /**
    * Creates JSON representation of given object encoded in UTF-8: the same bytes as
@@ -327,12 +353,15 @@ class MPJsons(val config: MPJsonsConfig) {
    * @param obj object to serialize
    * @return JSON representation of given object as UTF-8 bytes
    */
-  def serializeToBytes[T](obj: T)(implicit tag: TypeTag[T]): Array[Byte] = {
+  def serializeToBytes[T](obj: T)(implicit tag: TypeTag[T]): Array[Byte] = serializeToBytes(obj, config.maxOutputLength)
+
+  /** `serializeToBytes(obj)` allowing at most `maxLength` bytes instead of `MPJsonsConfig.maxOutputLength`. */
+  def serializeToBytes[T](obj: T, maxLength: Int)(implicit tag: TypeTag[T]): Array[Byte] = {
     val tpe = extractType(tag)
     if (isNothing(tpe)) {
       throw new IllegalArgumentException("Type for object serialization was not specified, or was Nothing. Please specify object type.")
     } else {
-      serializeToBytes(obj, tpe)
+      serializeToBytes(obj, tpe, maxLength)
     }
   }
 
@@ -342,13 +371,19 @@ class MPJsons(val config: MPJsonsConfig) {
    * @param tpe type of object to serialize
    * @return JSON representation of given object as UTF-8 bytes
    */
-  def serializeToBytes[T](obj: T, tpe: Type): Array[Byte] = {
+  def serializeToBytes[T](obj: T, tpe: Type): Array[Byte] = serializeToBytes(obj, tpe, config.maxOutputLength)
+
+  /** `serializeToBytes(obj, tpe)` allowing at most `maxLength` bytes instead of `MPJsonsConfig.maxOutputLength`. */
+  def serializeToBytes[T](obj: T, tpe: Type, maxLength: Int): Array[Byte] = {
     if (obj == null) {
-      serialize(obj, tpe).getBytes(StandardCharsets.UTF_8)
+      serialize(obj, tpe, maxLength).getBytes(StandardCharsets.UTF_8)
     } else {
       val hint = outputSizeHint(tpe)
-      val out = hint.newUtf8Output()
-      Utf8Writer.of(serializerFactory.getSerializer[T](tpe, rootContext)).writeUtf8(obj, out)
+      val out = hint.newUtf8Output(maxLength)
+      OutputLimit.within(maxLength, tpe, "bytes") {
+        Utf8Writer.of(serializerFactory.getSerializer[T](tpe, rootContext)).writeUtf8(obj, out)
+        out.size
+      }
       hint.update(out)
       out.toByteArray
     }
@@ -360,9 +395,12 @@ class MPJsons(val config: MPJsonsConfig) {
    * @param typeName type name (class name) of object to serialize
    * @return JSON representation of given object as UTF-8 bytes
    */
-  def serializeToBytes[T](obj: T, typeName: String): Array[Byte] = {
-    serializeToBytes(obj, extractTypeFromName(typeName))
-  }
+  def serializeToBytes[T](obj: T, typeName: String): Array[Byte] =
+    serializeToBytes(obj, extractTypeFromName(typeName), config.maxOutputLength)
+
+  /** `serializeToBytes(obj, typeName)` allowing at most `maxLength` bytes instead of `MPJsonsConfig.maxOutputLength`. */
+  def serializeToBytes[T](obj: T, typeName: String, maxLength: Int): Array[Byte] =
+    serializeToBytes(obj, extractTypeFromName(typeName), maxLength)
 
   /**
    * Creates a specialized serializer for a passed type name (class name).

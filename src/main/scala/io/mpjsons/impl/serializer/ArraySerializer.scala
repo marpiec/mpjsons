@@ -50,6 +50,7 @@ class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, contex
     while (i < array.length) {
       if (i > 0) builder.append(',')
       builder.append(array(i))
+      OutputLimit.checkEvery(i, builder)
       i += 1
     }
     builder.append(']')
@@ -61,6 +62,7 @@ class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, contex
     while (i < array.length) {
       if (i > 0) builder.append(',')
       builder.append(array(i))
+      OutputLimit.checkEvery(i, builder)
       i += 1
     }
     builder.append(']')
@@ -76,6 +78,7 @@ class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, contex
         throw new IllegalArgumentException("Non-finite floating point value " + value + " cannot be represented in JSON")
       }
       builder.append(value)
+      OutputLimit.checkEvery(i, builder)
       i += 1
     }
     builder.append(']')
@@ -91,6 +94,7 @@ class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, contex
         throw new IllegalArgumentException("Non-finite floating point value " + value + " cannot be represented in JSON")
       }
       builder.append(value)
+      OutputLimit.checkEvery(i, builder)
       i += 1
     }
     builder.append(']')
@@ -102,6 +106,7 @@ class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, contex
     while (i < array.length) {
       if (i > 0) builder.append(',')
       builder.append(array(i).toInt)
+      OutputLimit.checkEvery(i, builder)
       i += 1
     }
     builder.append(']')
@@ -113,6 +118,7 @@ class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, contex
     while (i < array.length) {
       if (i > 0) builder.append(',')
       builder.append(array(i).toInt)
+      OutputLimit.checkEvery(i, builder)
       i += 1
     }
     builder.append(']')
@@ -124,6 +130,7 @@ class ArraySerializer[E](serializerFactory: SerializerFactory, tpe: Type, contex
     while (i < array.length) {
       if (i > 0) builder.append(',')
       builder.append(if (array(i)) "true" else "false")
+      OutputLimit.checkEvery(i, builder)
       i += 1
     }
     builder.append(']')

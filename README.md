@@ -425,6 +425,7 @@ compact.serialize(Profile("Ann", Some("annie"), None))
 | `omitDefaults = true` | `false` | Bean fields whose value equals what reading `{}` would produce (the no-arg constructor initialisers, or zero / false / null / None) are left out. Lossless for round trips through this library; such nulls are omitted regardless of `nullPolicy`. |
 | `caseClassesViaConstructor = true` | `false` | Case classes are built by calling their primary constructor with the parsed values (constructor bodies such as `require` run; no final field is written reflectively, which future JDKs restrict). Absent keys still give zero / false / null / None. Costs some boxing per value. |
 | `maxDepth = n` | `0` (unlimited) | Reading fails with a clear error once values (objects, collections, maps, Options, tuples) nest deeper than `n`, including unknown fields being skipped. Use it for untrusted input, which could otherwise end in a `StackOverflowError`. |
+| `maxOutputLength = n` | 100 MiB | Writing fails with a `JsonTooLargeException` once the output is longer than `n` characters (`serialize`) or bytes (`serializeToBytes`); see "Output size limit". |
 
 Other levers are listed in `docs/roadmap.md`.
 
@@ -581,6 +582,28 @@ complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromArray
 ```
 
 `complete(json: String)` would be sent as `text/plain`, and `HttpEntity(contentType, bytes)` copies the array.
+
+### Output size limit
+
+The JDK cannot build a `String` of 2^30 (about a billion) or more characters when any of them is
+outside Latin-1, e.g. a Polish letter: the attempt ends in
+`OutOfMemoryError: UTF16 String size is ...` after using several gigabytes of memory. mpjsons stops earlier, at `MPJsonsConfig.maxOutputLength`
+(100 MiB by default): characters for `serialize`, bytes for `serializeToBytes`. Longer output fails
+with an `io.mpjsons.JsonTooLargeException` (an `IllegalArgumentException`) naming the type and the
+limit. Every serialize method also takes a limit for one call:
+
+```scala
+val mpjsons = new MPJsons(MPJsonsConfig(maxOutputLength = 20 * 1024 * 1024))
+mpjsons.serialize(event)                                     // up to 20 MiB
+mpjsons.serialize(bigReport, maxLength = 800 * 1024 * 1024)  // this call only
+mpjsons.serializeToBytes(bigReport, maxLength = 800 * 1024 * 1024)
+mpjsons.buildStaticSerializer[Report].serialize(bigReport, 800 * 1024 * 1024)
+```
+
+Byte output stops as soon as its buffer would grow past the limit. String output is checked after
+each object, every 1024 elements of a collection or array, after each map entry and before a long
+string is appended, so it stops soon after crossing the limit, and the finished output is checked
+exactly. Keep the limit well below 1 G characters so that this margin cannot reach the JDK's limit.
 
 ### Error handling
 

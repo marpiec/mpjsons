@@ -503,6 +503,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
       } else {
         writeFields(obj, jsonBuilder)
       }
+      OutputLimit.check(jsonBuilder.underlying, path.maxLength)
     } finally {
       path.depth -= 1
     }
@@ -580,9 +581,13 @@ object BeanSerializer {
    */
   private[serializer] final val CycleCheckDepth = 100
 
-  /** The beans being serialized on the current thread, from the root to the innermost one. */
+  /**
+   * The beans being serialized on the current thread, from the root to the innermost one, and the output limit of the
+   * serialize call (see OutputLimit).
+   */
   private[serializer] final class Path {
     var depth: Int = 0
+    var maxLength: Int = Int.MaxValue
     val onPath: java.util.Set[AnyRef] = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[AnyRef, java.lang.Boolean]())
   }
 

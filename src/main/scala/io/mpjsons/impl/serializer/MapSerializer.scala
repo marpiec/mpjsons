@@ -38,7 +38,7 @@ class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, conte
     jsonBuilder.append('[')
     var nonFirstField = false
 
-    val limit = OutputLimit.maxLength
+    val limit = OutputLimit.maxBytes
     map.foreachEntry { (key, value) =>
       if (nonFirstField) {
         jsonBuilder.append(',')
@@ -66,7 +66,7 @@ class MapSerializer[K, V](serializerFactory: SerializerFactory, tpe: Type, conte
     jsonBuilder.append('{')
     var nonFirstField = false
 
-    val limit = OutputLimit.maxLength
+    val limit = OutputLimit.maxBytes
     map.foreachEntry { (key, value) =>
       if (key == null) {
         throw new IllegalArgumentException("A null map key cannot be written as a JSON object key")

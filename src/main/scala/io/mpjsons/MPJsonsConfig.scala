@@ -31,13 +31,13 @@ package io.mpjsons
  *                                produce for that type (the no-arg constructor's initialisers, or zero / false /
  *                                null / None for types constructed without a constructor). Lossless for round
  *                                trips through this library; takes precedence over `nullPolicy` for such fields.
- * @param maxOutputLength         on write, the longest output allowed: characters for `serialize`, bytes for
- *                                `serializeToBytes` (100 MiB by default). Longer output fails with a
- *                                [[JsonTooLargeException]] while it is being built, instead of growing until the JDK's
- *                                own limit (about 2^30 UTF-16 characters for a String) throws an OutOfMemoryError. Each
- *                                serialize method also takes a `maxLength` argument for one call. Keep it well below
- *                                that JDK limit: String output is checked every 1024 collection elements, so it can
- *                                run a little past the limit before failing.
+ * @param maxOutputBytes          on write, the largest output allowed, in bytes (100 MiB by default; String output
+ *                                counts characters, none of which takes less than a byte in UTF-8). Larger output fails
+ *                                with a [[JsonTooLargeException]] while it is being built, instead of growing until the
+ *                                JDK's own limit (about 2^30 UTF-16 characters for a String) throws an
+ *                                OutOfMemoryError. Each serialize method also takes a `maxBytes` argument for one call.
+ *                                Keep it well below that JDK limit: String output is checked every 1024 collection
+ *                                elements, so it can run a little past the limit before failing.
  */
 final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                nullPolicy: NullPolicy = NullPolicy.Fail,
@@ -49,6 +49,6 @@ final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                omitDefaults: Boolean = false,
                                caseClassesViaConstructor: Boolean = false,
                                maxDepth: Int = 0,
-                               maxOutputLength: Int = 100 * 1024 * 1024) {
-  require(maxOutputLength > 0, "maxOutputLength must be positive, was " + maxOutputLength)
+                               maxOutputBytes: Int = 100 * 1024 * 1024) {
+  require(maxOutputBytes > 0, "maxOutputBytes must be positive, was " + maxOutputBytes)
 }

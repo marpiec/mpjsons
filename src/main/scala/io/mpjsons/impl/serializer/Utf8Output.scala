@@ -13,9 +13,9 @@ import scala.annotation.nowarn
  * sequence and an unpaired surrogate becomes '?'. Text is only ever passed in pieces that are delimited by ASCII
  * (quotes, commas, colons, brackets), so encoding piece by piece gives the same bytes as encoding the whole document.
  *
- * Growing past `maxLength` bytes fails with a JsonTooLargeException (see OutputLimit).
+ * Growing past `maxBytes` bytes fails with a JsonTooLargeException (see OutputLimit).
  */
-final class Utf8Output(initialCapacity: Int, maxLength: Int) {
+final class Utf8Output(initialCapacity: Int, maxBytes: Int) {
 
   def this(initialCapacity: Int) = this(initialCapacity, Int.MaxValue)
 
@@ -49,14 +49,14 @@ final class Utf8Output(initialCapacity: Int, maxLength: Int) {
 
   private def grow(extra: Int): Unit = {
     val needed = count.toLong + extra
-    if (needed > maxLength) {
-      throw OutputLimit.tooLarge(maxLength, "bytes")
+    if (needed > maxBytes) {
+      throw OutputLimit.tooLarge(maxBytes)
     }
     if (needed > Utf8Output.MaxLength) {
       throw new OutOfMemoryError("JSON output larger than " + Utf8Output.MaxLength + " bytes")
     }
     val doubled = buf.length.toLong * 2
-    buf = Arrays.copyOf(buf, Math.min(Math.max(doubled, needed), Math.min(maxLength, Utf8Output.MaxLength).toLong).toInt)
+    buf = Arrays.copyOf(buf, Math.min(Math.max(doubled, needed), Math.min(maxBytes, Utf8Output.MaxLength).toLong).toInt)
   }
 
   def writeByte(b: Byte): Unit = {

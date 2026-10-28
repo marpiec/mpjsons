@@ -45,7 +45,7 @@ class BitSetSerializer(serializerFactory: SerializerFactory, tpe: Type, context:
 
     var isNotFirstField = false
 
-    val limit = OutputLimit.maxLength
+    val limit = OutputLimit.maxBytes
     obj.iterator.foreach(element => {
 
       if (isNotFirstField) {

@@ -89,8 +89,8 @@ All new behaviour beyond the fixes above is behind `MPJsonsConfig` levers that d
 # Upgrading to 0.7.11
 
 - **Output is limited to 100 MiB by default.** `serialize` / `serializeToBytes` of output longer than
-  `MPJsonsConfig.maxOutputLength` (characters, or bytes for UTF-8) now fail with `io.mpjsons.JsonTooLargeException`
-  instead of building it. Raise the limit in the config, or per call with the new `maxLength` argument
-  (`serialize(obj, maxLength)`, `serializeToBytes(obj, maxLength)`, the `Type` and class-name variants, and the same
+  `MPJsonsConfig.maxOutputBytes` now fail with `io.mpjsons.JsonTooLargeException`
+  instead of building it. Raise the limit in the config, or per call with the new `maxBytes` argument
+  (`serialize(obj, maxBytes)`, `serializeToBytes(obj, maxBytes)`, the `Type` and class-name variants, and the same
   on `StaticSerializer`).
-- `Utf8Output` gained a `maxLength` constructor parameter; the one-argument constructor remains.
+- `Utf8Output` gained a `maxBytes` constructor parameter; the one-argument constructor remains.

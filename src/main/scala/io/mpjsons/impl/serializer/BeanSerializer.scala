@@ -503,7 +503,7 @@ class BeanSerializer(serializerFactory: SerializerFactory, private val tpe: Type
       } else {
         writeFields(obj, jsonBuilder)
       }
-      OutputLimit.check(jsonBuilder.underlying, path.maxLength)
+      OutputLimit.check(jsonBuilder.underlying, path.maxBytes)
     } finally {
       path.depth -= 1
     }
@@ -587,7 +587,7 @@ object BeanSerializer {
    */
   private[serializer] final class Path {
     var depth: Int = 0
-    var maxLength: Int = Int.MaxValue
+    var maxBytes: Int = Int.MaxValue
     val onPath: java.util.Set[AnyRef] = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[AnyRef, java.lang.Boolean]())
   }
 

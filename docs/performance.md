@@ -536,9 +536,9 @@ looked different; `round7-regression-0.7.8.txt`):
 ## 4i. Streaming output and `serializeToByteBuffer` (0.7.11)
 
 `serializeToStream` reuses `Utf8Output`: with a sink, `grow` (the cold path) writes the buffer to the stream once it is
-`streamChunkBytes` (64 KiB by default) instead of doubling it, so none of the write methods changed. The only hot-path addition is three calls per
-`@omitEmpty` value that is written and may be taken back (`holdBack`, `holdValueStart`, `release`); each is a null
-test without a sink.
+the chunk size (`streamChunkBytes`, 32 KiB by default, or the call's `chunkBytes`) instead of doubling it, so none of
+the write methods changed. The only hot-path addition is three calls per `@omitEmpty` value that is written and may
+be taken back (`holdBack`, `holdValueStart`, `release`); each is a null test without a sink.
 
 Measured 28/10/2026, JDK 25.0.4.1, standalone harness (`WriteBench` plus an `@omitEmpty` `serializeToBytes` event
 with 7 annotated fields). The committed output-limit classes and the streaming classes were run in the order A B B A,
@@ -558,6 +558,26 @@ with 7 annotated fields). The committed output-limit classes and the streaming c
 
 All changes are within run-to-run noise. Streaming a 2.6 MB document through Pekko's `StreamConverters.asOutputStream`
 (the README example) delivered it in 27 chunks of at most 96 KiB.
+
+Chunk size, measured 28/10/2026 with a plain timing loop (3 passes, medians; one machine, so indicative): a 10.8 MB
+document streamed to a discarding stream, and through the README's Pekko `asOutputStream` source:
+
+| Chunk | discarding stream | through Pekko | chunks |
+|---|---|---|---|
+| 1 KiB | 24 ms | 173 ms | 10 579 |
+| 4 KiB | 24 ms | 68 ms | 2 634 |
+| 8 KiB | 24 ms | 48 ms | 1 317 |
+| 16 KiB | 24 ms | 39 ms | 659 |
+| 32 KiB | 24 ms | 34 ms | 329 |
+| 64 KiB | 24 ms | 38 ms | 165 |
+| 128 KiB | 24 ms | 33 ms | 83 |
+| 256 KiB | 24 ms | 30 ms | 42 |
+| 1 MiB | 24 ms | 27 ms | 11 |
+
+- mpjsons itself does not depend on the chunk size (`serializeToBytes` of the same document: 27 ms).
+- Through Pekko each chunk costs about 15–20 µs (a hand-off between threads), which dominates below 16 KiB.
+- 64 KiB was slower than both 32 KiB and 128 KiB in all three passes (not explained); the default became 32 KiB:
+  as fast as 128 KiB here, with a quarter of the memory per response in progress.
 
 ## 5. Constraints to respect while optimising
 

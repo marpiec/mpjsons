@@ -39,9 +39,10 @@ package io.mpjsons
  *                                Keep it well below that JDK limit: String output is checked every 1024 collection
  *                                elements, so it can run a little past the limit before failing.
  * @param streamChunkBytes        for `serializeToStream`, how many bytes are collected before they are written to the
- *                                stream (64 KiB by default). One write can be up to about twice this, and a single
+ *                                stream (32 KiB by default). One write can be up to about twice this, and a single
  *                                string longer than this is written whole. Smaller values use less memory per call in
- *                                progress and write to the stream more often.
+ *                                progress and write to the stream more often. `serializeToStream` also takes a
+ *                                `chunkBytes` argument for one call.
  */
 final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                nullPolicy: NullPolicy = NullPolicy.Fail,
@@ -54,7 +55,7 @@ final case class MPJsonsConfig(ignoreNonExistingFields: Boolean = false,
                                caseClassesViaConstructor: Boolean = false,
                                maxDepth: Int = 0,
                                maxOutputBytes: Int = 100 * 1024 * 1024,
-                               streamChunkBytes: Int = 64 * 1024) {
+                               streamChunkBytes: Int = 32 * 1024) {
   require(maxOutputBytes > 0, "maxOutputBytes must be positive, was " + maxOutputBytes)
   require(streamChunkBytes > 0, "streamChunkBytes must be positive, was " + streamChunkBytes)
 }

@@ -95,6 +95,6 @@ All new behaviour beyond the fixes above is behind `MPJsonsConfig` levers that d
   on `StaticSerializer`).
 - `Utf8Output` gained a `maxBytes` constructor parameter; the one-argument constructor remains.
 - New: `serializeToStream(obj, outputStream)` writes UTF-8 to a stream while it is produced, in chunks of
-  `MPJsonsConfig.streamChunkBytes` (64 KiB by default), and
-  `serializeToByteBuffer(obj)` returns the bytes of `serializeToBytes` without its final copy. Both have the `Type`,
-  class-name and `maxBytes` variants and are on `StaticSerializer` too. The existing methods are unchanged.
+  `MPJsonsConfig.streamChunkBytes` (32 KiB by default, or a `chunkBytes` argument after `maxBytes` for one call),
+  and `serializeToByteBuffer(obj)` returns the bytes of `serializeToBytes` without its final copy. Both have the
+  `Type`, class-name and `maxBytes` variants and are on `StaticSerializer` too. The existing methods are unchanged.

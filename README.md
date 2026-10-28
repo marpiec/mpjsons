@@ -594,21 +594,32 @@ complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromByteB
 ### Streaming output
 
 `serializeToStream` writes the same bytes to an `OutputStream` while they are produced, in chunks of
-64 KiB, so a large response does not have to be held in memory: memory use stays at about 64 KiB,
-or the longest single string value (or one custom converter's output) when that is larger. It flushes the stream at the end and does
-not close it. Writing to the stream blocks, so run it on a thread that may block.
+32 KiB, so a large response does not have to be held in memory: memory use stays at about one chunk,
+or the longest single string value (or one custom converter's output) when that is larger. It
+flushes the stream at the end and does not close it. Writing to the stream blocks, so run it on a
+thread that may block.
 
 ```scala
 mpjsons.serializeToStream(report, outputStream)   // also (obj, Type, stream), (obj, typeName, stream)
 ser.serializeToStream(report, outputStream)       // StaticSerializer
 ```
 
-The chunk size is `MPJsonsConfig.streamChunkBytes` (64 KiB by default). One write to the stream can be up to about
-twice that. A smaller value uses less memory per response in progress and writes to the stream more often:
+The chunk size is `MPJsonsConfig.streamChunkBytes` (32 KiB by default), or the `chunkBytes` argument
+for one call, which comes after `maxBytes`. One write to the stream can be up to about twice the
+chunk size. Larger chunks write to the stream less often, which is faster through Pekko's
+`asOutputStream` (each chunk costs a hand-off between threads), but hold more memory per response
+in progress:
 
 ```scala
-val mpjsons = new MPJsons(MPJsonsConfig(streamChunkBytes = 16 * 1024))
+val mpjsons = new MPJsons(MPJsonsConfig(streamChunkBytes = 16 * 1024))   // every stream of this instance
+ser.serializeToStream(report, outputStream, 800 * 1024 * 1024, 256 * 1024)  // this call: maxBytes, chunkBytes
 ```
+
+Streaming a 10.8 MB document through `asOutputStream` (measured once on one machine) took 173 ms in
+1 KiB chunks, 48 ms in 8 KiB, 34 ms in 32 KiB and 30 ms in 256 KiB; mpjsons itself took 24 ms at
+every size. 32 KiB suits most responses; 128–256 KiB pays off for multi-megabyte exports with few
+of them at a time. Above 256 KiB the gain is small, and with G1 a buffer of half a heap region or
+more (regions are 1–32 MB depending on the heap) is a slower "humongous" allocation.
 
 If serialization fails part-way (an exception from a serializer, or the output limit), the chunks
 already written stay written. With Pekko HTTP the status line and headers are sent before the body

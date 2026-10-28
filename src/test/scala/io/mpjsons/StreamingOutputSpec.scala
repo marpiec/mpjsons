@@ -67,19 +67,19 @@ class StreamingOutputSpec extends AnyFlatSpec {
     stream
   }
 
-  "serializeToStream" must "write the bytes of serializeToBytes in chunks of 64 KiB, flush and not close the stream" in {
+  "serializeToStream" must "write the bytes of serializeToBytes in chunks of 32 KiB, flush and not close the stream" in {
     val expected = m.serializeToBytes(document)
     expected.length must be > 500000
     val stream = streamed(document)
     stream.bytes.toByteArray mustBe expected
     stream.writes must be > 5
-    stream.largestWrite must be <= 128 * 1024
+    stream.largestWrite must be <= 64 * 1024
     stream.flushes mustBe 1
     stream.closed mustBe false
   }
 
   it must "write chunks of MPJsonsConfig.streamChunkBytes" in {
-    MPJsonsConfig().streamChunkBytes mustBe 64 * 1024
+    MPJsonsConfig().streamChunkBytes mustBe 32 * 1024
     an[IllegalArgumentException] must be thrownBy MPJsonsConfig(streamChunkBytes = 0)
     val expected = m.serializeToBytes(document)
     val small = new RecordingStream
@@ -95,6 +95,29 @@ class StreamingOutputSpec extends AnyFlatSpec {
     val entries = Padded("p", (0 until 300).toList.map(i =>
       Entry(i, Some(Inner(mutable.ArrayBuffer.empty, mutable.ArrayBuffer.empty)), mutable.ArrayBuffer.empty, i)))
     streamed(entries, tiny).bytes.toByteArray mustBe tiny.serializeToBytes(entries)
+  }
+
+  it must "take the chunk size per call in every variant" in {
+    val expected = m.serializeToBytes(document)
+    val limit = MPJsonsConfig().maxOutputBytes
+    val tpe = scala.reflect.runtime.universe.typeOf[Document]
+    val calls: List[RecordingStream => Unit] = List(
+      m.serializeToStream(document, _, limit, 4096),
+      m.serializeToStream(document, tpe, _, limit, 4096),
+      m.serializeToStream(document, classOf[Document].getName, _, limit, 4096),
+      m.buildStaticSerializer[Document].serializeToStream(document, _, limit, 4096))
+    for (call <- calls) {
+      val stream = new RecordingStream
+      call(stream)
+      stream.bytes.toByteArray mustBe expected
+      stream.largestWrite must be <= 8192
+    }
+    val large = new RecordingStream
+    m.serializeToStream(document, large, limit, 256 * 1024)
+    large.bytes.toByteArray mustBe expected
+    large.largestWrite must be > 128 * 1024
+    an[IllegalArgumentException] must be thrownBy m.serializeToStream(document, new RecordingStream, limit, 0)
+    streamed(document).largestWrite must be <= 64 * 1024 // the configured default still applies without the argument
   }
 
   it must "write the same bytes in every variant" in {
@@ -141,7 +164,7 @@ class StreamingOutputSpec extends AnyFlatSpec {
     val big = Big(mutable.ArrayBuffer.range(0, 300000))
     val stream = streamed(big)
     stream.bytes.toByteArray mustBe m.serializeToBytes(big)
-    stream.largestWrite must be <= 128 * 1024
+    stream.largestWrite must be <= 64 * 1024
   }
 
   it must "encode the output of custom converters" in {

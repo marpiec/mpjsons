@@ -75,8 +75,10 @@ private[mpjsons] final class OutputSizeHint {
   def newUtf8Output(maxBytes: Int): Utf8Output = new Utf8Output(Math.min(byteLength + 32, maxBytes), maxBytes)
 
   /** Output that writes to `stream` in chunks of about `chunkSize` bytes. */
-  def newStreamOutput(maxBytes: Int, stream: OutputStream, chunkSize: Int): Utf8Output =
+  def newStreamOutput(maxBytes: Int, stream: OutputStream, chunkSize: Int): Utf8Output = {
+    require(chunkSize > 0, "chunkBytes must be positive, was " + chunkSize)
     new Utf8Output(Math.min(Math.min(byteLength + 32, chunkSize), maxBytes), maxBytes, stream, chunkSize)
+  }
 
   def update(out: Utf8Output): Unit = {
     byteLength = out.size
@@ -153,19 +155,25 @@ class StaticSerializer[T](private val innerSerializer: JsonTypeSerializer[T], co
   }
 
   /**
-   * Writes the bytes of `serializeToBytes(obj)` to `stream` while they are produced, in chunks of `MPJsonsConfig.streamChunkBytes` (64 KiB), so memory
-   * use does not grow with the size of the output; then flushes `stream` (it is not closed). If serialization fails
-   * (an exception from a serializer or the output limit), the chunks already written stay written.
+   * Writes the bytes of `serializeToBytes(obj)` to `stream` while they are produced, in chunks of
+   * `MPJsonsConfig.streamChunkBytes` (32 KiB by default), so memory use does not grow with the size of the output; then
+   * flushes `stream` (it is not closed). If serialization fails (an exception from a serializer or the output limit),
+   * the chunks already written stay written.
    */
-  def serializeToStream(obj: T, stream: OutputStream): Unit = serializeToStream(obj, stream, config.maxOutputBytes)
+  def serializeToStream(obj: T, stream: OutputStream): Unit =
+    serializeToStream(obj, stream, config.maxOutputBytes, config.streamChunkBytes)
 
   /** `serializeToStream(obj, stream)` allowing at most `maxBytes` bytes instead of `MPJsonsConfig.maxOutputBytes`. */
-  def serializeToStream(obj: T, stream: OutputStream, maxBytes: Int): Unit = {
+  def serializeToStream(obj: T, stream: OutputStream, maxBytes: Int): Unit =
+    serializeToStream(obj, stream, maxBytes, config.streamChunkBytes)
+
+  /** `serializeToStream(obj, stream, maxBytes)` in chunks of `chunkBytes` instead of `MPJsonsConfig.streamChunkBytes`. */
+  def serializeToStream(obj: T, stream: OutputStream, maxBytes: Int, chunkBytes: Int): Unit = {
     if (obj == null) {
       stream.write(serializeToBytes(obj, maxBytes))
       stream.flush()
     } else {
-      writeUtf8(obj, sizeHint.newStreamOutput(maxBytes, stream, config.streamChunkBytes), maxBytes).finish()
+      writeUtf8(obj, sizeHint.newStreamOutput(maxBytes, stream, chunkBytes), maxBytes).finish()
     }
   }
 
@@ -478,39 +486,52 @@ class MPJsons(val config: MPJsonsConfig) {
     serializeToByteBuffer(obj, extractTypeFromName(typeName), maxBytes)
 
   /**
-   * Writes the bytes of `serializeToBytes(obj)` to `stream` while they are produced, in chunks of `MPJsonsConfig.streamChunkBytes` (64 KiB), so memory
-   * use does not grow with the size of the output; then flushes `stream` (it is not closed). If serialization fails
-   * (an exception from a serializer or the output limit), the chunks already written stay written.
+   * Writes the bytes of `serializeToBytes(obj)` to `stream` while they are produced, in chunks of
+   * `MPJsonsConfig.streamChunkBytes` (32 KiB by default), so memory use does not grow with the size of the output; then
+   * flushes `stream` (it is not closed). If serialization fails (an exception from a serializer or the output limit),
+   * the chunks already written stay written.
    */
   def serializeToStream[T](obj: T, stream: OutputStream)(implicit tag: TypeTag[T]): Unit =
-    serializeToStream(obj, stream, config.maxOutputBytes)
+    serializeToStream(obj, stream, config.maxOutputBytes, config.streamChunkBytes)
 
   /** `serializeToStream(obj, stream)` allowing at most `maxBytes` bytes instead of `MPJsonsConfig.maxOutputBytes`. */
   def serializeToStream[T](obj: T, stream: OutputStream, maxBytes: Int)(implicit tag: TypeTag[T]): Unit =
-    serializeToStream(obj, typeToSerialize(tag), stream, maxBytes)
+    serializeToStream(obj, stream, maxBytes, config.streamChunkBytes)
+
+  /** `serializeToStream(obj, stream, maxBytes)` in chunks of `chunkBytes` instead of `MPJsonsConfig.streamChunkBytes`. */
+  def serializeToStream[T](obj: T, stream: OutputStream, maxBytes: Int, chunkBytes: Int)(implicit tag: TypeTag[T]): Unit =
+    serializeToStream(obj, typeToSerialize(tag), stream, maxBytes, chunkBytes)
 
   /** `serializeToStream(obj, stream)` for the given type. */
   def serializeToStream[T](obj: T, tpe: Type, stream: OutputStream): Unit =
-    serializeToStream(obj, tpe, stream, config.maxOutputBytes)
+    serializeToStream(obj, tpe, stream, config.maxOutputBytes, config.streamChunkBytes)
 
   /** `serializeToStream(obj, tpe, stream)` allowing at most `maxBytes` bytes instead of `MPJsonsConfig.maxOutputBytes`. */
-  def serializeToStream[T](obj: T, tpe: Type, stream: OutputStream, maxBytes: Int): Unit = {
+  def serializeToStream[T](obj: T, tpe: Type, stream: OutputStream, maxBytes: Int): Unit =
+    serializeToStream(obj, tpe, stream, maxBytes, config.streamChunkBytes)
+
+  /** `serializeToStream(obj, tpe, stream, maxBytes)` in chunks of `chunkBytes` instead of `MPJsonsConfig.streamChunkBytes`. */
+  def serializeToStream[T](obj: T, tpe: Type, stream: OutputStream, maxBytes: Int, chunkBytes: Int): Unit = {
     if (obj == null) {
       stream.write(serializeToBytes(obj, tpe, maxBytes))
       stream.flush()
     } else {
       val hint = outputSizeHint(tpe)
-      writeUtf8(obj, tpe, hint, hint.newStreamOutput(maxBytes, stream, config.streamChunkBytes), maxBytes).finish()
+      writeUtf8(obj, tpe, hint, hint.newStreamOutput(maxBytes, stream, chunkBytes), maxBytes).finish()
     }
   }
 
   /** `serializeToStream(obj, stream)` for the given type name (class name). */
   def serializeToStream[T](obj: T, typeName: String, stream: OutputStream): Unit =
-    serializeToStream(obj, extractTypeFromName(typeName), stream, config.maxOutputBytes)
+    serializeToStream(obj, extractTypeFromName(typeName), stream, config.maxOutputBytes, config.streamChunkBytes)
 
   /** `serializeToStream(obj, typeName, stream)` allowing at most `maxBytes` bytes instead of `MPJsonsConfig.maxOutputBytes`. */
   def serializeToStream[T](obj: T, typeName: String, stream: OutputStream, maxBytes: Int): Unit =
-    serializeToStream(obj, extractTypeFromName(typeName), stream, maxBytes)
+    serializeToStream(obj, extractTypeFromName(typeName), stream, maxBytes, config.streamChunkBytes)
+
+  /** `serializeToStream(obj, typeName, stream, maxBytes)` in chunks of `chunkBytes` instead of `MPJsonsConfig.streamChunkBytes`. */
+  def serializeToStream[T](obj: T, typeName: String, stream: OutputStream, maxBytes: Int, chunkBytes: Int): Unit =
+    serializeToStream(obj, extractTypeFromName(typeName), stream, maxBytes, chunkBytes)
 
   private def typeToSerialize[T](tag: TypeTag[T]): Type = {
     val tpe = extractType(tag)

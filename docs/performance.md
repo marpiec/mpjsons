@@ -533,6 +533,32 @@ looked different; `round7-regression-0.7.8.txt`):
 - `optionAbsent` moves by 1–3 ns either way between runs (−1.7% / +5.9% in the recheck).
 - Allocation is unchanged everywhere.
 
+## 4i. Streaming output and `serializeToByteBuffer` (0.7.11)
+
+`serializeToStream` reuses `Utf8Output`: with a sink, `grow` (the cold path) writes the buffer to the stream once it is
+`streamChunkBytes` (64 KiB by default) instead of doubling it, so none of the write methods changed. The only hot-path addition is three calls per
+`@omitEmpty` value that is written and may be taken back (`holdBack`, `holdValueStart`, `release`); each is a null
+test without a sink.
+
+Measured 28/10/2026, JDK 25.0.4.1, standalone harness (`WriteBench` plus an `@omitEmpty` `serializeToBytes` event
+with 7 annotated fields). The committed output-limit classes and the streaming classes were run in the order A B B A,
+2 forks each, and each side's two runs were averaged:
+
+| Benchmark | before | after | change |
+|---|---|---|---|
+| `userStatic` (String) | 3 851 k ops/s | 4 030 k ops/s | +4.6% (code unchanged: noise) |
+| `orders200` (String) | 3 025 ops/s | 3 033 ops/s | +0.3% |
+| `strings` (String) | 16 185 ops/s | 15 706 ops/s | −3.0% (code unchanged; ±10% error in two runs) |
+| `numberArrays` (String) | 9 059 ops/s | 9 107 ops/s | +0.5% |
+| `userBytes` | 4 463 k ops/s | 4 466 k ops/s | 0% |
+| `orders200Bytes` | 3 108 ops/s | 3 108 ops/s | 0% |
+| `stringsBytes` | 23 647 ops/s | 23 946 ops/s | +1.3% |
+| `@omitEmpty` bytes, values empty | 120.2 ns | 121.4 ns | +1.0% |
+| `@omitEmpty` bytes, values filled | 421.3 ns | 420.5 ns | −0.2% |
+
+All changes are within run-to-run noise. Streaming a 2.6 MB document through Pekko's `StreamConverters.asOutputStream`
+(the README example) delivered it in 27 chunks of at most 96 KiB.
+
 ## 5. Constraints to respect while optimising
 
 - Public API: `JsonTypeSerializer.serialize(obj, jsonBuilder: scala.collection.mutable.StringBuilder)`,

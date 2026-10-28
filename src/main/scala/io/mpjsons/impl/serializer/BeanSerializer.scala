@@ -204,9 +204,12 @@ object BeanFieldWriter {
 
     private def writeUtf8UnlessEmpty(value: AnyRef, out: Utf8Output, notFirst: Boolean): Boolean = {
       val start = out.size
+      out.holdBack() // when streaming, keeps what may be taken back from being written to the stream
       writePrefix(out, notFirst)
       val valueStart = out.size
+      out.holdValueStart()
       writer.writeUtf8(value, out)
+      out.release()
       if (out.size - valueStart == 2 && BeanFieldWriter.isEmptyJson(out.byteAt(valueStart), out.byteAt(valueStart + 1))) {
         out.truncate(start)
         false

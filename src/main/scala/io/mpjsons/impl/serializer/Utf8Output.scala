@@ -14,13 +14,29 @@ import scala.annotation.nowarn
  * (quotes, commas, colons, brackets), so encoding piece by piece gives the same bytes as encoding the whole document.
  *
  * Growing past `maxBytes` bytes fails with a JsonTooLargeException (see OutputLimit).
+ *
+ * With a `sink` (serializeToStream) the buffer does not grow past `chunkSize` (MPJsonsConfig.streamChunkBytes): when
+ * full, what it holds is written to the sink and the buffer is reused, so memory stays bounded however large the output is. This happens only
+ * where the buffer would otherwise grow, so the writing methods are the same with and without a sink. A single write
+ * larger than the free space (a long string) still gets room for all of it, so the buffer can grow to the size of the
+ * longest string. Bytes that an `@omitEmpty` field may still take back (see `holdBack`) stay in the buffer until they
+ * cannot be taken back any more.
  */
-final class Utf8Output(initialCapacity: Int, maxBytes: Int) {
+final class Utf8Output(initialCapacity: Int, maxBytes: Int, sink: java.io.OutputStream, chunkSize: Int) {
 
-  def this(initialCapacity: Int) = this(initialCapacity, Int.MaxValue)
+  def this(initialCapacity: Int, maxBytes: Int) = this(initialCapacity, maxBytes, null, 0)
+
+  def this(initialCapacity: Int) = this(initialCapacity, Int.MaxValue, null, 0)
 
   private var buf: Array[Byte] = new Array[Byte](Math.max(initialCapacity, 16))
   private var count: Int = 0
+  /** Bytes already written to the sink; `buf(0)` is byte number `flushed` of the output. */
+  private var flushed: Int = 0
+
+  // Values of @omitEmpty fields being written: where each field starts (its prefix) and where its value starts
+  private var holdStarts: Array[Int] = _
+  private var holdValueStarts: Array[Int] = _
+  private var holds: Int = 0
 
   /** Formats doubles and floats exactly like StringBuilder.append(double/float); created on first use. */
   private var numberText: java.lang.StringBuilder = _
@@ -28,18 +44,60 @@ final class Utf8Output(initialCapacity: Int, maxBytes: Int) {
   private var bridgeBuilder: StringBuilder = _
   private var chars: Array[Char] = _
 
-  /** Number of bytes written so far. */
-  def size: Int = count
+  /** Number of bytes written so far, including those already written to the sink. */
+  def size: Int = flushed + count
 
-  /** The byte at `index`, which is below `size`. */
-  private[serializer] def byteAt(index: Int): Byte = buf(index)
+  /** The byte at `index`, which is below `size` and not written to the sink yet. */
+  private[serializer] def byteAt(index: Int): Byte = buf(index - flushed)
 
-  /** Drops what was written after the first `size` bytes. */
+  /** Drops what was written after the first `size` bytes (none of them written to the sink yet). */
   private[serializer] def truncate(size: Int): Unit = {
-    count = size
+    count = size - flushed
+  }
+
+  /**
+   * An `@omitEmpty` field starting at the current size: until `release`, its bytes are not written to the sink while
+   * its value (see `holdValueStart`) is still short enough (2 bytes) to be taken back. Nothing to do without a sink.
+   */
+  private[serializer] def holdBack(): Unit = {
+    if (sink != null) {
+      if (holdStarts == null || holds == holdStarts.length) {
+        val capacity = if (holdStarts == null) 8 else holds * 2
+        holdStarts = if (holdStarts == null) new Array[Int](capacity) else Arrays.copyOf(holdStarts, capacity)
+        holdValueStarts = if (holdValueStarts == null) new Array[Int](capacity) else Arrays.copyOf(holdValueStarts, capacity)
+      }
+      holdStarts(holds) = size
+      holdValueStarts(holds) = Int.MaxValue // the field name is being written: hold all of it
+      holds += 1
+    }
+  }
+
+  /** The value of the innermost held field starts at the current size. */
+  private[serializer] def holdValueStart(): Unit = {
+    if (sink != null) {
+      holdValueStarts(holds - 1) = size
+    }
+  }
+
+  /** Ends the innermost `holdBack`. */
+  private[serializer] def release(): Unit = {
+    if (sink != null) {
+      holds -= 1
+    }
   }
 
   def toByteArray: Array[Byte] = Arrays.copyOf(buf, count)
+
+  /** The output without copying it: wraps this output's buffer (which may be larger than the output). */
+  def toByteBuffer: java.nio.ByteBuffer = java.nio.ByteBuffer.wrap(buf, 0, count)
+
+  /** Writes what is left to the sink and flushes it (serializeToStream). */
+  def finish(): Unit = {
+    sink.write(buf, 0, count)
+    flushed += count
+    count = 0
+    sink.flush()
+  }
 
   private def ensure(extra: Int): Unit = {
     if (extra > buf.length - count) {
@@ -48,15 +106,46 @@ final class Utf8Output(initialCapacity: Int, maxBytes: Int) {
   }
 
   private def grow(extra: Int): Unit = {
-    val needed = count.toLong + extra
-    if (needed > maxBytes) {
+    if (flushed.toLong + count + extra > maxBytes) {
       throw OutputLimit.tooLarge(maxBytes)
     }
+    if (sink != null && buf.length >= chunkSize) {
+      writeToSink()
+      if (extra <= buf.length - count) {
+        return
+      }
+    }
+    val needed = count.toLong + extra
     if (needed > Utf8Output.MaxLength) {
       throw new OutOfMemoryError("JSON output larger than " + Utf8Output.MaxLength + " bytes")
     }
     val doubled = buf.length.toLong * 2
     buf = Arrays.copyOf(buf, Math.min(Math.max(doubled, needed), Math.min(maxBytes, Utf8Output.MaxLength).toLong).toInt)
+  }
+
+  /**
+   * Writes the buffer to the sink, except the bytes from the start of the outermost held `@omitEmpty` field that may
+   * still be taken back, and moves what stays to the front of the buffer. A field may be taken back when the part of
+   * its value that is sure to stay (up to the first inner field that may itself be taken back) is 2 bytes or shorter:
+   * only such a value can still turn out to be `[]`, `{}` or `""`. Fields are nested, so they are checked from the
+   * innermost out. A field found safe stays safe (what is sure to stay only grows), so it was never written past.
+   */
+  private def writeToSink(): Unit = {
+    var mayGo = size // bytes from here on may still be taken back
+    var index = holds - 1
+    while (index >= 0) {
+      if (mayGo.toLong - holdValueStarts(index) <= 2) {
+        mayGo = holdStarts(index)
+      }
+      index -= 1
+    }
+    val keep = mayGo - flushed
+    if (keep > 0) {
+      sink.write(buf, 0, keep)
+      System.arraycopy(buf, keep, buf, 0, count - keep)
+      count -= keep
+      flushed += keep
+    }
   }
 
   def writeByte(b: Byte): Unit = {

@@ -583,6 +583,64 @@ complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromArray
 
 `complete(json: String)` would be sent as `text/plain`, and `HttpEntity(contentType, bytes)` copies the array.
 
+`serializeToByteBuffer` returns the same bytes without the final copy that `serializeToBytes` makes: a `ByteBuffer`
+wrapping the array they were written into (usually larger than the output; `remaining` is the output's length):
+
+```scala
+val buffer: java.nio.ByteBuffer = ser.serializeToByteBuffer(user)
+complete(HttpEntity.Strict(ContentTypes.`application/json`, ByteString.fromByteBuffer(buffer)))  // copies once
+```
+
+### Streaming output
+
+`serializeToStream` writes the same bytes to an `OutputStream` while they are produced, in chunks of
+64 KiB, so a large response does not have to be held in memory: memory use stays at about 64 KiB,
+or the longest single string value (or one custom converter's output) when that is larger. It flushes the stream at the end and does
+not close it. Writing to the stream blocks, so run it on a thread that may block.
+
+```scala
+mpjsons.serializeToStream(report, outputStream)   // also (obj, Type, stream), (obj, typeName, stream)
+ser.serializeToStream(report, outputStream)       // StaticSerializer
+```
+
+The chunk size is `MPJsonsConfig.streamChunkBytes` (64 KiB by default). One write to the stream can be up to about
+twice that. A smaller value uses less memory per response in progress and writes to the stream more often:
+
+```scala
+val mpjsons = new MPJsons(MPJsonsConfig(streamChunkBytes = 16 * 1024))
+```
+
+If serialization fails part-way (an exception from a serializer, or the output limit), the chunks
+already written stay written. With Pekko HTTP the status line and headers are sent before the body
+is complete, so a failure can no longer change the status; fail the response stream instead of
+ending it, so the client sees a broken response rather than a short JSON:
+
+```scala
+import org.apache.pekko.NotUsed
+import org.apache.pekko.stream.scaladsl.{Source, StreamConverters}
+import org.apache.pekko.util.ByteString
+import scala.concurrent.{ExecutionContext, Future, Promise}
+
+/** `blocking`: a dispatcher for blocking work, e.g. system.dispatchers.lookup("pekko.actor.default-blocking-io-dispatcher"). */
+def jsonSource[T](ser: StaticSerializer[T], value: T)(implicit blocking: ExecutionContext): Source[ByteString, NotUsed] = {
+  val end = Promise[Source[ByteString, NotUsed]]()
+  StreamConverters.asOutputStream()
+    .mapMaterializedValue { out =>
+      Future(ser.serializeToStream(value, out)).onComplete { result =>
+        out.close()
+        end.tryComplete(result.map(_ => Source.empty)) // a failure fails the stream instead of ending it
+      }
+      NotUsed
+    }
+    .concat(Source.futureSource(end.future))
+}
+
+complete(HttpEntity(ContentTypes.`application/json`, jsonSource(ser, report)))  // sent chunked
+```
+
+For small responses `serializeToBytes` is faster: the stream costs a thread switch and chunked
+transfer per response.
+
 ### Output size limit
 
 The JDK cannot build a `String` of 2^30 (about a billion) or more characters when any of them is
@@ -597,6 +655,7 @@ val mpjsons = new MPJsons(MPJsonsConfig(maxOutputBytes = 20 * 1024 * 1024))
 mpjsons.serialize(event)                                     // up to 20 MiB
 mpjsons.serialize(bigReport, maxBytes = 800 * 1024 * 1024)  // this call only
 mpjsons.serializeToBytes(bigReport, maxBytes = 800 * 1024 * 1024)
+mpjsons.serializeToStream(bigReport, outputStream, maxBytes = 800 * 1024 * 1024)
 mpjsons.buildStaticSerializer[Report].serialize(bigReport, 800 * 1024 * 1024)
 ```
 
